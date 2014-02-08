@@ -1928,6 +1928,24 @@ void process_commands()
   {
     switch( (int)code_value() )
     {
+        // [FMC] home command    
+    case 599:
+      homeaxis (X_AXIS);
+      homeaxis (Y_AXIS);
+      homeaxis (Z_AXIS);
+      
+      disable_heater();
+
+      disable_x();
+      disable_y();
+      disable_z();
+      disable_e0();
+      disable_e1();
+      disable_e2();
+      
+      break;    
+
+    
 #ifdef ULTIPANEL
     case 0: // M0 - Unconditional stop - Wait for user button press on LCD
     case 1: // M1 - Conditional stop - Wait for user button press on LCD
@@ -3870,7 +3888,9 @@ case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or disp
       gcode_LastN = Stopped_gcode_LastN;
       FlushSerialRequestResend();
     break;
+
     }
+    
   }
 
   else if(code_seen('T'))

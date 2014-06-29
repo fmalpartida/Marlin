@@ -61,6 +61,7 @@ static void lcd_set_contrast();
 #endif
 static void lcd_control_retract_menu();
 static void lcd_sdcard_menu();
+static void lcd_calz_menu();
 
 static void lcd_quick_feedback();//Cause an LCD refresh, and give the user visual or audible feedback that something has happened
 
@@ -270,6 +271,7 @@ static void lcd_main_menu()
         MENU_ITEM(submenu, MSG_PREPARE, lcd_prepare_menu);
     }
     MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
+	MENU_ITEM(submenu, MSG_CALZ, lcd_calz_menu);
 #ifdef SDSUPPORT
     if (card.cardOK)
     {
@@ -553,6 +555,28 @@ void lcd_cooldown()
     lcd_return_to_status();
 }
 
+//Function to Calibration Z Menu and Auto_Home_f
+void z_ten_up(){
+  current_position[Z_AXIS] = current_position[Z_AXIS]+10;
+
+  if (current_position[Z_AXIS] < Z_MIN_POS)
+    current_position[Z_AXIS] = Z_MIN_POS;
+  if (current_position[Z_AXIS] > Z_MAX_POS)
+    current_position[Z_AXIS] = Z_MAX_POS;
+
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
+}
+
+//Redefinition of auto home. I use this way because is more secure if you have fasteners
+void auto_home_f(){
+	z_ten_up();
+
+	enquecommand_P((PSTR("G28 X")));
+	enquecommand_P((PSTR("G28 Y")));
+	enquecommand_P((PSTR("G28 Z")));
+
+}
+
 static void lcd_prepare_menu()
 {
     START_MENU();
@@ -563,7 +587,7 @@ static void lcd_prepare_menu()
     #endif
 #endif
     MENU_ITEM(gcode, MSG_DISABLE_STEPPERS, PSTR("M84"));
-    MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
+    MENU_ITEM(function, MSG_AUTO_HOME, auto_home_f);
     //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
 #if TEMP_SENSOR_0 != 0
   #if TEMP_SENSOR_1 != 0 || TEMP_SENSOR_2 != 0 || TEMP_SENSOR_BED != 0
@@ -712,6 +736,7 @@ static void lcd_move_menu_axis()
     MENU_ITEM(back, MSG_MOVE_AXIS, lcd_move_menu);
     MENU_ITEM(submenu, MSG_MOVE_X, lcd_move_x);
     MENU_ITEM(submenu, MSG_MOVE_Y, lcd_move_y);
+	MENU_ITEM(submenu, MSG_MOVE_Z, lcd_move_z);
     if (move_menu_scale < 10.0)
     {
         MENU_ITEM(submenu, MSG_MOVE_Z, lcd_move_z);
@@ -1069,6 +1094,64 @@ menu_edit_type(unsigned long, long5, ftostr5, 0.01)
 		enquecommand_P((PSTR("G28"))); // move all axis home
 	}
 #endif
+
+//Menu Z Calibration
+//Las funciones calz_cornerX son repetitivas y se podrian simplificar en una sola funcion, pero no se como hacerlo
+void calz_corner1(){
+  z_ten_up();
+  
+  current_position[X_AXIS] = X_CORNER_1;
+  current_position[Y_AXIS] = Y_CORNER_1;
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
+  
+  enquecommand_P(PSTR("G28 Z"));
+}
+void calz_corner2(){
+  z_ten_up();
+
+  current_position[X_AXIS] = X_CORNER_2;
+  current_position[Y_AXIS] = Y_CORNER_2;  
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
+    
+  enquecommand_P(PSTR("G28 Z"));
+}
+
+void calz_corner3(){
+  z_ten_up();
+
+  current_position[X_AXIS] = X_CORNER_3;
+  current_position[Y_AXIS] = Y_CORNER_3;  
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
+    
+  enquecommand_P(PSTR("G28 Z"));
+}
+
+void calz_corner4(){
+  z_ten_up();
+
+  current_position[X_AXIS] = X_CORNER_4;
+  current_position[Y_AXIS] = Y_CORNER_4;  
+  plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS], 60, active_extruder);
+    
+  enquecommand_P(PSTR("G28 Z"));
+}
+
+//Este menu tiene las opciones que yo suelo usar para calibrar la altura Z, pero no tienen que ser las que usa todo el mundo.
+//Se pueden comentar si se quieren las opciones que no sean de utilidad para cada uno
+
+static void lcd_calz_menu()
+{
+    START_MENU();
+    MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
+	MENU_ITEM(function, MSG_AUTO_HOME, auto_home_f);
+	MENU_ITEM(gcode, MSG_Z10, PSTR("G1 Z10"));
+	MENU_ITEM(gcode, MSG_HOMEZ, PSTR("G28 Z"));
+	MENU_ITEM(function, MSG_CORNER1, calz_corner1);
+	MENU_ITEM(function, MSG_CORNER2, calz_corner2);
+	MENU_ITEM(function, MSG_CORNER3, calz_corner3);
+	MENU_ITEM(function, MSG_CORNER4, calz_corner4);
+    END_MENU();
+}
 
 /** End of menus **/
 

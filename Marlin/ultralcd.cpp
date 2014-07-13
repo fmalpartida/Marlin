@@ -1143,13 +1143,12 @@ static void lcd_calz_menu()
 {
     START_MENU();
     MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
-	MENU_ITEM(function, MSG_AUTO_HOME, auto_home_f);
-	MENU_ITEM(gcode, MSG_Z10, PSTR("G1 Z10"));
 	MENU_ITEM(gcode, MSG_HOMEZ, PSTR("G28 Z"));
 	MENU_ITEM(function, MSG_CORNER1, calz_corner1);
 	MENU_ITEM(function, MSG_CORNER2, calz_corner2);
 	MENU_ITEM(function, MSG_CORNER3, calz_corner3);
 	MENU_ITEM(function, MSG_CORNER4, calz_corner4);
+	MENU_ITEM(gcode, MSG_Z10, PSTR("G1 Z10"));
     END_MENU();
 }
 

@@ -338,15 +338,14 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 
 //Configuration Calibration Z. Put X and Y values 
-
-#define X_CORNER_1 0
-#define Y_CORNER_1 10
-#define X_CORNER_2 238
-#define Y_CORNER_2 10
-#define X_CORNER_3 0
-#define Y_CORNER_3 0
-#define X_CORNER_4 0
-#define Y_CORNER_4 0
+#define X_CORNER_1 10
+#define Y_CORNER_1 15
+#define X_CORNER_2 183
+#define Y_CORNER_2 15
+#define X_CORNER_3 183
+#define Y_CORNER_3 185
+#define X_CORNER_4 10
+#define Y_CORNER_4 185
 
 //============================= Bed Auto Leveling ===========================
 

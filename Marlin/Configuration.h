@@ -385,8 +385,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 //============================= Bed Auto Leveling ===========================
 
-// #define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
-#define Z_PROBE_REPEATABILITY_TEST  // If not commented out, Z-Probe Repeatability test will be included if Auto Bed Leveling is Enabled.
+#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+//#define Z_PROBE_REPEATABILITY_TEST  // If not commented out, Z-Probe Repeatability test will be included if Auto Bed Leveling is Enabled.
 
 #ifdef ENABLE_AUTO_BED_LEVELING
 
@@ -402,7 +402,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //    Probe 3 arbitrary points on the bed (that aren't colinear)
 //    You must specify the X & Y coordinates of all 3 points
 
-  #define AUTO_BED_LEVELING_GRID
+#define AUTO_BED_LEVELING_GRID
   // with AUTO_BED_LEVELING_GRID, the bed is sampled in a
   // AUTO_BED_LEVELING_GRID_POINTSxAUTO_BED_LEVELING_GRID_POINTS grid
   // and least squares solution is calculated
@@ -410,10 +410,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   #ifdef AUTO_BED_LEVELING_GRID
 
     // set the rectangle in which to probe
-    #define LEFT_PROBE_BED_POSITION 40
-    #define RIGHT_PROBE_BED_POSITION 130
-    #define BACK_PROBE_BED_POSITION 130
-    #define FRONT_PROBE_BED_POSITION 40
+    #define LEFT_PROBE_BED_POSITION 36
+    #define RIGHT_PROBE_BED_POSITION 150
+    #define BACK_PROBE_BED_POSITION 135
+    #define FRONT_PROBE_BED_POSITION 10
 
      // set the number of grid points per dimension
      // I wouldn't see a reason to go above 3 (=9 probing points on the bed)
@@ -424,28 +424,28 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
     // with no grid, just probe 3 arbitrary points.  A simple cross-product
     // is used to esimate the plane of the print bed
 
-      #define ABL_PROBE_PT_1_X 15
-      #define ABL_PROBE_PT_1_Y 180
-      #define ABL_PROBE_PT_2_X 15
-      #define ABL_PROBE_PT_2_Y 20
-      #define ABL_PROBE_PT_3_X 170
-      #define ABL_PROBE_PT_3_Y 20
+      #define ABL_PROBE_PT_1_X 36
+      #define ABL_PROBE_PT_1_Y 36
+      #define ABL_PROBE_PT_2_X 150
+      #define ABL_PROBE_PT_2_Y 70
+      #define ABL_PROBE_PT_3_X 75
+      #define ABL_PROBE_PT_3_Y 135
 
   #endif // AUTO_BED_LEVELING_GRID
 
 
   // these are the offsets to the probe relative to the extruder tip (Hotend - Probe)
   #define X_PROBE_OFFSET_FROM_EXTRUDER 35
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER 0.7
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -0.8 
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER 0
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -1.2 
 
-  #define Z_RAISE_BEFORE_HOMING 1       // (in mm) Raise Z before homing (G28) for Probe Clearance.
+  #define Z_RAISE_BEFORE_HOMING 2       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
 
-  #define XY_TRAVEL_SPEED 4000         // X and Y axis travel speed between probes, in mm/min
+  #define XY_TRAVEL_SPEED 3000         // X and Y axis travel speed between probes, in mm/min
 
-  #define Z_RAISE_BEFORE_PROBING 1    //How much the extruder will be raised before traveling to the first probing point.
-  #define Z_RAISE_BETWEEN_PROBINGS 1  //How much the extruder will be raised when traveling from between next probing points
+  #define Z_RAISE_BEFORE_PROBING 2    //How much the extruder will be raised before traveling to the first probing point.
+  #define Z_RAISE_BETWEEN_PROBINGS 3  //How much the extruder will be raised when traveling from between next probing points
 
   //#define Z_PROBE_SLED // turn on if you have a z-probe mounted on a sled like those designed by Charles Bell
   //#define SLED_DOCKING_OFFSET 5 // the extra distance the X axis must travel to pickup the sled. 0 should be fine but you can push it further if you'd like.
@@ -490,12 +490,12 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
-#define HOMING_FEEDRATE {40*70, 40*70, 4*70, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {40*70, 40*70, 8*70, 0}  // set the homing speeds (mm/min)
 
 // default settings
 
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.145, 79.58, 4000.00, 797.07494}  // default steps per unit for ultimaker
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 99}  // default steps per unit for ultimaker
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 100}  // default steps per unit for ultimaker
 #define DEFAULT_MAX_FEEDRATE          {400, 400, 5, 25}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {2000,2000,100,4000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
@@ -518,7 +518,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //===========================================================================
 
 // Custom M code points
-#define CUSTOM_M_CODES
+//#define CUSTOM_M_CODES
 #ifdef CUSTOM_M_CODES
   #define CUSTOM_M_CODE_SET_Z_PROBE_OFFSET 851
   #define Z_PROBE_OFFSET_RANGE_MIN -2

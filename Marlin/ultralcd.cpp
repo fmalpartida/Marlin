@@ -785,7 +785,7 @@ static void lcd_move_menu()
     MENU_ITEM(back, MSG_PREPARE, lcd_prepare_menu);
     MENU_ITEM(submenu, MSG_MOVE_10MM, lcd_move_menu_10mm);
     MENU_ITEM(submenu, MSG_MOVE_1MM, lcd_move_menu_1mm);
-    MENU_ITEM(submenu, MSG_MOVE_01MM, lcd_move_menu_01mm);
+    //MENU_ITEM(submenu, MSG_MOVE_01MM, lcd_move_menu_01mm);
     //TODO:X,Y,Z,E
     END_MENU();
 }

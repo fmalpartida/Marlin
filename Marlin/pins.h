@@ -1953,7 +1953,7 @@
 
 #endif
 
-#endif  // MOTHERBOARD == 83
+#endif // SAV_MKI
 
 /****************************************************************************************
 * Teensy++ 2.0 Breadboard pin assignments (AT90USB1286)

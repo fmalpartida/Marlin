@@ -1954,14 +1954,6 @@
 
 #endif
 
-#define KILL_PIN           42 // A2 = 42 - teensy = 40
-#define HOME_PIN          -1 // A4 = marlin 44 - teensy = 42
-
-#ifdef NUM_SERVOS
-  #define SERVO0_PIN       41 // In teensy's pin definition for pinMode (in Servo.cpp)
-#endif
-
-#endif // SAV_3DLCD
 #endif // SAV_MKI
 
 /****************************************************************************************
@@ -2195,42 +2187,6 @@ DaveX plan for Teensylu/printrboard-type pinouts (ref teensylu & sprinter) for a
 #define SDPOWER          -1
 #define LED_PIN          -1
 
-// y axes
-#define Y_STEP_PIN 23
-#define Y_DIR_PIN 22
-#define Y_MIN_PIN 25
-//Alex Checar #define Y_STOP_PIN         25
-#define Y_ENABLE_PIN 24 //shared with X_enable_pin
-#define Y_MAX_PIN -1
-
-// z axes
-#define Z_STEP_PIN 27
-#define Z_DIR_PIN 28
-#define Z_MIN_PIN 30
-//Alex Checar #define Z_STOP_PIN         30
-#define Z_ENABLE_PIN 29
-#define Z_MAX_PIN -1
-
-//extruder pins
-#define E0_STEP_PIN         12
-#define E0_DIR_PIN          17
-#define E0_ENABLE_PIN       3
-
-#define HEATER_0_PIN 16
-#define TEMP_0_PIN 0
-
-#define FAN_PIN -1
-
-//bed pins
-#define HEATER_BED_PIN -1
-#define TEMP_BED_PIN -1
-
-
-#define SDSS     -1
-#define SDPOWER          -1
-#define LED_PIN          -1
-
->>>>>>> pr/1219
 //pin for controlling the PSU.
 #define PS_ON_PIN       14  //Alex, Do this work on the card?
 

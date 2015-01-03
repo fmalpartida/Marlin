@@ -904,9 +904,9 @@
   #define SCK_PIN          52
   #define MISO_PIN         50
   #define MOSI_PIN         51
-  #define MAX6675_SS       53
+  #define MAX6675_SS       66// Do not use pin 53 if there is even the remote possibility of using Dsplay/SD card
 #else
-  #define MAX6675_SS       49
+  #define MAX6675_SS       66// Do not use pin 49 as this is tied to the switch inside the SD card socket to detect if there is an SD card present
 #endif
 
 #endif // RAMPS_OLD || RAMPS_13_EFB || RAMPS_13_EEB || RAMPS_13_EFF || 3DRAG
@@ -1400,6 +1400,7 @@
 #define PS_ON_PIN          12
 #define KILL_PIN           -1
 #define SUICIDE_PIN        54  //PIN that has to be turned on right after start, to keep power flowing.
+#define SERVO0_PIN         13  // untested
 
 #ifdef ULTRA_LCD
 
@@ -1903,8 +1904,8 @@
 
   #define X_STOP_PIN         13
   #define Y_STOP_PIN         14
-//  #define Z_STOP_PIN         15
-  #define Z_STOP_PIN         36  // For inductive sensor.
+  #define Z_STOP_PIN         15
+//  #define Z_STOP_PIN         36  // For inductive sensor.
 
   #define TEMP_0_PIN          7  // Extruder / Analog pin numbering
   #define TEMP_BED_PIN        6  // Bed / Analog pin numbering

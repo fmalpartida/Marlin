@@ -4360,12 +4360,15 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) //default argument s
     if(max_inactive_time)
       kill();
 
+#if 0
 	// If 'OK' is garbled on sending PC won't receive it.  Both machines will wait on each other forever.
 	// This resends OK if nothing is heard from PC for a while to avoid this bad case.
   if( (millis() - previous_millis_ok) >  max_inactive_time/4 ) {
 		SERIAL_PROTOCOL(MSG_OK);
 		previous_millis_ok=millis();
   }
+#endif
+
 
   if(stepper_inactive_time)  {
     if( (millis() - previous_millis_cmd) >  stepper_inactive_time )

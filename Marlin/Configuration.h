@@ -480,8 +480,8 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // default settings
 
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {160.50, 160.16, 8000.00, 1938.7}  // default steps per unit for ultimaker (T800)
-//#define DEFAULT_AXIS_STEPS_PER_UNIT   {159.06, 158.89, 8000.00, 2*797.07494}  // default steps per unit for ultimaker (vinciBot)
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {159.06, 158.89, 8000.00, 100}  // default steps per unit for ultimaker (vincibot direct drive)
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {159.06, 158.89, 8000.00, 2*797.07494}  // default steps per unit for ultimaker (vinciBot)
+//#define DEFAULT_AXIS_STEPS_PER_UNIT   {159.06, 158.89, 8000.00, 100}  // default steps per unit for ultimaker (vincibot direct drive)
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 2, 25}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1000,1000,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
@@ -668,7 +668,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // 2 wire Non-latching LCD SR from:
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection 
 //[FMC]#define SAV_3DLCD
-//#define SAV_3DLCD
+#define SAV_3DLCD
 #ifdef SAV_3DLCD
    #define SR_LCD_2W_NL    // Non latching 2 wire shiftregister
    #define NEWPANEL

@@ -1753,12 +1753,16 @@
 #define E0_ENABLE_PIN      19
 
 #define HEATER_0_PIN       21  // Extruder
-#define HEATER_1_PIN       -1
-#define HEATER_2_PIN       -1
+#define HEATER_1_PIN       46
+#define HEATER_2_PIN       47
 #define HEATER_BED_PIN     20  // Bed
-#define FAN_PIN            22  // Fan
-// You may need to change FAN_PIN to 16 because Marlin isn't using fastio.h
-// for the fan and Teensyduino uses a different pin mapping.
+// If soft or fast PWM is off then use Teensyduino pin numbering, Marlin
+// fastio pin numbering otherwise
+#ifdef FAN_SOFT_PWM || FAST_PWM_FAN
+        #define FAN_PIN        22  // Fan
+#else
+        #define FAN_PIN        16  // Fan
+#endif
 
 #if MB(TEENSYLU)  // Teensylu
   #define X_STOP_PIN         13
@@ -1777,8 +1781,8 @@
   #endif //FILAMENT_SENSOR
 #endif
 
-#define TEMP_1_PIN         -1
-#define TEMP_2_PIN         -1
+#define TEMP_1_PIN         2
+#define TEMP_2_PIN         3
 
 #define SDPOWER            -1
 #define SDSS                8
@@ -2358,6 +2362,20 @@ DaveX plan for Teensylu/printrboard-type pinouts (ref teensylu & sprinter) for a
 
 #define LARGE_FLASH true
 
+// servo support
+#ifdef NUM_SERVOS
+ #define SERVO0_PIN 22 //motor header MX1
+ #if NUM_SERVOS > 1
+ #define SERVO1_PIN 23 //Motor header MX2
+ #endif
+ #if NUM_SERVOS > 2
+ #define SERVO2_PIN 24 //Motor header MX3
+ #endif
+ #if NUM_SERVOS > 3
+ #define SERVO2_PIN 5 //pwm header pin 5
+ #endif
+#endif
+
 #define X_STEP_PIN 37
 #define X_DIR_PIN 48
 #define X_MIN_PIN 12
@@ -2416,7 +2434,13 @@ DaveX plan for Teensylu/printrboard-type pinouts (ref teensylu & sprinter) for a
 #define SDPOWER            -1
 #define SDSS               53
 #define LED_PIN            13
-#define FAN_PIN            8
+#define FAN_PIN            8  
+/**********************************************************
+Fan Pins
+Fan_0 8
+Fan_1 6
+Fan_2 2
+***********************************************************/
 #define PS_ON_PIN          4
 #define KILL_PIN           -1 //80 with Smart Controller LCD
 #define SUICIDE_PIN        -1  //PIN that has to be turned on right after start, to keep power flowing.

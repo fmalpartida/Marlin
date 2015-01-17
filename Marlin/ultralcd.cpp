@@ -185,8 +185,9 @@ void* editValue;
 int32_t minEditValue, maxEditValue;
 menuFunc_t callbackFunc;
 
-// place-holders for Ki and Kd edits
+// place-holders for Ki and Kd edits, and the extruder # being edited
 float raw_Ki, raw_Kd;
+int pid_current_extruder;
 
 static void lcd_goto_menu(menuFunc_t menu, const uint32_t encoder=0, const bool feedback=true) {
   if (currentMenu != menu) {
@@ -195,7 +196,7 @@ static void lcd_goto_menu(menuFunc_t menu, const uint32_t encoder=0, const bool 
     if (feedback) lcd_quick_feedback();
 
     // For LCD_PROGRESS_BAR re-initialize the custom characters
-    #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT)
+    #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT) && !defined(DOGLCD)
       lcd_set_custom_characters(menu == lcd_status_screen);
     #endif
   }
@@ -204,7 +205,7 @@ static void lcd_goto_menu(menuFunc_t menu, const uint32_t encoder=0, const bool 
 /* Main status screen. It's up to the implementation specific part to show what is needed. As this is very display dependent */
 static void lcd_status_screen()
 {
-  #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT)
+  #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT) && !defined(DOGLCD)
     uint16_t mil = millis();
     #ifndef PROGRESS_MSG_ONCE
       if (mil > progressBarTick + PROGRESS_BAR_MSG_TIME + PROGRESS_BAR_BAR_TIME) {
@@ -236,11 +237,12 @@ static void lcd_status_screen()
         lcd_status_update_delay--;
     else
         lcdDrawUpdate = 1;
-    if (lcdDrawUpdate)
-    {
+
+    if (lcdDrawUpdate) {
         lcd_implementation_status_screen();
         lcd_status_update_delay = 10;   /* redraw the main screen every second. This is easier then trying keep track of all things that change on the screen */
     }
+
 #ifdef ULTIPANEL
 
     bool current_click = LCD_CLICKED;
@@ -265,7 +267,7 @@ static void lcd_status_screen()
     {
         lcd_goto_menu(lcd_main_menu);
         lcd_implementation_init( // to maybe revive the LCD if static electricity killed it.
-          #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT)
+          #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT) && !defined(DOGLCD)
             currentMenu == lcd_status_screen
           #endif
         );
@@ -763,12 +765,6 @@ static void lcd_control_menu()
 
 static void lcd_control_temperature_menu()
 {
-#ifdef PIDTEMP
-    // set up temp variables - undo the default scaling
-    raw_Ki = unscalePID_i(Ki);
-    raw_Kd = unscalePID_d(Kd);
-#endif
-
     START_MENU();
     MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
 #if TEMP_SENSOR_0 != 0
@@ -791,13 +787,45 @@ static void lcd_control_temperature_menu()
     MENU_ITEM_EDIT(float32, MSG_FACTOR, &autotemp_factor, 0.0, 1.0);
 #endif
 #ifdef PIDTEMP
-    //MENU_ITEM_EDIT(float52, MSG_PID_P, &Kp, 1, 9990);
-    // i is typically a small value so allows values below 1
-    //MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_I, &raw_Ki, 0.01, 9990, copy_and_scalePID_i);
-    //MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_D, &raw_Kd, 1, 9990, copy_and_scalePID_d);
-# ifdef PID_ADD_EXTRUSION_RATE
-    //MENU_ITEM_EDIT(float3, MSG_PID_C, &Kc, 1, 9990);
-# endif//PID_ADD_EXTRUSION_RATE
+	// set up temp variables - undo the default scaling
+	pid_current_extruder = 0;
+	raw_Ki = unscalePID_i(PID_PARAM(Ki,0));
+	raw_Kd = unscalePID_d(PID_PARAM(Kd,0));
+	MENU_ITEM_EDIT(float52, MSG_PID_P, &PID_PARAM(Kp,0), 1, 9990);
+	// i is typically a small value so allows values below 1
+	MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_I, &raw_Ki, 0.01, 9990, copy_and_scalePID_i);
+	MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_D, &raw_Kd, 1, 9990, copy_and_scalePID_d);
+    #ifdef PID_ADD_EXTRUSION_RATE
+	  MENU_ITEM_EDIT(float3, MSG_PID_C, &PID_PARAM(Kc,0), 1, 9990);
+    #endif//PID_ADD_EXTRUSION_RATE
+#ifdef PID_PARAMS_PER_EXTRUDER
+  #if EXTRUDERS > 1
+	  // set up temp variables - undo the default scaling
+	  pid_current_extruder = 0;
+	  raw_Ki = unscalePID_i(PID_PARAM(Ki,1));
+	  raw_Kd = unscalePID_d(PID_PARAM(Kd,1));
+	  MENU_ITEM_EDIT(float52, MSG_PID_P1, &PID_PARAM(Kp,1), 1, 9990);
+	  // i is typically a small value so allows values below 1
+	  MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_I1, &raw_Ki, 0.01, 9990, copy_and_scalePID_i);
+	  MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_D1, &raw_Kd, 1, 9990, copy_and_scalePID_d);
+      #ifdef PID_ADD_EXTRUSION_RATE
+	    MENU_ITEM_EDIT(float3, MSG_PID_C1, &PID_PARAM(Kc,1), 1, 9990);
+      #endif//PID_ADD_EXTRUSION_RATE
+  #endif//EXTRUDERS > 1
+  #if EXTRUDERS > 2
+	    // set up temp variables - undo the default scaling
+	    pid_current_extruder = 0;
+	    raw_Ki = unscalePID_i(PID_PARAM(Ki,2));
+	    raw_Kd = unscalePID_d(PID_PARAM(Kd,2));
+	    MENU_ITEM_EDIT(float52, MSG_PID_P2, &PID_PARAM(Kp,2), 1, 9990);
+	    // i is typically a small value so allows values below 1
+	    MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_I2, &raw_Ki, 0.01, 9990, copy_and_scalePID_i);
+	    MENU_ITEM_EDIT_CALLBACK(float52, MSG_PID_D2, &raw_Kd, 1, 9990, copy_and_scalePID_d);
+        #ifdef PID_ADD_EXTRUSION_RATE
+	      MENU_ITEM_EDIT(float3, MSG_PID_C2, &PID_PARAM(Kc,2), 1, 9990);
+        #endif//PID_ADD_EXTRUSION_RATE
+  #endif//EXTRUDERS > 2
+#endif // PID_PARAMS_PER_EXTRUDER
 #endif//PIDTEMP
     MENU_ITEM(submenu, MSG_PREHEAT_PLA_SETTINGS, lcd_control_temperature_preheat_pla_settings_menu);
     MENU_ITEM(submenu, MSG_PREHEAT_ABS_SETTINGS, lcd_control_temperature_preheat_abs_settings_menu);
@@ -1190,7 +1218,7 @@ void lcd_update()
         lcdDrawUpdate = 2;
         lcd_oldcardstatus = IS_SD_INSERTED;
         lcd_implementation_init( // to maybe revive the LCD if static electricity killed it.
-          #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT)
+          #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT) && !defined(DOGLCD)
             currentMenu == lcd_status_screen
           #endif
         );
@@ -1293,7 +1321,7 @@ void lcd_finishstatus() {
     }
   }
   lcd_status_message[LCD_WIDTH] = '\0';
-  #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT)
+  #if defined(LCD_PROGRESS_BAR) && defined(SDSUPPORT) && !defined(DOGLCD)
     #if PROGRESS_MSG_EXPIRE > 0
       messageTick =
     #endif
@@ -1704,7 +1732,7 @@ char *ftostr52(const float &x)
 void copy_and_scalePID_i()
 {
 #ifdef PIDTEMP
-  Ki = scalePID_i(raw_Ki);
+  PID_PARAM(Ki, pid_current_extruder) = scalePID_i(raw_Ki);
   updatePID();
 #endif
 }
@@ -1714,7 +1742,7 @@ void copy_and_scalePID_i()
 void copy_and_scalePID_d()
 {
 #ifdef PIDTEMP
-  Kd = scalePID_d(raw_Kd);
+	PID_PARAM(Kd, pid_current_extruder) = scalePID_d(raw_Kd);
   updatePID();
 #endif
 }

@@ -45,8 +45,12 @@
   #define MACHINE_NAME "Makibox"
   #define FIRMWARE_URL "https://github.com/MarlinFirmware/Marlin"
 #elif MB(SAV_MKI)
-  #define MACHINE_NAME "SAV MkI"
-  #define FIRMWARE_URL "https://github.com/fmalpartida/Marlin/tree/SAV-MkI-config"
+   #ifdef CUSTOM_MENDEL_NAME
+      #define MACHINE_NAME CUSTOM_MENDEL_NAME
+   #else
+      #define MACHINE_NAME "SAV MkI"
+   #endif // CUSTOM_MENDEL_NAME
+      #define FIRMWARE_URL "https://github.com/fmalpartida/Marlin/tree/SAV-MkI-config"
 #else
   #ifdef CUSTOM_MENDEL_NAME
     #define MACHINE_NAME CUSTOM_MENDEL_NAME

@@ -24,7 +24,7 @@
 #define MSG_PREHEAT_PLA012                  "Preheat PLA All"
 #define MSG_PREHEAT_PLA_BEDONLY             "Preheat PLA Bed"
 #define MSG_PREHEAT_PLA_SETTINGS            "Preheat PLA conf"
-#define MSG_PREHEAT_ABS                     "Preheat ABS"
+#define MSG_PREHEAT_ABS                     "Preheat FilaFlex"
 #define MSG_PREHEAT_ABS0                    "Preheat ABS 1"
 #define MSG_PREHEAT_ABS1                    "Preheat ABS 2"
 #define MSG_PREHEAT_ABS2                    "Preheat ABS 3"

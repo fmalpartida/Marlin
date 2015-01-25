@@ -27,12 +27,8 @@
 #define STRING_VERSION "v1.0.2"
 #define STRING_URL "reprap.org"
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
-<<<<<<< HEAD
 #define STRING_CONFIG_H_AUTHOR "(fm, SAV MkI-lewihe)" //Who made the changes.
-=======
 #define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
->>>>>>> FETCH_HEAD
-#define STRING_SPLASH STRING_VERSION " - " STRING_URL // will be shown during bootup
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
 // This allows the connection of wireless adapters (for instance) to non-default port pins.
@@ -321,7 +317,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define DISABLE_Y false
 #define DISABLE_Z false
 #define DISABLE_E false // For all extruders
-#define DISABLE_INACTIVE_EXTRUDER true //disable only inactive extruders and keep active extruder enabled
+#define DISABLE_INACTIVE_EXTRUDER false //disable only inactive extruders and keep active extruder enabled
 
 #define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
 #define INVERT_Y_DIR true    // for Mendel set to true, for Orca set to false

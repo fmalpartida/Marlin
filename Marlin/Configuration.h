@@ -293,12 +293,12 @@ your extruder heater takes 2 minutes to hit the target on heating.
 #endif
 
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
-const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Y_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool X_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool Y_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
@@ -320,10 +320,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define DISABLE_E true // For all extruders
 #define DISABLE_INACTIVE_EXTRUDER true //disable only inactive extruders and keep active extruder enabled
 
-#define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
+#define INVERT_X_DIR false    // for Mendel set to false, for Orca set to true
 #define INVERT_Y_DIR true    // for Mendel set to true, for Orca set to false
 #define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_E0_DIR true   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
@@ -349,7 +349,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 //============================= Bed Auto Leveling ===========================
 
-#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
 //#define Z_PROBE_REPEATABILITY_TEST  // If not commented out, Z-Probe Repeatability test will be included if Auto Bed Leveling is Enabled.
 
 #ifdef ENABLE_AUTO_BED_LEVELING
@@ -401,12 +401,12 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   // these are the offsets to the probe relative to the extruder tip (Hotend - Probe)
   #define X_PROBE_OFFSET_FROM_EXTRUDER 35
   #define Y_PROBE_OFFSET_FROM_EXTRUDER 0
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -1.0
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -0.35
 
-  #define Z_RAISE_BEFORE_HOMING 2       // (in mm) Raise Z before homing (G28) for Probe Clearance.
+  #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
 
-  #define XY_TRAVEL_SPEED 3000         // X and Y axis travel speed between probes, in mm/min
+  #define XY_TRAVEL_SPEED 8000         // X and Y axis travel speed between probes, in mm/min
 
   #define Z_RAISE_BEFORE_PROBING 2    //How much the extruder will be raised before traveling to the first probing point.
   #define Z_RAISE_BETWEEN_PROBINGS 3  //How much the extruder will be raised when traveling from between next probing points
@@ -482,12 +482,13 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // default settings
 
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.145, 79.58, 4000.00, 797.07494}  // default steps per unit for ultimaker
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 100}  // default steps per unit for ultimaker
-#define DEFAULT_MAX_FEEDRATE          {400, 400, 5, 25}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1000,1000,100,3000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
+//#define DEFAULT_AXIS_STEPS_PER_UNIT   {159.06/2, 158.89/2, 8000.00, 797.07494}  // default steps per unit for ultimaker (vinciBot)
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {160, 160, 8000, 1550}  // default steps per unit for ultimaker (T800)
+#define DEFAULT_MAX_FEEDRATE          {400, 400, 1, 45}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {3000,3000,30,5000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  1500   // X, Y, Z and E max acceleration in mm/s^2 for retracts
+#define DEFAULT_RETRACT_ACCELERATION  2000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
 
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
@@ -669,7 +670,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // 2 wire Non-latching LCD SR from:
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection 
 //[FMC]#define SAV_3DLCD
-//#define SAV_3DLCD
+#define SAV_3DLCD
 #ifdef SAV_3DLCD
    #define SR_LCD_2W_NL    // Non latching 2 wire shiftregister
    #define NEWPANEL

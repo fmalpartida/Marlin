@@ -1150,20 +1150,18 @@ static void retract_z_probe() {
 }
 
 /// Probe bed height at position (x,y), returns the measured z value
-static float probe_pt(float x, float y, float z_before, int retract_action=0) {
+static float probe_pt(float x, float y, float z_before) {
   // move to right place
   do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], z_before);
   do_blocking_move_to(x - X_PROBE_OFFSET_FROM_EXTRUDER, y - Y_PROBE_OFFSET_FROM_EXTRUDER, current_position[Z_AXIS]);
 
 #ifndef Z_PROBE_SLED
-   if ((retract_action==0) || (retract_action==1)) 
-     engage_z_probe();   // Engage Z Servo endstop if available
+  engage_z_probe();   // Engage Z Servo endstop if available
 #endif // Z_PROBE_SLED
   run_z_probe();
   float measured_z = current_position[Z_AXIS];
 #ifndef Z_PROBE_SLED
-  if ((retract_action==0) || (retract_action==3)) 
-     retract_z_probe();
+  retract_z_probe();
 #endif // Z_PROBE_SLED
 
   SERIAL_PROTOCOLPGM(MSG_BED);
@@ -1283,32 +1281,28 @@ void refresh_cmd_timeout(void)
       feedrate=retract_feedrate*60;
       retracted[active_extruder]=true;
       prepare_move();
-      if(retract_zlift > 0.01) {
-         current_position[Z_AXIS]-=retract_zlift;
+      current_position[Z_AXIS]-=retract_zlift;
 #ifdef DELTA
-         calculate_delta(current_position); // change cartesian kinematic to  delta kinematic;
-         plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
+      calculate_delta(current_position); // change cartesian kinematic to  delta kinematic;
+      plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
 #else
-         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 #endif
-         prepare_move();
-      }
+      prepare_move();
       feedrate = oldFeedrate;
     } else if(!retracting && retracted[active_extruder]) {
       destination[X_AXIS]=current_position[X_AXIS];
       destination[Y_AXIS]=current_position[Y_AXIS];
       destination[Z_AXIS]=current_position[Z_AXIS];
       destination[E_AXIS]=current_position[E_AXIS];
-      if(retract_zlift > 0.01) {
-         current_position[Z_AXIS]+=retract_zlift;
+      current_position[Z_AXIS]+=retract_zlift;
 #ifdef DELTA
-         calculate_delta(current_position); // change cartesian kinematic  to  delta kinematic;
-         plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
+      calculate_delta(current_position); // change cartesian kinematic  to  delta kinematic;
+      plan_set_position(delta[X_AXIS], delta[Y_AXIS], delta[Z_AXIS], current_position[E_AXIS]);
 #else
-         plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
+      plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 #endif
-         //prepare_move();
-      }
+      //prepare_move();
       if (swapretract) {
         current_position[E_AXIS]-=(retract_length_swap+retract_recover_length_swap)/volumetric_multiplier[active_extruder]; 
       } else {
@@ -1752,22 +1746,7 @@ void process_commands()
                   z_before = current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS;
                 }
 
-                float measured_z;
-                //Enhanced G29 - Do not retract servo between probes
-                if (code_seen('E') || code_seen('e') )
-                   {
-                   if ((yProbe==FRONT_PROBE_BED_POSITION) && (xCount==0))
-                       {
-                        measured_z = probe_pt(xProbe, yProbe, z_before,1);
-                       } else if ((yProbe==FRONT_PROBE_BED_POSITION + (yGridSpacing * (AUTO_BED_LEVELING_GRID_POINTS-1))) && (xCount == AUTO_BED_LEVELING_GRID_POINTS-1))
-                         {
-                         measured_z = probe_pt(xProbe, yProbe, z_before,3);
-                         } else {
-                           measured_z = probe_pt(xProbe, yProbe, z_before,2);
-                         }
-                    } else {
-                    measured_z = probe_pt(xProbe, yProbe, z_before);
-                    }
+                float measured_z = probe_pt(xProbe, yProbe, z_before);
 
                 eqnBVector[probePointCounter] = measured_z;
 
@@ -1798,30 +1777,15 @@ void process_commands()
 #else // AUTO_BED_LEVELING_GRID not defined
 
             // Probe at 3 arbitrary points
-            // Enhanced G29
-            
-            float z_at_pt_1,z_at_pt_2,z_at_pt_3;
-            
-            if (code_seen('E') || code_seen('e') )
-               {
-               // probe 1               
-                z_at_pt_1 = probe_pt(ABL_PROBE_PT_1_X, ABL_PROBE_PT_1_Y, Z_RAISE_BEFORE_PROBING,1);
-               // probe 2
-                z_at_pt_2 = probe_pt(ABL_PROBE_PT_2_X, ABL_PROBE_PT_2_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS,2);
-               // probe 3
-                z_at_pt_3 = probe_pt(ABL_PROBE_PT_3_X, ABL_PROBE_PT_3_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS,3); 
-               }
-               else 
-               {
-	        // probe 1
-	        float z_at_pt_1 = probe_pt(ABL_PROBE_PT_1_X, ABL_PROBE_PT_1_Y, Z_RAISE_BEFORE_PROBING);
+            // probe 1
+            float z_at_pt_1 = probe_pt(ABL_PROBE_PT_1_X, ABL_PROBE_PT_1_Y, Z_RAISE_BEFORE_PROBING);
 
-                // probe 2
-                float z_at_pt_2 = probe_pt(ABL_PROBE_PT_2_X, ABL_PROBE_PT_2_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
+            // probe 2
+            float z_at_pt_2 = probe_pt(ABL_PROBE_PT_2_X, ABL_PROBE_PT_2_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
 
-                // probe 3
-                float z_at_pt_3 = probe_pt(ABL_PROBE_PT_3_X, ABL_PROBE_PT_3_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
-               }
+            // probe 3
+            float z_at_pt_3 = probe_pt(ABL_PROBE_PT_3_X, ABL_PROBE_PT_3_Y, current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
+
             clean_up_after_endstop_move();
 
             set_bed_level_equation_3pts(z_at_pt_1, z_at_pt_2, z_at_pt_3);
@@ -3228,52 +3192,30 @@ Sigma_Exit:
     #endif // M300
 
     #ifdef PIDTEMP
-	case 301: // M301
-	{
+    case 301: // M301
+      {
+        if(code_seen('P')) Kp = code_value();
+        if(code_seen('I')) Ki = scalePID_i(code_value());
+        if(code_seen('D')) Kd = scalePID_d(code_value());
 
-		// multi-extruder PID patch: M301 updates or prints a single extruder's PID values
-		// default behaviour (omitting E parameter) is to update for extruder 0 only
-		int e = 0; // extruder being updated
-		if (code_seen('E'))
-		{
-			e = (int)code_value();
-		}
-		if (e < EXTRUDERS) // catch bad input value
-		{
+        #ifdef PID_ADD_EXTRUSION_RATE
+        if(code_seen('C')) Kc = code_value();
+        #endif
 
-			if (code_seen('P')) PID_PARAM(Kp,e) = code_value();
-			if (code_seen('I')) PID_PARAM(Ki,e) = scalePID_i(code_value());
-			if (code_seen('D')) PID_PARAM(Kd,e) = scalePID_d(code_value());
-			#ifdef PID_ADD_EXTRUSION_RATE
-			if (code_seen('C')) PID_PARAM(Kc,e) = code_value();
-			#endif			
-
-			updatePID();
-			SERIAL_PROTOCOL(MSG_OK);
-            #ifdef PID_PARAMS_PER_EXTRUDER
-			  SERIAL_PROTOCOL(" e:"); // specify extruder in serial output
-			  SERIAL_PROTOCOL(e);
-            #endif // PID_PARAMS_PER_EXTRUDER
-			SERIAL_PROTOCOL(" p:");
-			SERIAL_PROTOCOL(PID_PARAM(Kp,e));
-			SERIAL_PROTOCOL(" i:");
-			SERIAL_PROTOCOL(unscalePID_i(PID_PARAM(Ki,e)));
-			SERIAL_PROTOCOL(" d:");
-			SERIAL_PROTOCOL(unscalePID_d(PID_PARAM(Kd,e)));
-			#ifdef PID_ADD_EXTRUSION_RATE
-			SERIAL_PROTOCOL(" c:");
-			//Kc does not have scaling applied above, or in resetting defaults
-			SERIAL_PROTOCOL(PID_PARAM(Kc,e));
-			#endif
-			SERIAL_PROTOCOLLN("");
-		
-		}
-		else
-		{
-			SERIAL_ECHO_START;
-			SERIAL_ECHOLN(MSG_INVALID_EXTRUDER);
-		}
-
+        updatePID();
+        SERIAL_PROTOCOL(MSG_OK);
+        SERIAL_PROTOCOL(" p:");
+        SERIAL_PROTOCOL(Kp);
+        SERIAL_PROTOCOL(" i:");
+        SERIAL_PROTOCOL(unscalePID_i(Ki));
+        SERIAL_PROTOCOL(" d:");
+        SERIAL_PROTOCOL(unscalePID_d(Kd));
+        #ifdef PID_ADD_EXTRUSION_RATE
+        SERIAL_PROTOCOL(" c:");
+        //Kc does not have scaling applied above, or in resetting defaults
+        SERIAL_PROTOCOL(Kc);
+        #endif
+        SERIAL_PROTOCOLLN("");
       }
       break;
     #endif //PIDTEMP

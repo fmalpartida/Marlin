@@ -254,7 +254,6 @@ float extruder_offset[NUM_EXTRUDER_OFFSETS][EXTRUDERS] = {
   #else
     0
   #endif
-  ,
   #if defined(EXTRUDER_OFFSET_Y)
     EXTRUDER_OFFSET_Y
   #else

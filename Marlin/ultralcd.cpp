@@ -461,8 +461,8 @@ static void lcd_tune_menu() {
   #if TEMP_SENSOR_BED != 0
     MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
   #endif
-    MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
-    MENU_ITEM_EDIT(int3, MSG_FLOW, &extrudemultiply, 10, 999);
+    //MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+    //MENU_ITEM_EDIT(int3, MSG_FLOW, &extrudemultiply, 10, 999);
     MENU_ITEM_EDIT(int3, MSG_FLOW MSG_F0, &extruder_multiply[0], 10, 999);
   #if TEMP_SENSOR_1 != 0
     MENU_ITEM_EDIT(int3, MSG_FLOW MSG_F1, &extruder_multiply[1], 10, 999);
@@ -482,7 +482,7 @@ static void lcd_tune_menu() {
     MENU_ITEM(submenu, MSG_BABYSTEP_Z, lcd_babystep_z);
   #endif
   #ifdef FILAMENTCHANGEENABLE
-     MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
+     //MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
   #endif
   END_MENU();
 }
@@ -593,8 +593,8 @@ static void lcd_prepare_menu() {
     #endif
   #endif
   MENU_ITEM(gcode, MSG_DISABLE_STEPPERS, PSTR("M84"));
-  MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
-  MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets);
+  //MENU_ITEM(gcode, MSG_AUTO_HOME, PSTR("G28"));
+  //MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets);
   //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
   #if TEMP_SENSOR_0 != 0
     #if TEMP_SENSOR_1 != 0 || TEMP_SENSOR_2 != 0 || TEMP_SENSOR_BED != 0
@@ -605,7 +605,7 @@ static void lcd_prepare_menu() {
       MENU_ITEM(function, MSG_PREHEAT_ABS, lcd_preheat_abs0);
     #endif
   #endif
-  MENU_ITEM(function, MSG_COOLDOWN, lcd_cooldown);
+  //MENU_ITEM(function, MSG_COOLDOWN, lcd_cooldown);
   #if defined(POWER_SUPPLY) && POWER_SUPPLY > 0 && defined(PS_ON_PIN) && PS_ON_PIN > -1
     if (powersupply) {
       MENU_ITEM(gcode, MSG_SWITCH_PS_OFF, PSTR("M81"));
@@ -712,22 +712,22 @@ static void lcd_move_menu() {
 static void lcd_control_menu() {
   START_MENU();
   MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
-  MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
-  MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
-  MENU_ITEM(submenu, MSG_VOLUMETRIC, lcd_control_volumetric_menu);
+  //MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
+  //MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
+  //MENU_ITEM(submenu, MSG_VOLUMETRIC, lcd_control_volumetric_menu);
 
   #ifdef DOGLCD
     //MENU_ITEM_EDIT(int3, MSG_CONTRAST, &lcd_contrast, 0, 63);
-    MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
+    //MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
   #endif
   #ifdef FWRETRACT
     MENU_ITEM(submenu, MSG_RETRACT, lcd_control_retract_menu);
   #endif
   #ifdef EEPROM_SETTINGS
-    MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
-    MENU_ITEM(function, MSG_LOAD_EPROM, Config_RetrieveSettings);
+    //MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
+    //MENU_ITEM(function, MSG_LOAD_EPROM, Config_RetrieveSettings);
   #endif
-  MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
+  //MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
   END_MENU();
 }
 

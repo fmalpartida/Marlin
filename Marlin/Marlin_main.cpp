@@ -532,9 +532,9 @@ void setup_killpin()
 // Set home pin
 void setup_homepin(void)
 {
-#if defined(HOME_PIN) && HOME_PIN > -1
+#if defined(HOME_PIN) &&  HOME_PIN > -1
    SET_INPUT(HOME_PIN);
-   WRITE(HOME_PIN,HIGH);
+   WRITE(HOME_PIN, HIGH);
 #endif
 }
 
@@ -5275,7 +5275,7 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) //default argument s
    const int KILL_DELAY = 10000;
 #endif
 
-#if defined(HOME_PIN) && HOME_PIN > -1
+#if defined(HOME_PIN) &&  HOME_PIN > -1
    static int homeDebounceCount = 0;   // poor man's debouncing count
    const int HOME_DEBOUNCE_DELAY = 10000;
 #endif
@@ -5332,7 +5332,7 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) //default argument s
     }
   #endif
 
-#if defined(HOME_PIN) && HOME_PIN > -1
+#if defined(HOME_PIN) &&  HOME_PIN > -1
     // Check to see if we have to home, use poor man's debouncer
     // ---------------------------------------------------------
     if ( 0 == READ(HOME_PIN) )

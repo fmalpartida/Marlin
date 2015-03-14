@@ -295,7 +295,6 @@ your extruder heater takes 2 minutes to hit the target on heating.
 //============================= Mechanical Settings =========================
 //===========================================================================
 
-<<<<<<< HEAD
 // Uncomment the following line to enable CoreXY kinematics
  #define COREXY
 
@@ -354,7 +353,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // Travel limits after homing
 #define X_MAX_POS 150
 #define X_MIN_POS 0
-#define Y_MAX_POS 140
+#define Y_MAX_POS 150
 #define Y_MIN_POS 0
 #define Z_MAX_POS 180
 #define Z_MIN_POS 0
@@ -391,10 +390,10 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   #ifdef AUTO_BED_LEVELING_GRID
 
     // set the rectangle in which to probe
-    #define LEFT_PROBE_BED_POSITION 1
-    #define RIGHT_PROBE_BED_POSITION 120
+    #define LEFT_PROBE_BED_POSITION 10
+    #define RIGHT_PROBE_BED_POSITION 110
     #define BACK_PROBE_BED_POSITION 135
-    #define FRONT_PROBE_BED_POSITION 1
+    #define FRONT_PROBE_BED_POSITION 10
     
     #define MIN_PROBE_EDGE 10 // The probe square sides can be no smaller than this
 
@@ -481,7 +480,6 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 // default settings
 
-<<<<<<< HEAD
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.145, 79.58, 4000.00, 797.07494}  // default steps per unit for ultimaker
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 100}  // default steps per unit for ultimaker
 #define DEFAULT_MAX_FEEDRATE          {400, 400, 5, 25}    // (mm/sec)

@@ -8,7 +8,7 @@
 //===========================================================================
 /*
 Here are some standard links for getting your machine calibrated:
- * http://reprap.org/wiki/Calibration 
+ * http://reprap.org/wiki/Calibration
  * http://youtu.be/wAL9d7FgInk
  * http://calculator.josefprusa.cz
  * http://reprap.org/wiki/Triffid_Hunter%27s_Calibration_Guide
@@ -118,10 +118,15 @@ Here are some standard links for getting your machine calibrated:
 // 1010 is Pt1000 with 1k pullup (non standard)
 // 147 is Pt100 with 4k7 pullup
 // 110 is Pt100 with 1k pullup (non standard)
+// 998 and 999 are Dummy Tables. They will ALWAYS read 25°C or the temperature defined below. 
+//     Use it for Testing or Development purposes. NEVER for production machine.
+//     #define DUMMY_THERMISTOR_998_VALUE 25
+//     #define DUMMY_THERMISTOR_999_VALUE 100
 
-#define TEMP_SENSOR_0 5
+#define TEMP_SENSOR_0 1
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
+#define TEMP_SENSOR_3 0
 #define TEMP_SENSOR_BED 0
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
@@ -139,6 +144,7 @@ Here are some standard links for getting your machine calibrated:
 #define HEATER_0_MINTEMP 5
 #define HEATER_1_MINTEMP 5
 #define HEATER_2_MINTEMP 5
+#define HEATER_3_MINTEMP 5
 #define BED_MINTEMP 5
 
 // When temperature exceeds max temp, your heater will be switched off.
@@ -147,6 +153,7 @@ Here are some standard links for getting your machine calibrated:
 #define HEATER_0_MAXTEMP 250
 #define HEATER_1_MAXTEMP 250
 #define HEATER_2_MAXTEMP 250
+#define HEATER_3_MAXTEMP 275
 #define BED_MAXTEMP 150
 
 // If your bed has low resistance e.g. .6 ohm and throws the fuse you can duty cycle it to reduce the
@@ -288,32 +295,22 @@ your extruder heater takes 2 minutes to hit the target on heating.
 //============================= Mechanical Settings =========================
 //===========================================================================
 
+<<<<<<< HEAD
 // Uncomment the following line to enable CoreXY kinematics
  #define COREXY
 
-// coarse Endstop Settings
-#define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
+// Enable this option for Toshiba steppers
+// #define CONFIG_STEPPERS_TOSHIBA
 
-#ifndef ENDSTOPPULLUPS
-  // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
-  // #define ENDSTOPPULLUP_XMAX
-  // #define ENDSTOPPULLUP_YMAX
-  // #define ENDSTOPPULLUP_ZMAX
-  // #define ENDSTOPPULLUP_XMIN
-  // #define ENDSTOPPULLUP_YMIN
-  // #define ENDSTOPPULLUP_ZMIN
-#endif
+// The pullups are needed if you directly connect a mechanical endstop between the signal and ground pins.
+#define ENDSTOPPULLUP_XMAX
+#define ENDSTOPPULLUP_YMAX
+#define ENDSTOPPULLUP_ZMAX
+#define ENDSTOPPULLUP_XMIN
+#define ENDSTOPPULLUP_YMIN
+#define ENDSTOPPULLUP_ZMIN
 
-#ifdef ENDSTOPPULLUPS
-  #define ENDSTOPPULLUP_XMAX
-  #define ENDSTOPPULLUP_YMAX
-  #define ENDSTOPPULLUP_ZMAX
-  #define ENDSTOPPULLUP_XMIN
-  #define ENDSTOPPULLUP_YMIN
-  #define ENDSTOPPULLUP_ZMIN
-#endif
-
-// The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
+// Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
 const bool X_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
@@ -322,11 +319,6 @@ const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 //#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
-
-// Disable max endstops for compatibility with endstop checking routine
-#if defined(COREXY) && !defined(DISABLE_MAX_ENDSTOPS)
-  #define DISABLE_MAX_ENDSTOPS
-#endif
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
 #define X_ENABLE_ON 0
@@ -341,12 +333,14 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define DISABLE_E false // For all extruders
 #define DISABLE_INACTIVE_EXTRUDER false //disable only inactive extruders and keep active extruder enabled
 
-#define INVERT_X_DIR true    // for Mendel set to false, for Orca set to true
-#define INVERT_Y_DIR true    // for Mendel set to true, for Orca set to false
-#define INVERT_Z_DIR true     // for Mendel set to false, for Orca set to true
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
-#define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+// If you motor turns to wrong direction, you can invert it here:
+#define INVERT_X_DIR true
+#define INVERT_Y_DIR true
+#define INVERT_Z_DIR true
+#define INVERT_E0_DIR false
+#define INVERT_E1_DIR false
+#define INVERT_E2_DIR false
+#define INVERT_E3_DIR false
 
 // ENDSTOP SETTINGS:
 // Sets direction of endstops when homing; 1=MAX, -1=MIN
@@ -379,23 +373,21 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 #ifdef ENABLE_AUTO_BED_LEVELING
 
-// There are 2 different ways to pick the X and Y locations to probe:
+  // There are 2 different ways to specify probing locations
+  //
+  // - "grid" mode
+  //   Probe several points in a rectangular grid.
+  //   You specify the rectangle and the density of sample points.
+  //   This mode is preferred because there are more measurements.
+  //
+  // - "3-point" mode
+  //   Probe 3 arbitrary points on the bed (that aren't colinear)
+  //   You specify the XY coordinates of all 3 points.
 
-//  - "grid" mode
-//    Probe every point in a rectangular grid
-//    You must specify the rectangle, and the density of sample points
-//    This mode is preferred because there are more measurements.
-//    It used to be called ACCURATE_BED_LEVELING but "grid" is more descriptive
-
-//  - "3-point" mode
-//    Probe 3 arbitrary points on the bed (that aren't colinear)
-//    You must specify the X & Y coordinates of all 3 points
-
+  // Enable this to sample the bed in a grid (least squares solution)
+  // Note: this feature generates 10KB extra code size
   #define AUTO_BED_LEVELING_GRID
-  // with AUTO_BED_LEVELING_GRID, the bed is sampled in a
-  // AUTO_BED_LEVELING_GRID_POINTSxAUTO_BED_LEVELING_GRID_POINTS grid
-  // and least squares solution is calculated
-  // Note: this feature occupies 10'206 byte
+
   #ifdef AUTO_BED_LEVELING_GRID
 
     // set the rectangle in which to probe
@@ -403,27 +395,30 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
     #define RIGHT_PROBE_BED_POSITION 120
     #define BACK_PROBE_BED_POSITION 135
     #define FRONT_PROBE_BED_POSITION 1
+    
+    #define MIN_PROBE_EDGE 10 // The probe square sides can be no smaller than this
 
-     // set the number of grid points per dimension
-     // I wouldn't see a reason to go above 3 (=9 probing points on the bed)
+    // Set the number of grid points per dimension
+    // You probably don't need more than 3 (squared=9)
     #define AUTO_BED_LEVELING_GRID_POINTS 2
 
 
-  #else  // not AUTO_BED_LEVELING_GRID
-    // with no grid, just probe 3 arbitrary points.  A simple cross-product
-    // is used to esimate the plane of the print bed
+  #else  // !AUTO_BED_LEVELING_GRID
 
-      #define ABL_PROBE_PT_1_X 36
-      #define ABL_PROBE_PT_1_Y 36
-      #define ABL_PROBE_PT_2_X 150
-      #define ABL_PROBE_PT_2_Y 70
-      #define ABL_PROBE_PT_3_X 75
-      #define ABL_PROBE_PT_3_Y 135
+      // Arbitrary points to probe. A simple cross-product
+      // is used to estimate the plane of the bed.
+      #define ABL_PROBE_PT_1_X 15
+      #define ABL_PROBE_PT_1_Y 180
+      #define ABL_PROBE_PT_2_X 15
+      #define ABL_PROBE_PT_2_Y 20
+      #define ABL_PROBE_PT_3_X 170
+      #define ABL_PROBE_PT_3_Y 20
 
   #endif // AUTO_BED_LEVELING_GRID
 
 
-  // these are the offsets to the probe relative to the extruder tip (Hotend - Probe)
+  // Offsets to the probe relative to the extruder tip (Hotend - Probe)
+  // X and Y offsets must be integers
   #define X_PROBE_OFFSET_FROM_EXTRUDER -35
   #define Y_PROBE_OFFSET_FROM_EXTRUDER 0
   #define Z_PROBE_OFFSET_FROM_EXTRUDER -0.15
@@ -436,6 +431,9 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   #define Z_RAISE_BEFORE_PROBING 2    //How much the extruder will be raised before traveling to the first probing point.
   #define Z_RAISE_BETWEEN_PROBINGS 3  //How much the extruder will be raised when traveling from between next probing points
 
+//   #define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" //These commands will be executed in the end of G29 routine.
+                                                                            //Useful to retract a deployable probe.
+                                                                           
   //#define Z_PROBE_SLED // turn on if you have a z-probe mounted on a sled like those designed by Charles Bell
   //#define SLED_DOCKING_OFFSET 5 // the extra distance the X axis must travel to pickup the sled. 0 should be fine but you can push it further if you'd like.
 
@@ -463,29 +461,6 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
   #endif
 
-  #ifdef AUTO_BED_LEVELING_GRID	// Check if Probe_Offset * Grid Points is greater than Probing Range
-    #if X_PROBE_OFFSET_FROM_EXTRUDER < 0
-      #if (-(X_PROBE_OFFSET_FROM_EXTRUDER * (AUTO_BED_LEVELING_GRID_POINTS-1)) >= (RIGHT_PROBE_BED_POSITION - LEFT_PROBE_BED_POSITION))
-	     #error "The X axis probing range is not enough to fit all the points defined in AUTO_BED_LEVELING_GRID_POINTS"
-	  #endif
-	#else
-      #if ((X_PROBE_OFFSET_FROM_EXTRUDER * (AUTO_BED_LEVELING_GRID_POINTS-1)) >= (RIGHT_PROBE_BED_POSITION - LEFT_PROBE_BED_POSITION))
-	     #error "The X axis probing range is not enough to fit all the points defined in AUTO_BED_LEVELING_GRID_POINTS"
-	  #endif
-	#endif
-    #if Y_PROBE_OFFSET_FROM_EXTRUDER < 0
-      #if (-(Y_PROBE_OFFSET_FROM_EXTRUDER * (AUTO_BED_LEVELING_GRID_POINTS-1)) >= (BACK_PROBE_BED_POSITION - FRONT_PROBE_BED_POSITION))
-	     #error "The Y axis probing range is not enough to fit all the points defined in AUTO_BED_LEVELING_GRID_POINTS"
-	  #endif
-	#else
-      #if ((Y_PROBE_OFFSET_FROM_EXTRUDER * (AUTO_BED_LEVELING_GRID_POINTS-1)) >= (BACK_PROBE_BED_POSITION - FRONT_PROBE_BED_POSITION))
-	     #error "The Y axis probing range is not enough to fit all the points defined in AUTO_BED_LEVELING_GRID_POINTS"
-	  #endif
-	#endif
-
-	
-  #endif
-  
 #endif // ENABLE_AUTO_BED_LEVELING
 
 
@@ -506,6 +481,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 // default settings
 
+<<<<<<< HEAD
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.145, 79.58, 4000.00, 797.07494}  // default steps per unit for ultimaker
 #define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 100}  // default steps per unit for ultimaker
 #define DEFAULT_MAX_FEEDRATE          {400, 400, 5, 25}    // (mm/sec)
@@ -513,6 +489,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 #define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  1500   // X, Y, Z and E max acceleration in mm/s^2 for retracts
+#define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration in mm/s^2 for travel (non printing) moves
 
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
@@ -555,13 +532,19 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // Preheat Constants
 #define PLA_PREHEAT_HOTEND_TEMP 200
 #define PLA_PREHEAT_HPB_TEMP 50
-#define PLA_PREHEAT_FAN_SPEED 50   // Insert Value between 0 and 255
+#define PLA_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
 
 #define ABS_PREHEAT_HOTEND_TEMP 230
 #define ABS_PREHEAT_HPB_TEMP 0
 #define ABS_PREHEAT_FAN_SPEED 50   // Insert Value between 0 and 255
 
-//LCD and SD support
+//==============================LCD and SD support=============================
+
+// Define your display language below. Replace (en) with your language code and uncomment.
+// en, pl, fr, de, es, ru, it, pt, pt-br, fi, an, nl, ca, eu
+// See also language.h
+//#define LANGUAGE_INCLUDE GENERATE_LANGUAGE_INCLUDE(en)
+
 // Character based displays can have different extended charsets.
 #define DISPLAY_CHARSET_HD44780_JAPAN     // "ääööüüß23°"
 //#define DISPLAY_CHARSET_HD44780_WESTERN // "ÄäÖöÜüß²³°" if you see a '~' instead of a 'arrow_right' at the right of submenuitems - this is the right one.
@@ -579,9 +562,19 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000	// this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
 
+// PanelOne from T3P3 (via RAMPS 1.4 AUX2/AUX3)
+// http://reprap.org/wiki/PanelOne
+//#define PANEL_ONE
+
 // The MaKr3d Makr-Panel with graphic controller and SD support
 // http://reprap.org/wiki/MaKr3d_MaKrPanel
 //#define MAKRPANEL
+
+// The Panucatt Devices Viki 2.0 and mini Viki with Graphic LCD
+// http://panucatt.com
+// ==> REMEMBER TO INSTALL U8glib to your ARDUINO library folder: http://code.google.com/p/u8glib/wiki/u8glib
+//#define VIKI2
+//#define miniVIKI
 
 // The RepRapDiscount Smart Controller (white PCB)
 // http://reprap.org/wiki/RepRapDiscount_Smart_Controller
@@ -614,6 +607,26 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
  #define ULTIPANEL
  #define NEWPANEL
  #define DEFAULT_LCD_CONTRAST 17
+#endif
+
+#if defined(miniVIKI) || defined(VIKI2)
+ #define ULTRA_LCD  //general LCD support, also 16x2
+ #define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
+ #define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
+ 
+  #ifdef miniVIKI
+   #define DEFAULT_LCD_CONTRAST 95
+  #else
+   #define DEFAULT_LCD_CONTRAST 40
+  #endif
+  
+ #define ENCODER_PULSES_PER_STEP 4
+ #define ENCODER_STEPS_PER_MENU_ITEM 1
+#endif
+
+#if defined (PANEL_ONE)
+ #define SDSUPPORT
+ #define ULTIMAKERCONTROLLER
 #endif
 
 #if defined (REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)

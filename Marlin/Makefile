@@ -36,12 +36,11 @@
 # Note that all settings are set with ?=, this means you can override them
 # from the commandline with "make HARDWARE_MOTHERBOARD=71" for example
 
-# This defined the board you are compiling for (see boards.h for the options)
+# This defined the board you are compiling for (see Configuration.h for the options)
 HARDWARE_MOTHERBOARD ?= 11
 
 # Arduino source install directory, and version number
-# On most linuxes this will be /usr/share/arduino
-ARDUINO_INSTALL_DIR  ?= /usr/share/arduino
+ARDUINO_INSTALL_DIR  ?= /Applications/Arduino.app/Contents/Resources/Java
 ARDUINO_VERSION      ?= 105
 
 # You can optionally set a path to the avr-gcc tools. Requires a trailing slash. (ex: /usr/local/avr-gcc/bin)
@@ -49,12 +48,10 @@ AVR_TOOLS_PATH ?=
 
 #Programmer configuration
 UPLOAD_RATE        ?= 115200
-AVRDUDE_PROGRAMMER ?= wiring
-# on most linuxes this will be /dev/ttyACM0 or /dev/ttyACM1 
+AVRDUDE_PROGRAMMER ?= arduino
 UPLOAD_PORT        ?= /dev/arduino
 
-#Directory used to build files in, contains all the build files, from object files to the final hex file
-#on linux it is best to put an absolute path like /home/username/tmp .
+#Directory used to build files in, contains all the build files, from object files to the final hex file.
 BUILD_DIR          ?= applet
 
 # This defines whether Liquid_TWI2 support will be built
@@ -160,11 +157,6 @@ else ifeq  ($(HARDWARE_MOTHERBOARD),9)
 HARDWARE_VARIANT ?= Sanguino
 MCU              ?= atmega644p
 
-#Gen3 Monolithic Electronics
-else ifeq  ($(HARDWARE_MOTHERBOARD),22)
-HARDWARE_VARIANT ?= Sanguino
-MCU              ?= atmega644p
-
 #Megatronics
 else ifeq  ($(HARDWARE_MOTHERBOARD),70)
 HARDWARE_VARIANT ?= arduino
@@ -224,7 +216,7 @@ TARGET = $(notdir $(CURDIR))
 VPATH = .
 VPATH += $(BUILD_DIR)
 VPATH += $(HARDWARE_SRC)
-ifeq ($(HARDWARE_VARIANT), $(filter $(HARDWARE_VARIANT),arduino Teensy))
+ifeq ($(HARDWARE_VARIANT), arduino)
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/LiquidCrystal
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/SPI
 ifeq ($(LIQUID_TWI2), 1)
@@ -354,15 +346,15 @@ LDFLAGS = -lm
 
 # Programming support using avrdude. Settings and variables.
 AVRDUDE_PORT = $(UPLOAD_PORT)
-AVRDUDE_WRITE_FLASH = -Uflash:w:$(BUILD_DIR)/$(TARGET).hex:i
+AVRDUDE_WRITE_FLASH = -U flash:w:$(BUILD_DIR)/$(TARGET).hex:i
 ifeq ($(shell uname -s), Linux)
 AVRDUDE_CONF = $(ARDUINO_INSTALL_DIR)/hardware/tools/avrdude.conf
 else
 AVRDUDE_CONF = $(ARDUINO_INSTALL_DIR)/hardware/tools/avr/etc/avrdude.conf
 endif
-AVRDUDE_FLAGS = -q -q -D -C$(AVRDUDE_CONF) \
-	-p$(MCU) -P$(AVRDUDE_PORT) -c$(AVRDUDE_PROGRAMMER) \
-	-b$(UPLOAD_RATE)
+AVRDUDE_FLAGS = -D -C $(AVRDUDE_CONF) \
+	-p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER) \
+	-b $(UPLOAD_RATE)
 
 # Define all object files.
 OBJ = ${patsubst %.c, $(BUILD_DIR)/%.o, ${SRC}}

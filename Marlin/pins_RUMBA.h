@@ -6,6 +6,10 @@
   #error Oops!  Make sure you have 'Arduino Mega' selected from the 'Tools -> Boards' menu.
 #endif
 
+#if EXTRUDERS > 3
+  #error RUMBA supports up to 3 extruders. Comment this line to keep going.
+#endif
+
 #define X_STEP_PIN         17
 #define X_DIR_PIN          16
 #define X_ENABLE_PIN       48
@@ -39,7 +43,7 @@
 #define LED_PIN            13
 
 #define FAN_PIN            7
-//additional FAN1 PIN (e.g. useful for electronics fan or light on/off) on PIN 8
+#define FAN1_PIN           8
 
 #define PS_ON_PIN          45
 #define KILL_PIN           46
@@ -108,3 +112,6 @@
 #define BTN_EN1            11
 #define BTN_EN2            12
 #define BTN_ENC            43
+
+#define SERVO0_PIN         5
+

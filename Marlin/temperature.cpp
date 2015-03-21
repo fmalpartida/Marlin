@@ -535,17 +535,17 @@ inline void _temp_error(int e, const char *msg1, const char *msg2) {
 
 void max_temp_error(uint8_t e) {
   disable_heater();
-  _temp_error(e, MSG_MAXTEMP_EXTRUDER_OFF, MSG_ERR_MAXTEMP);
+  _temp_error(e, PSTR(MSG_MAXTEMP_EXTRUDER_OFF), PSTR(MSG_ERR_MAXTEMP));
 }
 void min_temp_error(uint8_t e) {
   disable_heater();
-  _temp_error(e, MSG_MINTEMP_EXTRUDER_OFF, MSG_ERR_MINTEMP);
+  _temp_error(e, PSTR(MSG_MINTEMP_EXTRUDER_OFF), PSTR(MSG_ERR_MINTEMP));
 }
 void bed_max_temp_error(void) {
   #if HAS_HEATER_BED
     WRITE_HEATER_BED(0);
   #endif
-  _temp_error(-1, MSG_MAXTEMP_BED_OFF, MSG_ERR_MAXTEMP_BED);
+  _temp_error(-1, PSTR(MSG_MAXTEMP_BED_OFF), PSTR(MSG_ERR_MAXTEMP_BED));
 }
 
 float get_pid_output(int e) {
@@ -635,6 +635,21 @@ float get_pid_output(int e) {
     #else
       pid_output = constrain(target_temperature_bed, 0, MAX_BED_POWER);
     #endif // PID_OPENLOOP
+
+    #ifdef PID_BED_DEBUG
+      SERIAL_ECHO_START;
+      SERIAL_ECHO(" PID_BED_DEBUG ");
+      SERIAL_ECHO(": Input ");
+      SERIAL_ECHO(current_temperature_bed);
+      SERIAL_ECHO(" Output ");
+      SERIAL_ECHO(pid_output);
+      SERIAL_ECHO(" pTerm ");
+      SERIAL_ECHO(pTerm_bed);
+      SERIAL_ECHO(" iTerm ");
+      SERIAL_ECHO(iTerm_bed);
+      SERIAL_ECHO(" dTerm ");
+      SERIAL_ECHOLN(dTerm_bed);
+    #endif //PID_BED_DEBUG
 
     return pid_output;
   }

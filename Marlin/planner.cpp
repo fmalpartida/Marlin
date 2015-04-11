@@ -58,7 +58,7 @@
 #include "ultralcd.h"
 #include "language.h"
 
-#if defined(MESH_BED_LEVELING)
+#ifdef MESH_BED_LEVELING
   #include "mesh_bed_leveling.h"
 #endif  // MESH_BED_LEVELING
 
@@ -67,7 +67,7 @@
 //===========================================================================
 
 unsigned long minsegmenttime;
-float max_feedrate[NUM_AXIS]; // set the max speeds
+float max_feedrate[NUM_AXIS]; // Max speeds in mm per minute
 float axis_steps_per_unit[NUM_AXIS];
 unsigned long max_acceleration_units_per_sq_second[NUM_AXIS]; // Use M201 to override by software
 float minimumfeedrate;
@@ -87,7 +87,7 @@ unsigned long axis_steps_per_sqr_second[NUM_AXIS];
     0.0, 1.0, 0.0,
     0.0, 0.0, 1.0
   };
-#endif // #ifdef ENABLE_AUTO_BED_LEVELING
+#endif // ENABLE_AUTO_BED_LEVELING
 
 // The current position of the tool in absolute steps
 long position[NUM_AXIS];   //rescaled from extern when axis_steps_per_unit are changed by gcode
@@ -113,9 +113,6 @@ volatile unsigned char block_buffer_tail;           // Index of the block to pro
 //===========================================================================
 //=============================private variables ============================
 //===========================================================================
-#ifdef PREVENT_DANGEROUS_EXTRUDE
-  float extrude_min_temp = EXTRUDE_MINTEMP;
-#endif
 #ifdef XY_FREQUENCY_LIMIT
   // Used for the frequency limit
   #define MAX_FREQ_TIME (1000000.0/XY_FREQUENCY_LIMIT)
@@ -427,7 +424,7 @@ void check_axes_activity() {
     disable_e3();
   }
 
-  #if defined(FAN_PIN) && FAN_PIN > -1 // HAS_FAN
+  #if HAS_FAN
     #ifdef FAN_KICKSTART_TIME
       static unsigned long fan_kick_end;
       if (tail_fan_speed) {
@@ -447,17 +444,17 @@ void check_axes_activity() {
     #else
       analogWrite(FAN_PIN, tail_fan_speed);
     #endif //!FAN_SOFT_PWM
-  #endif //FAN_PIN > -1
+  #endif // HAS_FAN
 
   #ifdef AUTOTEMP
     getHighESpeed();
   #endif
 
   #ifdef BARICUDA
-    #if defined(HEATER_1_PIN) && HEATER_1_PIN > -1 // HAS_HEATER_1
+    #if HAS_HEATER_1
       analogWrite(HEATER_1_PIN,tail_valve_pressure);
     #endif
-    #if defined(HEATER_2_PIN) && HEATER_2_PIN > -1 // HAS_HEATER_2
+    #if HAS_HEATER_2
       analogWrite(HEATER_2_PIN,tail_e_to_p_pressure);
     #endif
   #endif
@@ -472,7 +469,7 @@ float junction_deviation = 0.1;
   void plan_buffer_line(float x, float y, float z, const float &e, float feed_rate, const uint8_t &extruder)
 #else
   void plan_buffer_line(const float &x, const float &y, const float &z, const float &e, float feed_rate, const uint8_t &extruder)
-#endif  //ENABLE_AUTO_BED_LEVELING
+#endif  // ENABLE_AUTO_BED_LEVELING
 {
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
@@ -487,9 +484,7 @@ float junction_deviation = 0.1;
 
   #ifdef MESH_BED_LEVELING
     if (mbl.active) z += mbl.get_z(x, y);
-  #endif
-
-  #ifdef ENABLE_AUTO_BED_LEVELING
+  #elif defined(ENABLE_AUTO_BED_LEVELING)
     apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
   #endif
 
@@ -510,13 +505,15 @@ float junction_deviation = 0.1;
   #ifdef PREVENT_DANGEROUS_EXTRUDE
     if (de) {
       if (degHotend(active_extruder) < extrude_min_temp) {
-        position[E_AXIS] = target[E_AXIS]; //behave as if the move really took place, but ignore E part
+        position[E_AXIS] = target[E_AXIS]; // Behave as if the move really took place, but ignore E part
+        de = 0; // no difference
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM(MSG_ERR_COLD_EXTRUDE_STOP);
       }
       #ifdef PREVENT_LENGTHY_EXTRUDE
         if (labs(de) > axis_steps_per_unit[E_AXIS] * EXTRUDE_MAXLENGTH) {
           position[E_AXIS] = target[E_AXIS]; // Behave as if the move really took place, but ignore E part
+          de = 0; // no difference
           SERIAL_ECHO_START;
           SERIAL_ECHOLNPGM(MSG_ERR_LONG_EXTRUDE_STOP);
         }
@@ -614,7 +611,7 @@ float junction_deviation = 0.1;
         #if EXTRUDERS > 1
           case 1:
             enable_e1();
-            g_uc_extruder_last_move[1] = BLOCK_BUFFER_SIZE*2;
+            g_uc_extruder_last_move[1] = BLOCK_BUFFER_SIZE * 2;
             if (g_uc_extruder_last_move[0] == 0) disable_e0();
             #if EXTRUDERS > 2
               if (g_uc_extruder_last_move[2] == 0) disable_e2();
@@ -626,7 +623,7 @@ float junction_deviation = 0.1;
           #if EXTRUDERS > 2
             case 2:
               enable_e2();
-              g_uc_extruder_last_move[2] = BLOCK_BUFFER_SIZE*2;
+              g_uc_extruder_last_move[2] = BLOCK_BUFFER_SIZE * 2;
               if (g_uc_extruder_last_move[0] == 0) disable_e0();
               if (g_uc_extruder_last_move[1] == 0) disable_e1();
               #if EXTRUDERS > 3
@@ -636,7 +633,7 @@ float junction_deviation = 0.1;
             #if EXTRUDERS > 3
               case 3:
                 enable_e3();
-                g_uc_extruder_last_move[3] = BLOCK_BUFFER_SIZE*2;
+                g_uc_extruder_last_move[3] = BLOCK_BUFFER_SIZE * 2;
                 if (g_uc_extruder_last_move[0] == 0) disable_e0();
                 if (g_uc_extruder_last_move[1] == 0) disable_e1();
                 if (g_uc_extruder_last_move[2] == 0) disable_e2();
@@ -977,10 +974,10 @@ float junction_deviation = 0.1;
   void plan_set_position(const float &x, const float &y, const float &z, const float &e)
 #endif // ENABLE_AUTO_BED_LEVELING || MESH_BED_LEVELING
   {
-    #ifdef ENABLE_AUTO_BED_LEVELING
-      apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
-    #elif defined(MESH_BED_LEVELING)
+    #ifdef MESH_BED_LEVELING
       if (mbl.active) z += mbl.get_z(x, y);
+    #elif defined(ENABLE_AUTO_BED_LEVELING)
+      apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
     #endif
 
     float nx = position[X_AXIS] = lround(x * axis_steps_per_unit[X_AXIS]);
@@ -997,10 +994,6 @@ void plan_set_e_position(const float &e) {
   position[E_AXIS] = lround(e * axis_steps_per_unit[E_AXIS]);  
   st_set_e_position(position[E_AXIS]);
 }
-
-#ifdef PREVENT_DANGEROUS_EXTRUDE
-  void set_extrude_min_temp(float temp) { extrude_min_temp = temp; }
-#endif
 
 // Calculate the steps/s^2 acceleration rates, based on the mm/s^s
 void reset_acceleration_rates() {

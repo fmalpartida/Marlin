@@ -447,7 +447,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
 // @section bedlevel
 
-#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
    //#define Z_PROBE_REPEATABILITY_TEST  // If not commented out, Z-Probe Repeatability test will be included if Auto Bed Leveling is Enabled.
 
 #ifdef ENABLE_AUTO_BED_LEVELING
@@ -469,7 +469,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
   #ifdef AUTO_BED_LEVELING_GRID
 
-    #define LEFT_PROBE_BED_POSITION 15
+    #define LEFT_PROBE_BED_POSITION 55
     #define RIGHT_PROBE_BED_POSITION 170
     #define FRONT_PROBE_BED_POSITION 20
     #define BACK_PROBE_BED_POSITION 170
@@ -723,7 +723,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // 2 wire Non-latching LCD SR from:
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
 
-#define SAV_3DLCD
+//#define SAV_3DLCD
 
 // @section extras
 

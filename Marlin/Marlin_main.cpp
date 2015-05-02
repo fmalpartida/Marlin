@@ -4483,7 +4483,7 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) //default argument s
        {
           enquecommand_P((PSTR("G28")));
           homeDebounceCount++;
-          LCD_ALERTMESSAGEPGM(MSG_AUTO_HOME);
+          LCD_MESSAGEPGM(MSG_AUTO_HOME);
        }
        else if (homeDebounceCount < HOME_DEBOUNCE_DELAY)
        {

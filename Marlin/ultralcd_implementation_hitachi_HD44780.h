@@ -6,11 +6,11 @@
 * When selecting the Russian language, a slightly different LCD implementation is used to handle UTF8 characters.
 **/
 
-#ifndef REPRAPWORLD_KEYPAD
-  extern volatile uint8_t buttons;  //the last checked buttons in a bit array.
-#else
-  extern volatile uint16_t buttons;  //an extended version of the last checked buttons in a bit array.
-#endif
+//#ifndef REPRAPWORLD_KEYPAD
+//  extern volatile uint8_t buttons;  //the last checked buttons in a bit array.
+//#else
+  extern volatile uint8_t buttons;  //an extended version of the last checked buttons in a bit array.
+//#endif
 
 ////////////////////////////////////
 // Setup button and encode mappings for each panel (into 'buttons' variable
@@ -77,13 +77,13 @@
     #define BLEN_REPRAPWORLD_KEYPAD_F3 0
     #define BLEN_REPRAPWORLD_KEYPAD_F2 1
     #define BLEN_REPRAPWORLD_KEYPAD_F1 2
-    #define BLEN_REPRAPWORLD_KEYPAD_UP 3
+    #define BLEN_REPRAPWORLD_KEYPAD_UP 6
     #define BLEN_REPRAPWORLD_KEYPAD_RIGHT 4
     #define BLEN_REPRAPWORLD_KEYPAD_MIDDLE 5
-    #define BLEN_REPRAPWORLD_KEYPAD_DOWN 6
+    #define BLEN_REPRAPWORLD_KEYPAD_DOWN 3
     #define BLEN_REPRAPWORLD_KEYPAD_LEFT 7
     
-    #define REPRAPWORLD_BTN_OFFSET 3 // bit offset into buttons for shift register values
+    #define REPRAPWORLD_BTN_OFFSET 0 // bit offset into buttons for shift register values
 
     #define EN_REPRAPWORLD_KEYPAD_F3 BIT((BLEN_REPRAPWORLD_KEYPAD_F3+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_F2 BIT((BLEN_REPRAPWORLD_KEYPAD_F2+REPRAPWORLD_BTN_OFFSET))
@@ -94,10 +94,10 @@
     #define EN_REPRAPWORLD_KEYPAD_DOWN BIT((BLEN_REPRAPWORLD_KEYPAD_DOWN+REPRAPWORLD_BTN_OFFSET))
     #define EN_REPRAPWORLD_KEYPAD_LEFT BIT((BLEN_REPRAPWORLD_KEYPAD_LEFT+REPRAPWORLD_BTN_OFFSET))
 
-    #define LCD_CLICKED ((buttons&EN_C) || (buttons&EN_REPRAPWORLD_KEYPAD_F1))
-    #define REPRAPWORLD_KEYPAD_MOVE_Y_DOWN (buttons&EN_REPRAPWORLD_KEYPAD_DOWN)
-    #define REPRAPWORLD_KEYPAD_MOVE_Y_UP (buttons&EN_REPRAPWORLD_KEYPAD_UP)
-    #define REPRAPWORLD_KEYPAD_MOVE_HOME (buttons&EN_REPRAPWORLD_KEYPAD_MIDDLE)
+    //#define LCD_CLICKED ((buttons&EN_C) || (buttons&EN_REPRAPWORLD_KEYPAD_F1))
+    //#define REPRAPWORLD_KEYPAD_MOVE_Y_DOWN (buttons&EN_REPRAPWORLD_KEYPAD_DOWN)
+    //#define REPRAPWORLD_KEYPAD_MOVE_Y_UP (buttons&EN_REPRAPWORLD_KEYPAD_UP)
+    //#define REPRAPWORLD_KEYPAD_MOVE_HOME (buttons&EN_REPRAPWORLD_KEYPAD_MIDDLE)
 
 #elif defined(NEWPANEL)
   #define LCD_CLICKED (buttons&EN_C)
@@ -194,9 +194,9 @@
 #include "utf_mapper.h"
 
 #ifdef LCD_PROGRESS_BAR
-  static uint16_t progressBarTick = 0;
+  static millis_t progress_bar_ms = 0;
   #if PROGRESS_MSG_EXPIRE > 0
-    static uint16_t expireStatusMillis = 0;
+    static millis_t expire_status_ms = 0;
   #endif
   #define LCD_STR_PROGRESS  "\x03\x04\x05"
 #endif
@@ -550,7 +550,7 @@ static void lcd_implementation_status_screen() {
 
     lcd.setCursor(0, 2);
     lcd.print(LCD_STR_FEEDRATE[0]);
-    lcd.print(itostr3(feedmultiply));
+    lcd.print(itostr3(feedrate_multiplier));
     lcd.print('%');
 
     #if LCD_WIDTH > 19 && defined(SDSUPPORT)
@@ -567,8 +567,8 @@ static void lcd_implementation_status_screen() {
 
     lcd.setCursor(LCD_WIDTH - 6, 2);
     lcd.print(LCD_STR_CLOCK[0]);
-    if (starttime != 0) {
-      uint16_t time = millis()/60000 - starttime/60000;
+    if (print_job_start_ms != 0) {
+      uint16_t time = millis()/60000 - print_job_start_ms/60000;
       lcd.print(itostr2(time/60));
       lcd.print(':');
       lcd.print(itostr2(time%60));
@@ -588,8 +588,9 @@ static void lcd_implementation_status_screen() {
   #ifdef LCD_PROGRESS_BAR
 
     if (card.isFileOpen()) {
-      if (millis() >= progressBarTick + PROGRESS_BAR_MSG_TIME || !lcd_status_message[0]) {
-        // draw the progress bar
+      // Draw the progress bar if the message has shown long enough
+      // or if there is no message set.
+      if (millis() >= progress_bar_ms + PROGRESS_BAR_MSG_TIME || !lcd_status_message[0]) {
         int tix = (int)(card.percentDone() * LCD_WIDTH * 3) / 100,
           cel = tix / 3, rem = tix % 3, i = LCD_WIDTH;
         char msg[LCD_WIDTH+1], b = ' ';
@@ -610,7 +611,7 @@ static void lcd_implementation_status_screen() {
 
     // Show Filament Diameter and Volumetric Multiplier %
     // After allowing lcd_status_message to show for 5 seconds
-    if (millis() >= message_millis + 5000) {
+    if (millis() >= previous_lcd_status_ms + 5000) {
       lcd_printPGM(PSTR("Dia "));
       lcd.print(ftostr12ns(filament_width_meas));
       lcd_printPGM(PSTR(" V"));
@@ -724,46 +725,45 @@ static void lcd_implementation_drawmenu_sddirectory(bool sel, uint8_t row, const
 #define lcd_implementation_drawmenu_function(sel, row, pstr, data) lcd_implementation_drawmenu_generic(sel, row, pstr, '>', ' ')
 
 #ifdef LCD_HAS_STATUS_INDICATORS
-static void lcd_implementation_update_indicators()
-{
-  #if defined(LCD_I2C_PANELOLU2) || defined(LCD_I2C_VIKI)
-    //set the LEDS - referred to as backlights by the LiquidTWI2 library 
-    static uint8_t ledsprev = 0;
-    uint8_t leds = 0;
-    if (target_temperature_bed > 0) leds |= LED_A;
-    if (target_temperature[0] > 0) leds |= LED_B;
-    if (fanSpeed) leds |= LED_C;
-    #if EXTRUDERS > 1  
-      if (target_temperature[1] > 0) leds |= LED_C;
+
+  static void lcd_implementation_update_indicators() {
+    #if defined(LCD_I2C_PANELOLU2) || defined(LCD_I2C_VIKI)
+      //set the LEDS - referred to as backlights by the LiquidTWI2 library 
+      static uint8_t ledsprev = 0;
+      uint8_t leds = 0;
+      if (target_temperature_bed > 0) leds |= LED_A;
+      if (target_temperature[0] > 0) leds |= LED_B;
+      if (fanSpeed) leds |= LED_C;
+      #if EXTRUDERS > 1  
+        if (target_temperature[1] > 0) leds |= LED_C;
+      #endif
+      if (leds != ledsprev) {
+        lcd.setBacklight(leds);
+        ledsprev = leds;
+      }
     #endif
-    if (leds != ledsprev) {
-      lcd.setBacklight(leds);
-      ledsprev = leds;
-    }
-  #endif
-}
-#endif
+  }
+
+#endif // LCD_HAS_STATUS_INDICATORS
 
 #ifdef LCD_HAS_SLOW_BUTTONS
-extern uint32_t blocking_enc;
 
-static uint8_t lcd_implementation_read_slow_buttons()
-{
-  #ifdef LCD_I2C_TYPE_MCP23017
-  uint8_t slow_buttons;
-    // Reading these buttons this is likely to be too slow to call inside interrupt context
-    // so they are called during normal lcd_update
-    slow_buttons = lcd.readButtons() << B_I2C_BTN_OFFSET; 
-    #if defined(LCD_I2C_VIKI)
-    if(slow_buttons & (B_MI|B_RI)) { //LCD clicked
-       if(blocking_enc > millis()) {
-         slow_buttons &= ~(B_MI|B_RI); // Disable LCD clicked buttons if screen is updated
-       }
-    }
+  extern millis_t next_button_update_ms;
+
+  static uint8_t lcd_implementation_read_slow_buttons() {
+    #ifdef LCD_I2C_TYPE_MCP23017
+      uint8_t slow_buttons;
+      // Reading these buttons this is likely to be too slow to call inside interrupt context
+      // so they are called during normal lcd_update
+      slow_buttons = lcd.readButtons() << B_I2C_BTN_OFFSET; 
+      #ifdef LCD_I2C_VIKI
+        if ((slow_buttons & (B_MI|B_RI)) && millis() < next_button_update_ms) // LCD clicked
+          slow_buttons &= ~(B_MI|B_RI); // Disable LCD clicked buttons if screen is updated
+      #endif
+      return slow_buttons;
     #endif
-    return slow_buttons; 
-  #endif
-}
-#endif
+  }
+
+#endif // LCD_HAS_SLOW_BUTTONS
 
 #endif //__ULTRALCD_IMPLEMENTATION_HITACHI_HD44780_H

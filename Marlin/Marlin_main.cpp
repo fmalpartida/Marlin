@@ -1299,31 +1299,41 @@ static void setup_for_endstop_move() {
       }
 
     #elif defined(Z_PROBE_ALLEN_KEY)
-
       feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE;
 
-      // Move to the start position to initiate deployment
-      destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_X;
-      destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_Y;
-      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
-
-      feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE;
-
-      // Move to engage deployment
-      destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_X;
-      destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_Y;
-      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
-
-      #ifdef Z_PROBE_ALLEN_KEY_DEPLOY_3_X
-        feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE;
-        // Move to trigger deployment
-        destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_X;
-        destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_Y;
-        destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_Z;
-        prepare_move_raw(); // this will also set_current_to_destination
+      // If endstop is already false, the probe is deployed
+      #ifdef Z_PROBE_ENDSTOP
+        bool z_probe_endstop = (READ(Z_PROBE_PIN) != Z_PROBE_ENDSTOP_INVERTING);
+        if (z_probe_endstop)
+      #else
+        bool z_min_endstop = (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
+        if (z_min_endstop)
       #endif
+        {
+
+          // Move to the start position to initiate deployment
+          destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_X;
+          destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_Y;
+          destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_Z;
+          prepare_move_raw(); // this will also set_current_to_destination
+
+          feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE;
+
+          // Move to engage deployment
+          destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_X;
+          destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_Y;
+          destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_Z;
+          prepare_move_raw();
+
+          #ifdef Z_PROBE_ALLEN_KEY_DEPLOY_3_X
+            feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE;
+
+          // Move to trigger deployment
+            destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_X;
+            destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_Y;
+            destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_Z;
+            prepare_move_raw();
+          #endif
       }
 
       // Partially Home X,Y for safety
@@ -1334,10 +1344,10 @@ static void setup_for_endstop_move() {
       st_synchronize();
 
       #ifdef Z_PROBE_ENDSTOP
-        bool z_probe_endstop = (READ(Z_PROBE_PIN) != Z_PROBE_ENDSTOP_INVERTING);
+        z_probe_endstop = (READ(Z_PROBE_PIN) != Z_PROBE_ENDSTOP_INVERTING);
         if (z_probe_endstop)
       #else
-        bool z_min_endstop = (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
+        z_min_endstop = (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
         if (z_min_endstop)
       #endif
         {
@@ -1390,21 +1400,21 @@ static void setup_for_endstop_move() {
       destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_1_X;
       destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_1_Y;
       destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_1_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
+      prepare_move_raw();
 
       // Move the nozzle down to push the probe into retracted position
       feedrate = Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE;
       destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_2_X;
       destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_2_Y;
       destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_2_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
+      prepare_move_raw();
       
       // Move up for safety
       feedrate = Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE;
       destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_3_X;
       destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_3_Y;
       destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_3_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
+      prepare_move_raw();
       
       // Home XY for safety
       feedrate = homing_feedrate[X_AXIS]/2;

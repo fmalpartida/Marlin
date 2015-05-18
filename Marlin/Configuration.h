@@ -1,6 +1,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+
 #include "boards.h"
 
 //===========================================================================
@@ -46,7 +47,7 @@ Here are some standard links for getting your machine calibrated:
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
-#define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "(R Wackerbarth)" // Who made the changes.
 #define STRING_SPLASH_LINE1 BUILD_VERSION // will be shown during bootup in line 1
 //#define STRING_SPLASH_LINE2 STRING_DISTRIBUTION_DATE // will be shown during bootup in line 2
 
@@ -200,7 +201,7 @@ Here are some standard links for getting your machine calibrated:
   //#define SLOW_PWM_HEATERS // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   //#define PID_PARAMS_PER_EXTRUDER // Uses separate PID parameters for each extruder (useful for mismatched extruders)
                                     // Set/get with gcode: M301 E[extruder number, 0-2]
-  #define PID_FUNCTIONAL_RANGE 50   // If the temperature difference between the target temperature and the actual temperature
+  #define PID_FUNCTIONAL_RANGE 70   // If the temperature difference between the target temperature and the actual temperature
                                     // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
   #define PID_INTEGRAL_DRIVE_MAX PID_MAX  //limit for the integral term
   #define K1 0.95 //smoothing factor within the PID
@@ -311,7 +312,7 @@ Here are some standard links for getting your machine calibrated:
 #define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
 #define THERMAL_PROTECTION_BED     // Enable thermal protection for the heated bed
 // Parameters for all extruder heaters
-#define THERMAL_PROTECTION_PERIOD 40 // in seconds
+#define THERMAL_PROTECTION_PERIOD 10    // in seconds
 #define THERMAL_PROTECTION_HYSTERESIS 4 // in degree Celsius
 
 // To enable for the bed heater, uncomment the two defines below:
@@ -514,7 +515,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
   #ifdef AUTO_BED_LEVELING_GRID
 
     // set the rectangle in which to probe
-    #define DELTA_PROBABLE_RADIUS (DELTA_PRINTABLE_RADIUS-25)
+    #define DELTA_PROBABLE_RADIUS (DELTA_PRINTABLE_RADIUS-24)
     #define LEFT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
     #define RIGHT_PROBE_BED_POSITION DELTA_PROBABLE_RADIUS
     #define FRONT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
@@ -522,7 +523,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
     #define MIN_PROBE_EDGE 10 // The probe square sides can be no smaller than this
     // probe at the points of a lattice grid
-    #define AUTO_BED_LEVELING_GRID_POINTS 7
+    #define AUTO_BED_LEVELING_GRID_POINTS 9
     #define AUTO_BED_LEVELING_GRID_X ((RIGHT_PROBE_BED_POSITION - LEFT_PROBE_BED_POSITION) / (AUTO_BED_LEVELING_GRID_POINTS - 1))
     #define AUTO_BED_LEVELING_GRID_Y ((BACK_PROBE_BED_POSITION - FRONT_PROBE_BED_POSITION) / (AUTO_BED_LEVELING_GRID_POINTS - 1))
 
@@ -551,7 +552,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
   #define Y_PROBE_OFFSET_FROM_EXTRUDER -6  // KosselPro actual: -6.304
   // Kossel Pro note: The correct value is likely -17.45 but I'd rather err on the side of
   // not giving someone a head crash. Use something like G29 Z-0.2 to adjust as needed.
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -17.25  // Increase this if the first layer is too thin (remember: it's a negative number so increase means closer to zero).
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -17.10  // Increase this if the first layer is too thin (remember: it's a negative number so increase means closer to zero).
 
   #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
@@ -559,8 +560,8 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
   #define XY_TRAVEL_SPEED 8000         // X and Y axis travel speed between probes, in mm/min
 
   #define Z_RAISE_BEFORE_PROBING 100  //How much the extruder will be raised before traveling to the first probing point.
-  #define Z_RAISE_BETWEEN_PROBINGS 5  //How much the extruder will be raised when traveling from between next probing points
-  #define Z_RAISE_AFTER_PROBING 15    //How much the extruder will be raised after the last probing point.
+  #define Z_RAISE_BETWEEN_PROBINGS 6  //How much the extruder will be raised when traveling from between next probing points
+  #define Z_RAISE_AFTER_PROBING 30    //How much the extruder will be raised after the last probing point.
 
 //   #define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" //These commands will be executed in the end of G29 routine.
                                                                             //Useful to retract a deployable probe.
@@ -642,12 +643,12 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
     #define Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE (HOMING_FEEDRATE_X/2)
 
     #define Z_PROBE_ALLEN_KEY_STOW_1_X 36.00 // Line up with bed retaining clip
-    #define Z_PROBE_ALLEN_KEY_STOW_1_Y -122.00
+    #define Z_PROBE_ALLEN_KEY_STOW_1_Y -125.00
     #define Z_PROBE_ALLEN_KEY_STOW_1_Z 75.0
     #define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_X
     #define Z_PROBE_ALLEN_KEY_STOW_2_X 36.00 // move down to retract probe
     #define Z_PROBE_ALLEN_KEY_STOW_2_Y -122.00
-    #define Z_PROBE_ALLEN_KEY_STOW_2_Z 25.0
+    #define Z_PROBE_ALLEN_KEY_STOW_2_Z 5.0
     #define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_Z/2)
     #define Z_PROBE_ALLEN_KEY_STOW_3_X 0.0  // return to 0,0,100
     #define Z_PROBE_ALLEN_KEY_STOW_3_Y 0.0
@@ -703,7 +704,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 #ifdef MANUAL_HOME_POSITIONS
   #define MANUAL_X_HOME_POS 0
   #define MANUAL_Y_HOME_POS 0
-  #define MANUAL_Z_HOME_POS 277 // For delta: Distance between nozzle and print surface after homing.
+  #define MANUAL_Z_HOME_POS 280.80 // For delta: Distance between nozzle and print surface after homing.
 #endif
 
 // @section movement

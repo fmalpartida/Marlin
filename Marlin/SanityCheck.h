@@ -87,8 +87,8 @@
   /**
    * Required LCD language
    */
-  #if !defined(DOGLCD) && defined(ULTRA_LCD) && !defined(DISPLAY_CHARSET_HD44780_JAPAN) && !defined(DISPLAY_CHARSET_HD44780_WESTERN)
-    #error You must enable either DISPLAY_CHARSET_HD44780_JAPAN or DISPLAY_CHARSET_HD44780_WESTERN for your LCD controller.
+  #if !defined(DOGLCD) && defined(ULTRA_LCD) && !defined(DISPLAY_CHARSET_HD44780_JAPAN) && !defined(DISPLAY_CHARSET_HD44780_WESTERN)&& !defined(DISPLAY_CHARSET_HD44780_CYRILLIC)
+    #error You must enable either DISPLAY_CHARSET_HD44780_JAPAN or DISPLAY_CHARSET_HD44780_WESTERN  or DISPLAY_CHARSET_HD44780_CYRILLIC for your LCD controller.
   #endif
 
   /**
@@ -311,6 +311,18 @@
    */
   #ifdef X_HOME_RETRACT_MM
     #error [XYZ]_HOME_RETRACT_MM settings have been renamed [XYZ]_HOME_BUMP_MM
+  #endif
+
+  #if WATCH_TEMP_PERIOD > 500
+    #error WATCH_TEMP_PERIOD now uses seconds instead of milliseconds
+  #endif
+
+  #if !defined(THERMAL_PROTECTION_HOTENDS) && (defined(WATCH_TEMP_PERIOD) || defined(THERMAL_PROTECTION_PERIOD))
+    #error Thermal Runaway Protection for hotends must now be enabled with THERMAL_PROTECTION_HOTENDS
+  #endif
+
+  #if !defined(THERMAL_PROTECTION_BED) && defined(THERMAL_PROTECTION_BED_PERIOD)
+    #error Thermal Runaway Protection for the bed must now be enabled with THERMAL_PROTECTION_BED
   #endif
 
 #endif //SANITYCHECK_H

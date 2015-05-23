@@ -16,7 +16,6 @@
 #define BOARD_RAMPS_13_EEF      36   // RAMPS 1.3 / 1.4 (Power outputs: Extruder0, Extruder1, Fan)
 #define BOARD_RAMPS_13_SF       38   // RAMPS 1.3 / 1.4 (Power outputs: Spindle, Controller Fan)
 #define BOARD_FELIX2            37   // Felix 2.0+ Electronics Board (RAMPS like)
-#define BOARD_DUEMILANOVE_328P  4    // Duemilanove w/ ATMega328P pin assignments
 #define BOARD_GEN6              5    // Gen6
 #define BOARD_GEN6_DELUXE       51   // Gen6 deluxe
 #define BOARD_SANGUINOLOLU_11   6    // Sanguinololu < 1.2
@@ -52,8 +51,6 @@
 #define BOARD_5DPRINT           88   // 5DPrint D8 Driver Board
 #define BOARD_LEAPFROG          999  // Leapfrog
 #define BOARD_MKS_BASE          40   // MKS BASE 1.0
-#define BOARD_WITBOX            41   // bq WITBOX
-#define BOARD_HEPHESTOS         42   // bq Prusa i3 Hephestos
 #define BOARD_BAM_DICE          401  // 2PrintBeta BAM&DICE with STK drivers
 #define BOARD_BAM_DICE_DUE      402  // 2PrintBeta BAM&DICE Due with STK drivers
 

@@ -6,7 +6,7 @@
 #include "language.h"
 #include "SerialPrint.h"
 
-#ifdef SDSUPPORT
+#if ENABLED(SDSUPPORT)
 
 CardReader::CardReader() {
   filesize = 0;
@@ -130,7 +130,7 @@ void CardReader::ls()  {
   lsDive("", root);
 }
 
-#ifdef LONG_FILENAME_HOST_SUPPORT
+#if ENABLED(LONG_FILENAME_HOST_SUPPORT)
 
   /**
    * Get a long pretty path based on a DOS 8.3 path
@@ -197,7 +197,7 @@ void CardReader::initsd() {
   cardOK = false;
   if (root.isOpen()) root.close();
 
-  #ifdef SDSLOW
+  #if ENABLED(SDSLOW)
     #define SPI_SPEED SPI_HALF_SPEED
   #else
     #define SPI_SPEED SPI_FULL_SPEED

@@ -4,6 +4,7 @@
 ##############################################################
 
 menu.cpu=Processor
+menu.core=Arduino Core
 
 ########################################
 ## RAMBo
@@ -122,12 +123,13 @@ BrainwavePro.upload.disable_flushing=true
 
 BrainwavePro.build.mcu=at90usb1286
 BrainwavePro.build.f_cpu=16000000L
-BrainwavePro.build.core=brainwave
 BrainwavePro.build.dependency=true
 BrainwavePro.build.variant=brainwavepro
 BrainwavePro.build.vid=0x16D0
 BrainwavePro.build.pid=0x076B
 BrainwavePro.build.extra_flags=-DAT90USBxx_TEENSYPP_ASSIGNMENTS -DUSB_VID={build.vid} -DUSB_PID={build.pid}
+BrainwavePro.menu.core.legacy=Legacy Core
+BrainwavePro.menu.core.legacy.build.core=brainwave
 
 ########################################
 ## KosselPro -- BrainwavePro with HID boot
@@ -151,9 +153,10 @@ KosselPro.upload.disable_flushing=true
 
 KosselPro.build.mcu=at90usb1286
 KosselPro.build.f_cpu=16000000L
-KosselPro.build.core=brainwave
 KosselPro.build.dependency=true
 KosselPro.build.variant=brainwavepro
 KosselPro.build.vid=0x16D0
 KosselPro.build.pid=0x076B
 KosselPro.build.extra_flags=-DAT90USBxx_TEENSYPP_ASSIGNMENTS -DUSB_VID={build.vid} -DUSB_PID={build.pid}
+KosselPro.menu.core.legacy=Legacy Core
+KosselPro.menu.core.legacy.build.core=brainwave

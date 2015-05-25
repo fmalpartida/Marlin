@@ -132,6 +132,8 @@ BrainwavePro.menu.core.legacy=Legacy Core
 BrainwavePro.menu.core.legacy.build.core=brainwave
 BrainwavePro.menu.core.arduino106=1.0.6
 BrainwavePro.menu.core.arduino106.build.core=arduino_1_0_6
+BrainwavePro.menu.core.arduino164=1.6.4
+BrainwavePro.menu.core.arduino164.build.core=arduino_1_6_4
 
 ########################################
 ## KosselPro -- BrainwavePro with HID boot
@@ -164,3 +166,5 @@ KosselPro.menu.core.legacy=Legacy Core
 KosselPro.menu.core.legacy.build.core=brainwave
 KosselPro.menu.core.arduino106=1.0.6
 KosselPro.menu.core.arduino106.build.core=arduino_1_0_6
+KosselPro.menu.core.arduino164=1.6.4
+KosselPro.menu.core.arduino164.build.core=arduino_1_6_4

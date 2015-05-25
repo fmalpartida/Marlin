@@ -1,3 +1,5 @@
+
+
 /* Copyright (c) 2011, Peter Barrett  
 **  
 ** Permission to use, copy, modify, and/or distribute this software for  
@@ -15,9 +17,8 @@
 */
 
 #define CDC_ENABLED
+#define HID_ENABLED
 
-// Disable HID, Brainwaves don't need to be mice. -Hubbe 20120929
-// #define HID_ENABLED
 
 #ifdef CDC_ENABLED
 #define CDC_INTERFACE_COUNT	2

@@ -1,3 +1,5 @@
+
+
 /* Copyright (c) 2011, Peter Barrett  
 **  
 ** Permission to use, copy, modify, and/or distribute this software for  
@@ -112,29 +114,14 @@ bool WEAK CDC_Setup(Setup& setup)
 }
 
 
-int _serialPeek = -1;
-void Serial_::begin(uint16_t baud_count)
+void Serial_::begin(unsigned long baud_count)
 {
+	peek_buffer = -1;
 }
 
-void Serial_::end(void)
+void Serial_::begin(unsigned long baud_count, byte config)
 {
-}
-
-void Serial_::accept(void) 
-{
-	ring_buffer *buffer = &cdc_rx_buffer;
-	int c = USB_Recv(CDC_RX); 
-	int i = (unsigned int)(buffer->head+1) % SERIAL_BUFFER_SIZE;
-	
-	// if we should be storing the received character into the location
-	// just before the tail (meaning that the head would advance to the
-	// current location of the tail), we're about to overflow the buffer
-	// and so we don't write the character or advance the head.
-	if (i != buffer->tail) {
-		buffer->buffer[buffer->head] = c;
-		buffer->head = i;
-	}
+	peek_buffer = -1;
 }
 
 void Serial_::end(void)
@@ -172,6 +159,11 @@ void Serial_::flush(void)
 }
 
 size_t Serial_::write(uint8_t c)
+{
+	return write(&c, 1);
+}
+
+size_t Serial_::write(const uint8_t *buffer, size_t size)
 {
 	/* only try to send bytes if the high-level CDC connection itself 
 	 is open (not just the pipe) - the OS should set lineState when the port

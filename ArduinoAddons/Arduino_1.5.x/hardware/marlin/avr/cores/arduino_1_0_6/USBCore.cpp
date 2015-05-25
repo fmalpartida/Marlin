@@ -51,14 +51,14 @@ const u16 STRING_LANGUAGE[2] = {
 
 const u16 STRING_IPRODUCT[17] = {
 	(3<<8) | (2+2*16),
-#if USB_PID == USB_PID_LEONARDO	
+#if USB_PID == 0x8036	
 	'A','r','d','u','i','n','o',' ','L','e','o','n','a','r','d','o'
-#elif USB_PID == USB_PID_MICRO
+#elif USB_PID == 0x8037
 	'A','r','d','u','i','n','o',' ','M','i','c','r','o',' ',' ',' '
+#elif USB_PID == 0x803C
+	'A','r','d','u','i','n','o',' ','E','s','p','l','o','r','a',' '
 #elif USB_PID == 0x9208
 	'L','i','l','y','P','a','d','U','S','B',' ',' ',' ',' ',' ',' '
-#elif USB_PID == 0x076B
-  'B','r','a','i','n','w','a','v','e',' ',' ',' ',' ',' ',' ',' '
 #else
 	'U','S','B',' ','I','O',' ','B','o','a','r','d',' ',' ',' ',' '
 #endif
@@ -70,8 +70,6 @@ const u16 STRING_IMANUFACTURER[12] = {
 	'A','r','d','u','i','n','o',' ','L','L','C'
 #elif USB_VID == 0x1b4f
 	'S','p','a','r','k','F','u','n',' ',' ',' '
-#elif USB_VID == 0x16D0
-	'W','a','c','k','e','r','b','a','r','t','h'
 #else
 	'U','n','k','n','o','w','n',' ',' ',' ',' '
 #endif
@@ -292,9 +290,12 @@ int USB_Send(u8 ep, const void* d, int len)
 
 		if (n > len)
 			n = len;
-		len -= n;
 		{
 			LockEP lock(ep);
+			// Frame may have been released by the SOF interrupt handler
+			if (!ReadWriteAllowed())
+				continue;
+			len -= n;
 			if (ep & TRANSFER_ZERO)
 			{
 				while (n--)
@@ -613,8 +614,6 @@ ISR(USB_GEN_vect)
 	{
 #ifdef CDC_ENABLED
 		USB_Flush(CDC_TX);				// Send a tx frame if found
-		while (USB_Available(CDC_RX))	// Handle received bytes (if any)
-			Serial.accept();
 #endif
 		
 		// check whether the one-shot period has elapsed.  if so, turn off the LED

@@ -53,6 +53,7 @@
 #include "language.h"
 #include "pins_arduino.h"
 #include "math.h"
+#include "SerialPrint.h"
 
 #ifdef BLINKM
   #include "blinkm.h"

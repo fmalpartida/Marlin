@@ -54,6 +54,7 @@
 #include "temperature.h"
 #include "ultralcd.h"
 #include "language.h"
+#include "SerialPrint.h"
 
 #ifdef MESH_BED_LEVELING
   #include "mesh_bed_leveling.h"

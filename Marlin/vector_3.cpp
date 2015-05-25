@@ -20,6 +20,7 @@
 #include "Marlin.h"
 
 #ifdef ENABLE_AUTO_BED_LEVELING
+#include "SerialPrint.h"
 #include "vector_3.h"
 
 vector_3::vector_3() : x(0), y(0), z(0) { }

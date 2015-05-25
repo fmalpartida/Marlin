@@ -23,6 +23,7 @@
 #include "temperature.h"
 #include "watchdog.h"
 #include "language.h"
+#include "SerialPrint.h"
 
 #include "Sd2PinMap.h"
 

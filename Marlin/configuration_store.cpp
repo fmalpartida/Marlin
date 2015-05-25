@@ -93,6 +93,7 @@
 #include "planner.h"
 #include "temperature.h"
 #include "ultralcd.h"
+#include "SerialPrint.h"
 #include "configuration_store.h"
 
 #ifdef MESH_BED_LEVELING

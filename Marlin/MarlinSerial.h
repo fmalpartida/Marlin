@@ -154,7 +154,7 @@ extern MarlinSerial MSerial;
 
 // Use the UART for BT in AT90USB configurations
 #if defined(USBCON) && defined(BTENABLED)
-  extern HardwareSerial bt;
+  extern HardwareSerial BluetoothSerial;
 #endif
 
 #endif

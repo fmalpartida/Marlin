@@ -64,7 +64,7 @@ typedef unsigned long millis_t;
 
 #ifdef USBCON
   #ifdef BTENABLED
-    #define MYSERIAL bt
+    #define MYSERIAL BluetoothSerial
   #else
     #define MYSERIAL Serial
   #endif // BTENABLED

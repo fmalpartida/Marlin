@@ -130,6 +130,8 @@ BrainwavePro.build.pid=0x076B
 BrainwavePro.build.extra_flags=-DAT90USBxx_TEENSYPP_ASSIGNMENTS -DUSB_VID={build.vid} -DUSB_PID={build.pid}
 BrainwavePro.menu.core.legacy=Legacy Core
 BrainwavePro.menu.core.legacy.build.core=brainwave
+BrainwavePro.menu.core.arduino106=1.0.6
+BrainwavePro.menu.core.arduino106.build.core=arduino_1_0_6
 
 ########################################
 ## KosselPro -- BrainwavePro with HID boot
@@ -160,3 +162,5 @@ KosselPro.build.pid=0x076B
 KosselPro.build.extra_flags=-DAT90USBxx_TEENSYPP_ASSIGNMENTS -DUSB_VID={build.vid} -DUSB_PID={build.pid}
 KosselPro.menu.core.legacy=Legacy Core
 KosselPro.menu.core.legacy.build.core=brainwave
+KosselPro.menu.core.arduino106=1.0.6
+KosselPro.menu.core.arduino106.build.core=arduino_1_0_6

@@ -52,13 +52,13 @@ void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode) {
 	// and the 32U4.  Since avrlib defines registers PCMSK1 and PCMSK2 that aren't 
 	// even present on the 32U4 this is the only way to distinguish between them.
     case 0:
-        EICRA = (EICRA & ~((1<<ISC00) | (1<<ISC01))) | (mode << ISC00);
-        EIMSK |= (1<<INT0);
-        break;
+	EICRA = (EICRA & ~((1<<ISC00) | (1<<ISC01))) | (mode << ISC00);
+	EIMSK |= (1<<INT0);
+	break;
     case 1:
-        EICRA = (EICRA & ~((1<<ISC10) | (1<<ISC11))) | (mode << ISC10);
-        EIMSK |= (1<<INT1);
-        break;	
+	EICRA = (EICRA & ~((1<<ISC10) | (1<<ISC11))) | (mode << ISC10);
+	EIMSK |= (1<<INT1);
+	break;	
     case 2:
         EICRA = (EICRA & ~((1<<ISC20) | (1<<ISC21))) | (mode << ISC20);
         EIMSK |= (1<<INT2);
@@ -237,87 +237,87 @@ void attachInterruptTwi(void (*userFunc)(void) ) {
 */
 
 #if defined(__AVR_ATmega32U4__)
-SIGNAL(INT0_vect) {
+ISR(INT0_vect) {
 	if(intFunc[EXTERNAL_INT_0])
 		intFunc[EXTERNAL_INT_0]();
 }
 
-SIGNAL(INT1_vect) {
+ISR(INT1_vect) {
 	if(intFunc[EXTERNAL_INT_1])
 		intFunc[EXTERNAL_INT_1]();
 }
 
-SIGNAL(INT2_vect) {
+ISR(INT2_vect) {
     if(intFunc[EXTERNAL_INT_2])
 		intFunc[EXTERNAL_INT_2]();
 }
 
-SIGNAL(INT3_vect) {
+ISR(INT3_vect) {
     if(intFunc[EXTERNAL_INT_3])
 		intFunc[EXTERNAL_INT_3]();
 }
 
-SIGNAL(INT6_vect) {
+ISR(INT6_vect) {
     if(intFunc[EXTERNAL_INT_4])
 		intFunc[EXTERNAL_INT_4]();
 }
 
 #elif defined(EICRA) && defined(EICRB)
 
-SIGNAL(INT0_vect) {
+ISR(INT0_vect) {
   if(intFunc[EXTERNAL_INT_2])
     intFunc[EXTERNAL_INT_2]();
 }
 
-SIGNAL(INT1_vect) {
+ISR(INT1_vect) {
   if(intFunc[EXTERNAL_INT_3])
     intFunc[EXTERNAL_INT_3]();
 }
 
-SIGNAL(INT2_vect) {
+ISR(INT2_vect) {
   if(intFunc[EXTERNAL_INT_4])
     intFunc[EXTERNAL_INT_4]();
 }
 
-SIGNAL(INT3_vect) {
+ISR(INT3_vect) {
   if(intFunc[EXTERNAL_INT_5])
     intFunc[EXTERNAL_INT_5]();
 }
 
-SIGNAL(INT4_vect) {
+ISR(INT4_vect) {
   if(intFunc[EXTERNAL_INT_0])
     intFunc[EXTERNAL_INT_0]();
 }
 
-SIGNAL(INT5_vect) {
+ISR(INT5_vect) {
   if(intFunc[EXTERNAL_INT_1])
     intFunc[EXTERNAL_INT_1]();
 }
 
-SIGNAL(INT6_vect) {
+ISR(INT6_vect) {
   if(intFunc[EXTERNAL_INT_6])
     intFunc[EXTERNAL_INT_6]();
 }
 
-SIGNAL(INT7_vect) {
+ISR(INT7_vect) {
   if(intFunc[EXTERNAL_INT_7])
     intFunc[EXTERNAL_INT_7]();
 }
 
 #else
 
-SIGNAL(INT0_vect) {
+ISR(INT0_vect) {
   if(intFunc[EXTERNAL_INT_0])
     intFunc[EXTERNAL_INT_0]();
 }
 
-SIGNAL(INT1_vect) {
+ISR(INT1_vect) {
   if(intFunc[EXTERNAL_INT_1])
     intFunc[EXTERNAL_INT_1]();
 }
 
 #if defined(EICRA) && defined(ISC20)
-SIGNAL(INT2_vect) {
+ISR(INT2_vect) {
   if(intFunc[EXTERNAL_INT_2])
     intFunc[EXTERNAL_INT_2]();
 }
@@ -326,7 +326,7 @@ SIGNAL(INT2_vect) {
 #endif
 
 /*
-SIGNAL(SIG_2WIRE_SERIAL) {
+ISR(TWI_vect) {
   if(twiIntFunc)
     twiIntFunc();
 }

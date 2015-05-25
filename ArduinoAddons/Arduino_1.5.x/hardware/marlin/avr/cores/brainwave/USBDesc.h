@@ -1,5 +1,3 @@
-
-
 /* Copyright (c) 2011, Peter Barrett  
 **  
 ** Permission to use, copy, modify, and/or distribute this software for  
@@ -17,8 +15,9 @@
 */
 
 #define CDC_ENABLED
-#define HID_ENABLED
 
+// Disable HID, Brainwaves don't need to be mice. -Hubbe 20120929
+// #define HID_ENABLED
 
 #ifdef CDC_ENABLED
 #define CDC_INTERFACE_COUNT	2
@@ -60,8 +59,4 @@
 
 #define IMANUFACTURER	1
 #define IPRODUCT		2
-#define USB_PID_LEONARDO 0x0034
-#define USB_PID_MICRO 0x0035
-#define USB_VID 0x2341	// arduino LLC vid
-#define USB_PID	ARDUINO_MODEL_USB_PID	
 

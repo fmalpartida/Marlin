@@ -8,9 +8,7 @@
 #include <stdlib.h>
 
 void * operator new(size_t size);
-void * operator new[](size_t size);
-void operator delete(void * ptr);
-void operator delete[](void * ptr);
+void operator delete(void * ptr); 
 
 __extension__ typedef int __guard __attribute__((mode (__DI__)));
 

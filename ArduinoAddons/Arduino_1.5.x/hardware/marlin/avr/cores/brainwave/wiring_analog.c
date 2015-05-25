@@ -45,8 +45,6 @@ int analogRead(uint8_t pin)
 	if (pin >= 54) pin -= 54; // allow for channel or pin numbers
 #elif defined(__AVR_ATmega32U4__)
 	if (pin >= 18) pin -= 18; // allow for channel or pin numbers
-#elif defined(__AVR_ATmega1284__)
-	if (pin >= 24) pin -= 24; // allow for channel or pin numbers
 #else
 	if (pin >= 14) pin -= 14; // allow for channel or pin numbers
 #endif
@@ -206,17 +204,14 @@ void analogWrite(uint8_t pin, int val)
 				break;
 			#endif
 
-			#if defined(TCCR4A)
+			#if defined(TCCR4A) && defined(COM4A1)
 			case TIMER4A:
-				//connect pwm to pin on timer 4, channel A
+				// connect pwm to pin on timer 4, channel A
 				sbi(TCCR4A, COM4A1);
-				#if defined(COM4A0)		// only used on 32U4
-				cbi(TCCR4A, COM4A0);
-				#endif
-				OCR4A = val;	// set pwm duty
+				OCR4A = val; // set pwm duty
 				break;
 			#endif
-			
+
 			#if defined(TCCR4A) && defined(COM4B1)
 			case TIMER4B:
 				// connect pwm to pin on timer 4, channel B
@@ -233,18 +228,14 @@ void analogWrite(uint8_t pin, int val)
 				break;
 			#endif
 				
-			#if defined(TCCR4C) && defined(COM4D1)
-			case TIMER4D:				
+			#if defined(TCCR4A) && defined(COM4D1)
+			case TIMER4D:
 				// connect pwm to pin on timer 4, channel D
-				sbi(TCCR4C, COM4D1);
-				#if defined(COM4D0)		// only used on 32U4
-				cbi(TCCR4C, COM4D0);
-				#endif
-				OCR4D = val;	// set pwm duty
+				sbi(TCCR4A, COM4D1);
+				OCR4D = val; // set pwm duty
 				break;
 			#endif
 
-							
 			#if defined(TCCR5A) && defined(COM5A1)
 			case TIMER5A:
 				// connect pwm to pin on timer 5, channel A
@@ -279,4 +270,3 @@ void analogWrite(uint8_t pin, int val)
 		}
 	}
 }
-

@@ -51,12 +51,16 @@ const u16 STRING_LANGUAGE[2] = {
 
 const u16 STRING_IPRODUCT[17] = {
 	(3<<8) | (2+2*16),
-	'B','r','a','i','n','w','a','v','e',' ',' ',' ',' ',' ',' ',' '
+#if USB_PID == USB_PID_LEONARDO	
+	'A','r','d','u','i','n','o',' ','L','e','o','n','a','r','d','o'
+#elif USB_PID == USB_PID_MICRO
+	'A','r','d','u','i','n','o',' ','M','i','c','r','o',' ',' ',' '
+#endif
 };
 
 const u16 STRING_IMANUFACTURER[12] = {
 	(3<<8) | (2+2*11),
-	'M','e','t','r','i','x',' ',' ',' ',' ',' '
+	'A','r','d','u','i','n','o',' ','L','L','C'
 };
 
 #ifdef CDC_ENABLED
@@ -595,8 +599,6 @@ ISR(USB_GEN_vect)
 	{
 #ifdef CDC_ENABLED
 		USB_Flush(CDC_TX);				// Send a tx frame if found
-		while (USB_Available(CDC_RX))	// Handle received bytes (if any)
-			Serial.accept();
 #endif
 		
 		// check whether the one-shot period has elapsed.  if so, turn off the LED
@@ -619,32 +621,20 @@ u8 USBConnected()
 //=======================================================================
 //=======================================================================
 
-USBDevice_ USBDevice;
+USB_ USB;
 
-USBDevice_::USBDevice_()
+USB_::USB_()
 {
 }
 
-void USBDevice_::attach()
+void USB_::attach()
 {
 	_usbConfiguration = 0;
 	UHWCON = 0x01;						// power internal reg
 	USBCON = (1<<USBE)|(1<<FRZCLK);		// clock frozen, usb enabled
-#if defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB647__)
-	PLLCSR = 0x1A;						// Need 16 MHz xtal
-#elif defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB1287__)
-	PLLCSR = 0x16;						// Need 16 MHz xtal
-#else
 	PLLCSR = 0x12;						// Need 16 MHz xtal
-#endif
 	while (!(PLLCSR & (1<<PLOCK)))		// wait for lock pll
 		;
-
-	// Some tests on specific versions of macosx (10.7.3), reported some
-	// strange behaviuors when the board is reset using the serial
-	// port touch at 1200 bps. This delay fixes this behaviour.
-	delay(1);
-
 	USBCON = ((1<<USBE)|(1<<OTGPADE));	// start USB clock
 	UDIEN = (1<<EORSTE)|(1<<SOFE);		// Enable interrupts for EOR (End of Reset) and SOF (start of frame)
 	UDCON = 0;							// enable attach resistor
@@ -652,18 +642,18 @@ void USBDevice_::attach()
 	TX_RX_LED_INIT;
 }
 
-void USBDevice_::detach()
+void USB_::detach()
 {
 }
 
 //	Check for interrupts
 //	TODO: VBUS detection
-bool USBDevice_::configured()
+bool USB_::configured()
 {
 	return _usbConfiguration;
 }
 
-void USBDevice_::poll()
+void USB_::poll()
 {
 }
 

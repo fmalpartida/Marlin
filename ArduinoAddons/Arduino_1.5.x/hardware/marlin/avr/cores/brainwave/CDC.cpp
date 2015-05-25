@@ -102,13 +102,14 @@ bool WEAK CDC_Setup(Setup& setup)
 }
 
 
-int _serialPeek = -1;
-void Serial_::begin(uint16_t baud_count)
+void Serial_::begin(unsigned long baud_count)
 {
+	peek_buffer = -1;
 }
 
-void Serial_::end(void)
+void Serial_::begin(unsigned long baud_count, byte config)
 {
+	peek_buffer = -1;
 }
 
 int Serial_::available(void)
@@ -146,6 +147,11 @@ void Serial_::flush(void)
 }
 
 size_t Serial_::write(uint8_t c)
+{
+	return write(&c, 1);
+}
+
+size_t Serial_::write(const uint8_t *buffer, size_t size)
 {
 	/* only try to send bytes if the high-level CDC connection itself 
 	 is open (not just the pipe) - the OS should set lineState when the port

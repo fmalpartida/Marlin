@@ -207,10 +207,9 @@
 // Same again but for Y Axis.
 //#define Y_DUAL_STEPPER_DRIVERS
 
-// Define if the two Y drives need to rotate in opposite directions
-#define INVERT_Y2_VS_Y_DIR true
-
-#ifdef Y_DUAL_STEPPER_DRIVERS
+#if ENABLED(Y_DUAL_STEPPER_DRIVERS)
+  // Define if the two Y drives need to rotate in opposite directions
+  #define INVERT_Y2_VS_Y_DIR true
   #undef EXTRUDERS
   #define EXTRUDERS 1
 #endif
@@ -282,9 +281,9 @@
 // @section machine
 
 #ifdef CONFIG_STEPPERS_TOSHIBA
-#define MAX_STEP_FREQUENCY 10000 // Max step frequency for Toshiba Stepper Controllers
+  #define MAX_STEP_FREQUENCY 10000 // Max step frequency for Toshiba Stepper Controllers
 #else
-#define MAX_STEP_FREQUENCY 40000 // Max step frequency for Ultimaker (5000 pps / half step)
+  #define MAX_STEP_FREQUENCY 40000 // Max step frequency for Ultimaker (5000 pps / half step)
 #endif
 //By default pololu step drivers require an active high signal. However, some high power drivers require an active low signal as step.
 #define INVERT_X_STEP_PIN false
@@ -678,6 +677,7 @@ const unsigned int dropsegments=5; //everything with less than this number of st
   #undef BED_MAXTEMP
 #endif
 
+#endif
 #include "Conditionals.h"
 #include "SanityCheck.h"
 

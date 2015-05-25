@@ -55,7 +55,7 @@ typedef unsigned long millis_t;
 #include "WString.h"
 
 #ifdef USBCON
-  #ifdef BTENABLED
+  #if ENABLED(BTENABLED)
     #define MYSERIAL BluetoothSerial
   #else
     #define MYSERIAL Serial

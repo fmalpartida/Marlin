@@ -86,3 +86,17 @@
   #endif
 
 #endif // SAV_3DLCD
+
+#ifdef SAV_3DGLCD
+  #define BTN_EN1            41
+  #define BTN_EN2            40
+  #define BTN_ENC            12
+
+  #define KILL_PIN           42 // A2 = 42 - teensy = 40
+  #define HOME_PIN           44 // A4 = marlin 44 - teensy = 42
+
+  #ifdef NUM_SERVOS
+    #define SERVO0_PIN       41 // In teensy's pin definition for pinMode (in servo.cpp)
+  #endif
+
+#endif // SAV_3DGLCD

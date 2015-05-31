@@ -217,6 +217,8 @@ Here are some standard links for getting your machine calibrated:
 //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
 #ifdef PIDTEMPBED
+    #define PID_BED_INTEGRAL_DRIVE_MAX MAX_BED_POWER //limit for the integral term
+
 // Felix Foil Heater
    #define DEFAULT_bedKp 103.37
    #define DEFAULT_bedKi 2.79
@@ -557,7 +559,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 //==============================LCD and SD support=============================
 
 // Define your display language below. Replace (en) with your language code and uncomment.
-// en, pl, fr, de, es, ru, it, pt, pt-br, fi, an, nl, ca, eu, kana, kana_utf8, cn, test
+// en, pl, fr, de, es, ru, bg, it, pt, pt-br, fi, an, nl, ca, eu, kana, kana_utf8, cn, test
 // See also language.h
 //#define LANGUAGE_INCLUDE GENERATE_LANGUAGE_INCLUDE(en)
 

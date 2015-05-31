@@ -203,9 +203,9 @@ Here are some standard links for getting your machine calibrated:
 
 // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 // Ultimaker
-    #define  DEFAULT_Kp 22.2
-    #define  DEFAULT_Ki 1.08
-    #define  DEFAULT_Kd 114
+    #define  DEFAULT_Kp 17.46
+    #define  DEFAULT_Ki 0.82
+    #define  DEFAULT_Kd 92.71
 
 // MakerGear
 //    #define  DEFAULT_Kp 7.0
@@ -243,6 +243,8 @@ Here are some standard links for getting your machine calibrated:
 //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
 #ifdef PIDTEMPBED
+    #define PID_BED_INTEGRAL_DRIVE_MAX MAX_BED_POWER //limit for the integral term
+
 //120v 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
 //from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
     #define  DEFAULT_bedKp 10.00
@@ -311,10 +313,10 @@ Here are some standard links for getting your machine calibrated:
   // #define ENDSTOPPULLUP_XMAX
   // #define ENDSTOPPULLUP_YMAX
   // #define ENDSTOPPULLUP_ZMAX
-  // #define ENDSTOPPULLUP_XMIN
-  // #define ENDSTOPPULLUP_YMIN
-  // #define ENDSTOPPULLUP_ZMIN
-  // #define ENDSTOPPULLUP_ZPROBE
+  #define ENDSTOPPULLUP_XMIN
+  #define ENDSTOPPULLUP_YMIN
+  #define ENDSTOPPULLUP_ZMIN
+  //#define ENDSTOPPULLUP_ZPROBE
 #endif
 
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
@@ -325,7 +327,7 @@ const bool X_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 const bool Y_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
-//#define DISABLE_MAX_ENDSTOPS
+#define DISABLE_MAX_ENDSTOPS
 //#define DISABLE_MIN_ENDSTOPS
 
 // @section machine
@@ -491,7 +493,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
   #define Z_RAISE_BEFORE_PROBING 2    //How much the extruder will be raised before traveling to the first probing point.
   #define Z_RAISE_BETWEEN_PROBINGS 3  //How much the extruder will be raised when traveling from between next probing points
-  #define Z_RAISE_AFTER_PROBING 5    //How much the extruder will be raised after the last probing point.
+  #define Z_RAISE_AFTER_PROBING 3     //How much the extruder will be raised after the last probing point.
 
 //   #define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" //These commands will be executed in the end of G29 routine.
                                                                             //Useful to retract a deployable probe.
@@ -566,13 +568,13 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // default settings
 
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   {80.145, 79.58, 4000.00, 797.07494}  // default steps per unit for ultimaker
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 100}  // default steps per unit for ultimaker
-#define DEFAULT_MAX_FEEDRATE          {150, 150, 10, 25}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1000,1000,100,3000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {2*80, 2*80, (2*3201)/1.25, 100}       // default steps per unit for ultimaker
+#define DEFAULT_MAX_FEEDRATE          {150, 150, 10, 25}                     // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {750,750,100,2000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
-#define DEFAULT_ACCELERATION          1000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
+#define DEFAULT_ACCELERATION          500    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  1500    // X, Y, Z and E max acceleration in mm/s^2 for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   1000    // X, Y, Z acceleration in mm/s^2 for travel (non printing) moves
+#define DEFAULT_TRAVEL_ACCELERATION   500    // X, Y, Z acceleration in mm/s^2 for travel (non printing) moves
 
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
 #define DEFAULT_XYJERK                20.0    // (mm/sec)
@@ -614,19 +616,19 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // @section temperature
 
 // Preheat Constants
-#define PLA_PREHEAT_HOTEND_TEMP 200
-#define PLA_PREHEAT_HPB_TEMP 50
-#define PLA_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
+#define PLA_PREHEAT_HOTEND_TEMP   200
+#define PLA_PREHEAT_HPB_TEMP      50
+#define PLA_PREHEAT_FAN_SPEED     0   // Insert Value between 0 and 255
 
-#define ABS_PREHEAT_HOTEND_TEMP 230
-#define ABS_PREHEAT_HPB_TEMP 0
-#define ABS_PREHEAT_FAN_SPEED 50   // Insert Value between 0 and 255
+#define ABS_PREHEAT_HOTEND_TEMP   230
+#define ABS_PREHEAT_HPB_TEMP      0
+#define ABS_PREHEAT_FAN_SPEED     50   // Insert Value between 0 and 255
 
 //==============================LCD and SD support=============================
 // @section lcd
 
 // Define your display language below. Replace (en) with your language code and uncomment.
-// en, pl, fr, de, es, ru, it, pt, pt-br, fi, an, nl, ca, eu, kana, kana_utf8, cn, test
+// en, pl, fr, de, es, ru, bg, it, pt, pt-br, fi, an, nl, ca, eu, kana, kana_utf8, cn, test
 // See also language.h
 #define LANGUAGE_INCLUDE GENERATE_LANGUAGE_INCLUDE(en)
 
@@ -704,6 +706,10 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
 // Panucatt VIKI LCD with status LEDs, integrated click & L/R/U/P buttons, separate encoder inputs
 //#define LCD_I2C_VIKI
+  
+// SSD1306 OLED display support
+// ==> REMEMBER TO INSTALL U8glib to your ARDUINO library folder: http://code.google.com/p/u8glib/wiki/u8glib
+#define U8GLIB_SSD1306
 
 // Shift register panels
 // ---------------------
@@ -711,7 +717,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
 
-#define SAV_3DLCD
+//#define SAV_3DLCD
 
 // @section extras
 
@@ -786,7 +792,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 #define FILAMENT_SENSOR_EXTRUDER_NUM 0   //The number of the extruder that has the filament sensor (0,1,2)
 #define MEASUREMENT_DELAY_CM        14   //measurement delay in cm.  This is the distance from filament sensor to middle of barrel
 
-#define DEFAULT_NOMINAL_FILAMENT_DIA 3.0 //Enter the diameter (in mm) of the filament generally used (3.0 mm or 1.75 mm) - this is then used in the slicer software.  Used for sensor reading validation
+#define DEFAULT_NOMINAL_FILAMENT_DIA 1.75 //Enter the diameter (in mm) of the filament generally used (3.0 mm or 1.75 mm) - this is then used in the slicer software.  Used for sensor reading validation
 #define MEASURED_UPPER_LIMIT         3.3 //upper limit factor used for sensor reading validation in mm
 #define MEASURED_LOWER_LIMIT         1.9 //lower limit factor for sensor reading validation in mm
 #define MAX_MEASUREMENT_DELAY       20   //delay buffer size in bytes (1 byte = 1cm)- limits maximum measurement delay allowable (must be larger than MEASUREMENT_DELAY_CM  and lower number saves RAM)

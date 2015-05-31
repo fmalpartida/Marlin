@@ -35,6 +35,8 @@
 #include "ultralcd_st7920_u8glib_rrd.h"
 #include "Configuration.h"
 
+#define STRING_SPLASH_LINE1 STRING_VERSION
+
 #if !defined(MAPPER_C2C3) && !defined(MAPPER_NON) && defined(USE_BIG_EDIT_FONT)
    #undef USE_BIG_EDIT_FONT
 #endif
@@ -125,6 +127,9 @@
 #elif defined(U8GLIB_LM6059_AF)
   // Based on the Adafruit ST7565 (http://www.adafruit.com/products/250)
   U8GLIB_LM6059 u8g(DOGLCD_CS, DOGLCD_A0);
+  // FMC LCD update
+#elif defined U8GLIB_SSD1306
+  U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE);
 #else
   // for regular DOGM128 display with HW-SPI
   U8GLIB_DOGM128 u8g(DOGLCD_CS, DOGLCD_A0);  // HW-SPI Com: CS, A0

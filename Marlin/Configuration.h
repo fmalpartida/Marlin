@@ -709,7 +709,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
   
 // SSD1306 OLED display support
 // ==> REMEMBER TO INSTALL U8glib to your ARDUINO library folder: http://code.google.com/p/u8glib/wiki/u8glib
-#define U8GLIB_SSD1306
+//#define U8GLIB_SSD1306
 
 // Shift register panels
 // ---------------------
@@ -717,7 +717,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
 
-//#define SAV_3DLCD
+#define SAV_3DLCD
 
 // @section extras
 

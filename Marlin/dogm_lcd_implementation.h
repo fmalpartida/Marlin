@@ -35,8 +35,6 @@
 #include "ultralcd_st7920_u8glib_rrd.h"
 #include "Configuration.h"
 
-#define STRING_SPLASH_LINE1 STRING_VERSION
-
 #if !defined(MAPPER_C2C3) && !defined(MAPPER_NON) && defined(USE_BIG_EDIT_FONT)
    #undef USE_BIG_EDIT_FONT
 #endif

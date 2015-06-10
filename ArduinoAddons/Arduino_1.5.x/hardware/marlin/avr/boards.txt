@@ -157,3 +157,62 @@ KosselPro.build.variant=brainwavepro
 KosselPro.build.vid=0x16D0
 KosselPro.build.pid=0x076B
 KosselPro.build.extra_flags=-DAT90USBxx_TEENSYPP_ASSIGNMENTS -DUSB_VID={build.vid} -DUSB_PID={build.pid}
+
+
+########################################
+## SAVMkI
+########################################
+SAVMkI.name=SAV MkI (CDC)
+
+SAVMkI.bootloader.tool=avrdude
+SAVMkI.bootloader.low_fuses=0xDE
+SAVMkI.bootloader.high_fuses=0xDB
+SAVMkI.bootloader.extended_fuses=0xF1
+#SAVMkI.bootloader.unlock_bits=0x3F
+#SAVMkI.bootloader.lock_bits=0x02F
+SAVMkI.bootloader.path=SAVMkI
+SAVMkI.bootloader.file=SAVMkI-1286-LUFA.hex
+
+SAVMkI.upload.tool=avrdude
+SAVMkI.upload.protocol=avr109
+SAVMkI.upload.maximum_size=126976
+SAVMkI.upload.speed=115200
+SAVMkI.upload.disable_flushing=true
+
+SAVMkI.build.mcu=at90usb1286
+SAVMkI.build.f_cpu=16000000L
+SAVMkI.build.core=SAVMkI
+SAVMkI.build.dependency=true
+SAVMkI.build.variant=SAVMkI
+SAVMkI.build.vid=0x16D0
+SAVMkI.build.pid=0x076B
+SAVMkI.build.extra_flags=-DUSB_VID={build.vid} -DUSB_PID={build.pid}
+
+########################################
+## SAVMkI HID boot
+########################################
+SAVMkI.name=SAV MkI (HID Bootloader)
+
+SAVMkI.bootloader.tool=avrdude
+SAVMkI.bootloader.low_fuses=0xDE
+SAVMkI.bootloader.high_fuses=0xDB
+SAVMkI.bootloader.extended_fuses=0xF1
+#SAVMkI.bootloader.unlock_bits=0x3F
+#SAVMkI.bootloader.lock_bits=0x02F
+SAVMkI.bootloader.path=SAVMkI
+SAVMkI.bootloader.file=BootloaderHID.hex
+
+SAVMkI.upload.tool=hidloader
+SAVMkI.upload.protocol=halfkay
+SAVMkI.upload.maximum_size=126976
+SAVMkI.upload.speed=115200
+SAVMkI.upload.disable_flushing=true
+
+SAVMkI.build.mcu=at90usb1286
+SAVMkI.build.f_cpu=16000000L
+SAVMkI.build.core=SAVMkI
+SAVMkI.build.dependency=true
+SAVMkI.build.variant=SAVMkI
+SAVMkI.build.vid=0x16D0
+SAVMkI.build.pid=0x076B
+SAVMkI.build.extra_flags=-DUSB_VID={build.vid} -DUSB_PID={build.pid}

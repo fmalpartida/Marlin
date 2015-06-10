@@ -286,7 +286,7 @@ bool target_direction;
 
 #ifdef ENABLE_AUTO_BED_LEVELING
   int xy_travel_speed = XY_TRAVEL_SPEED;
-  float zprobe_zoffset = -Z_PROBE_OFFSET_FROM_EXTRUDER;
+  float zprobe_zoffset = Z_PROBE_OFFSET_FROM_EXTRUDER;
 #endif
 
 #if defined(Z_DUAL_ENDSTOPS) && !defined(DELTA)
@@ -1060,7 +1060,7 @@ static void axis_is_at_home(AxisEnum axis) {
     max_pos[axis] = base_max_pos(axis) + home_offset[axis];
 
     #if defined(ENABLE_AUTO_BED_LEVELING) && Z_HOME_DIR < 0
-      if (axis == Z_AXIS) current_position[Z_AXIS] += zprobe_zoffset;
+      if (axis == Z_AXIS) current_position[Z_AXIS] -= zprobe_zoffset;
     #endif
   }
 }
@@ -1296,32 +1296,73 @@ static void setup_for_endstop_move() {
       }
 
     #elif defined(Z_PROBE_ALLEN_KEY)
+      feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE;
 
-      feedrate = homing_feedrate[X_AXIS];
-
-      // Move to the start position to initiate deployment
-      destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_X;
-      destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_Y;
-      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
-
-      // Home X to touch the belt
-      feedrate = homing_feedrate[X_AXIS]/10;
-      destination[X_AXIS] = 0;
-      prepare_move_raw(); // this will also set_current_to_destination
-      
-      // Home Y for safety
-      feedrate = homing_feedrate[X_AXIS]/2;
-      destination[Y_AXIS] = 0;
-      prepare_move_raw(); // this will also set_current_to_destination
-      
-      st_synchronize();
-
+      // If endstop is already false, the probe is deployed
       #ifdef Z_PROBE_ENDSTOP
         bool z_probe_endstop = (READ(Z_PROBE_PIN) != Z_PROBE_ENDSTOP_INVERTING);
         if (z_probe_endstop)
       #else
         bool z_min_endstop = (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
+        if (z_min_endstop)
+      #endif
+        {
+
+          // Move to the start position to initiate deployment
+          destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_X;
+          destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_Y;
+          destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_1_Z;
+          prepare_move_raw(); // this will also set_current_to_destination
+
+          // Move to engage deployment
+          if (Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE != Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE) {
+            feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE;
+          }
+          if (Z_PROBE_ALLEN_KEY_DEPLOY_2_X != Z_PROBE_ALLEN_KEY_DEPLOY_1_X) {
+            destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_X;
+          }
+          if (Z_PROBE_ALLEN_KEY_DEPLOY_2_Y != Z_PROBE_ALLEN_KEY_DEPLOY_1_Y) {
+            destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_Y;
+          }
+          if (Z_PROBE_ALLEN_KEY_DEPLOY_2_Z != Z_PROBE_ALLEN_KEY_DEPLOY_1_Z) {
+            destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_2_Z;
+          }
+          prepare_move_raw();
+
+          #ifdef Z_PROBE_ALLEN_KEY_DEPLOY_3_X
+            if (Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE != Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE) {
+              feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE;
+            }
+
+            // Move to trigger deployment
+            if (Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE != Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE) {
+              feedrate = Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE;
+            }
+            if (Z_PROBE_ALLEN_KEY_DEPLOY_3_X != Z_PROBE_ALLEN_KEY_DEPLOY_2_X) {
+              destination[X_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_X;
+            }
+            if (Z_PROBE_ALLEN_KEY_DEPLOY_3_Y != Z_PROBE_ALLEN_KEY_DEPLOY_2_Y) {
+              destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_Y;
+            }
+            if (Z_PROBE_ALLEN_KEY_DEPLOY_3_Z != Z_PROBE_ALLEN_KEY_DEPLOY_2_Z) {
+              destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_DEPLOY_3_Z;
+            }
+            prepare_move_raw();
+          #endif
+      }
+
+      // Partially Home X,Y for safety
+      destination[X_AXIS] = destination[X_AXIS]*0.75;
+      destination[Y_AXIS] = destination[Y_AXIS]*0.75;
+      prepare_move_raw(); // this will also set_current_to_destination
+
+      st_synchronize();
+
+      #ifdef Z_PROBE_ENDSTOP
+        z_probe_endstop = (READ(Z_PROBE_PIN) != Z_PROBE_ENDSTOP_INVERTING);
+        if (z_probe_endstop)
+      #else
+        z_min_endstop = (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
         if (z_min_endstop)
       #endif
         {
@@ -1366,25 +1407,41 @@ static void setup_for_endstop_move() {
     #elif defined(Z_PROBE_ALLEN_KEY)
 
       // Move up for safety
-      feedrate = homing_feedrate[X_AXIS];
+      feedrate = Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE;
       destination[Z_AXIS] = current_position[Z_AXIS] + Z_RAISE_AFTER_PROBING;
       prepare_move_raw(); // this will also set_current_to_destination
 
       // Move to the start position to initiate retraction
-      destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_X;
-      destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_Y;
-      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_Z;
-      prepare_move_raw(); // this will also set_current_to_destination
+      destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_1_X;
+      destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_1_Y;
+      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_1_Z;
+      prepare_move_raw();
 
       // Move the nozzle down to push the probe into retracted position
-      feedrate = homing_feedrate[Z_AXIS]/10;
-      destination[Z_AXIS] = current_position[Z_AXIS] - Z_PROBE_ALLEN_KEY_STOW_DEPTH;
-      prepare_move_raw(); // this will also set_current_to_destination
+      if (Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE != Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE) {
+        feedrate = Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE;
+      }
+      if (Z_PROBE_ALLEN_KEY_STOW_2_X != Z_PROBE_ALLEN_KEY_STOW_1_X) {
+        destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_2_X;
+      }
+      if (Z_PROBE_ALLEN_KEY_STOW_2_Y != Z_PROBE_ALLEN_KEY_STOW_1_Y) {
+        destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_2_Y;
+      }
+      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_2_Z;
+      prepare_move_raw();
       
       // Move up for safety
-      feedrate = homing_feedrate[Z_AXIS]/2;
-      destination[Z_AXIS] = current_position[Z_AXIS] + Z_PROBE_ALLEN_KEY_STOW_DEPTH * 2;
-      prepare_move_raw(); // this will also set_current_to_destination
+      if (Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE != Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE) {
+        feedrate = Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE;
+      }
+      if (Z_PROBE_ALLEN_KEY_STOW_3_X != Z_PROBE_ALLEN_KEY_STOW_2_X) {
+        destination[X_AXIS] = Z_PROBE_ALLEN_KEY_STOW_3_X;
+      }
+      if (Z_PROBE_ALLEN_KEY_STOW_3_Y != Z_PROBE_ALLEN_KEY_STOW_2_Y) {
+        destination[Y_AXIS] = Z_PROBE_ALLEN_KEY_STOW_3_Y;
+      }
+      destination[Z_AXIS] = Z_PROBE_ALLEN_KEY_STOW_3_Z;
+      prepare_move_raw();
       
       // Home XY for safety
       feedrate = homing_feedrate[X_AXIS]/2;
@@ -2437,10 +2494,12 @@ inline void gcode_G28() {
 
 #elif defined(ENABLE_AUTO_BED_LEVELING)
 
-  void out_of_range_error(const char *edge) {
-    char msg[40];
-    sprintf_P(msg, PSTR("?Probe %s position out of range.\n"), edge);
-    SERIAL_PROTOCOL(msg);
+  void out_of_range_error(const char *p_edge) {
+    char edge[10];
+    strncpy_P(edge, p_edge, 10);
+    SERIAL_PROTOCOLPGM("?Probe ");
+    SERIAL_PROTOCOL(edge);
+    SERIAL_PROTOCOLLNPGM(" position out of range.");
   }
 
   /**
@@ -3349,6 +3408,7 @@ inline void gcode_M42() {
  */
 inline void gcode_M104() {
   if (setTargetedHotend(104)) return;
+  if (marlin_debug_flags & DEBUG_DRYRUN) return;
 
   if (code_seen('S')) {
     float temp = code_value();
@@ -3448,6 +3508,7 @@ inline void gcode_M105() {
  */
 inline void gcode_M109() {
   if (setTargetedHotend(109)) return;
+  if (marlin_debug_flags & DEBUG_DRYRUN) return;
 
   LCD_MESSAGEPGM(MSG_HEATING);
 
@@ -3532,6 +3593,8 @@ inline void gcode_M109() {
    *       Rxxx Wait for bed current temp to reach target temp. Waits when heating and cooling
    */
   inline void gcode_M190() {
+    if (marlin_debug_flags & DEBUG_DRYRUN) return;
+
     LCD_MESSAGEPGM(MSG_BED_HEATING);
     no_wait_for_cooling = code_seen('S');
     if (no_wait_for_cooling || code_seen('R'))
@@ -3567,7 +3630,20 @@ inline void gcode_M109() {
  * M111: Set the debug level
  */
 inline void gcode_M111() {
-  marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_INFO|DEBUG_ERRORS;
+  marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_INFO|DEBUG_COMMUNICATION;
+  
+  SERIAL_ECHO_START;
+  if (marlin_debug_flags & DEBUG_ECHO) SERIAL_ECHOLNPGM(MSG_DEBUG_ECHO);
+  // FOR MOMENT NOT ACTIVE
+  //if (marlin_debug_flags & DEBUG_INFO) SERIAL_ECHOLNPGM(MSG_DEBUG_INFO);
+  //if (marlin_debug_flags & DEBUG_ERRORS) SERIAL_ECHOLNPGM(MSG_DEBUG_ERRORS);
+  if (marlin_debug_flags & DEBUG_DRYRUN) {
+    SERIAL_ECHOLNPGM(MSG_DEBUG_DRYRUN);
+    setTargetBed(0);
+    for (int8_t cur_hotend = 0; cur_hotend < EXTRUDERS; ++cur_hotend) {
+      setTargetHotend(0, cur_hotend);
+    }
+  }
 }
 
 /**
@@ -3605,6 +3681,7 @@ inline void gcode_M112() { kill(PSTR(MSG_KILLED)); }
  * M140: Set bed temperature
  */
 inline void gcode_M140() {
+  if (marlin_debug_flags & DEBUG_DRYRUN) return;
   if (code_seen('S')) setTargetBed(code_value());
 }
 
@@ -4571,7 +4648,7 @@ inline void gcode_M400() { st_synchronize(); }
   #ifdef SERVO_ENDSTOPS
     void raise_z_for_servo() {
       float zpos = current_position[Z_AXIS], z_dest = Z_RAISE_BEFORE_HOMING;
-      z_dest += axis_known_position[Z_AXIS] ? -zprobe_zoffset : zpos;
+      z_dest += axis_known_position[Z_AXIS] ? zprobe_zoffset : zpos;
       if (zpos < z_dest)
         do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], z_dest); // also updates current_position
     }
@@ -4792,7 +4869,7 @@ inline void gcode_M503() {
     if (code_seen('Z')) {
       value = code_value();
       if (Z_PROBE_OFFSET_RANGE_MIN <= value && value <= Z_PROBE_OFFSET_RANGE_MAX) {
-        zprobe_zoffset = -value;
+        zprobe_zoffset = value;
         SERIAL_ECHO_START;
         SERIAL_ECHOLNPGM(MSG_ZPROBE_ZOFFSET " " MSG_OK);
         SERIAL_EOL;
@@ -4809,8 +4886,8 @@ inline void gcode_M503() {
     }
     else {
       SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM(MSG_ZPROBE_ZOFFSET " : ");
-      SERIAL_ECHO(-zprobe_zoffset);
+      SERIAL_ECHOPGM(MSG_ZPROBE_ZOFFSET " : ");
+      SERIAL_ECHO(zprobe_zoffset);
       SERIAL_EOL;
     }
   }
@@ -4881,12 +4958,23 @@ inline void gcode_M503() {
     LCD_ALERTMESSAGEPGM(MSG_FILAMENTCHANGE);
     uint8_t cnt = 0;
     while (!lcd_clicked()) {
-      if (++cnt == 0) lcd_quick_feedback(); // every 256th frame till the lcd is clicked
-      manage_heater();
-      manage_inactivity(true);
-      lcd_update();
+      #ifndef AUTO_FILAMENT_CHANGE
+        if (++cnt == 0) lcd_quick_feedback(); // every 256th frame till the lcd is clicked
+        manage_heater();
+        manage_inactivity(true);
+        lcd_update();
+      #else
+        current_position[E_AXIS] += AUTO_FILAMENT_CHANGE_LENGTH;
+        plan_buffer_line(target[X_AXIS],target[Y_AXIS],target[Z_MAX_ENDSTOP_INVERTING],current_position[E_AXIS],AUTO_FILAMENT_CHANGE_FEEDRATE/60,active_extruder);
+        st_synchronize();
+      #endif
     } // while(!lcd_clicked)
 
+    #ifdef AUTO_FILAMENT_CHANGE
+      current_position[E_AXIS]= 0;
+      st_synchronize();
+    #endif
+          
     //return to normal
     if (code_seen('L')) target[E_AXIS] -= code_value();
     #ifdef FILAMENTCHANGE_FINALRETRACT
@@ -5166,12 +5254,13 @@ void process_next_command() {
 
   // Sanitize the current command:
   //  - Skip leading spaces
-  //  - Bypass N...
+  //  - Bypass N[0-9][0-9]*[ ]*
   //  - Overwrite * with nul to mark the end
   while (*current_command == ' ') ++current_command;
   if (*current_command == 'N' && current_command[1] >= '0' && current_command[1] <= '9') {
-    while (*current_command != ' ' && *current_command != 'G' && *current_command != 'M' && *current_command != 'T') ++current_command;
-    while (*current_command == ' ') ++current_command;
+    current_command += 2; // skip N[0-9]
+    while (*current_command >= '0' && *current_command <= '9') ++current_command; // skip [0-9]*
+    while (*current_command == ' ') ++current_command; // skip [ ]*
   }
   char *starpos = strchr(current_command, '*');  // * should always be the last parameter
   if (starpos) *starpos = '\0';
@@ -5190,7 +5279,7 @@ void process_next_command() {
   // Args pointer optimizes code_seen, especially those taking XYZEF
   // This wastes a little cpu on commands that expect no arguments.
   current_command_args = current_command;
-  while (*current_command_args != ' ') ++current_command_args;
+  while (*current_command_args && *current_command_args != ' ') ++current_command_args;
   while (*current_command_args == ' ') ++current_command_args;
 
   // Interpret the code int
@@ -5908,6 +5997,7 @@ void mesh_plan_buffer_line(float x, float y, float z, const float e, float feed_
 #ifdef PREVENT_DANGEROUS_EXTRUDE
 
   inline void prevent_dangerous_extrude(float &curr_e, float &dest_e) {
+    if (marlin_debug_flags & DEBUG_DRYRUN) return;
     float de = dest_e - curr_e;
     if (de) {
       if (degHotend(active_extruder) < extrude_min_temp) {

@@ -1480,7 +1480,7 @@ static void setup_for_endstop_move() {
 
   // Probe bed height at position (x,y), returns the measured z value
   static float probe_pt(float x, float y, float z_before, ProbeAction probe_action=ProbeDeployAndStow, int verbose_level=1) {
-    // move to right place
+    // Move Z up to the z_before height, then move the probe to the given XY
     do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], z_before); // this also updates current_position
     do_blocking_move_to(x - X_PROBE_OFFSET_FROM_EXTRUDER, y - Y_PROBE_OFFSET_FROM_EXTRUDER, current_position[Z_AXIS]); // this also updates current_position
 
@@ -1490,13 +1490,6 @@ static void setup_for_endstop_move() {
 
     run_z_probe();
     float measured_z = current_position[Z_AXIS];
-
-    #if Z_RAISE_BETWEEN_PROBINGS > 0
-      if (probe_action == ProbeStay) {
-        do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS); // this also updates current_position
-        st_synchronize();
-      }
-    #endif
 
     #if !defined(Z_PROBE_SLED) && !defined(Z_PROBE_ALLEN_KEY)
       if (probe_action & ProbeStow) stow_z_probe();
@@ -2495,10 +2488,8 @@ inline void gcode_G28() {
 #elif defined(ENABLE_AUTO_BED_LEVELING)
 
   void out_of_range_error(const char *p_edge) {
-    char edge[10];
-    strncpy_P(edge, p_edge, 10);
     SERIAL_PROTOCOLPGM("?Probe ");
-    SERIAL_PROTOCOL(edge);
+    serialprintPGM(p_edge);
     SERIAL_PROTOCOLLNPGM(" position out of range.");
   }
 
@@ -4512,9 +4503,6 @@ inline void gcode_M303() {
   int c = code_seen('C') ? code_value_short() : 5;
   float temp = code_seen('S') ? code_value() : (e < 0 ? 70.0 : 150.0);
   PID_autotune(temp, e, c);
-  // Suppress a line mismatch error
-  gcode_LastN += 1;
-  FlushSerialRequestResend();
 }
 
 #ifdef SCARA
@@ -6344,8 +6332,23 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) {
   if (max_inactive_time && ms > previous_cmd_ms + max_inactive_time) kill(PSTR(MSG_KILLED));
 
   if (stepper_inactive_time && ms > previous_cmd_ms + stepper_inactive_time
-      && !ignore_stepper_queue && !blocks_queued())
-    disable_all_steppers();
+      && !ignore_stepper_queue && !blocks_queued()) {
+    #if DISABLE_X == true
+      disable_x();
+    #endif
+    #if DISABLE_Y == true
+      disable_y();
+    #endif
+    #if DISABLE_Z == true
+      disable_z();
+    #endif
+    #if DISABLE_E == true
+      disable_e0();
+      disable_e1();
+      disable_e2();
+      disable_e3();
+    #endif
+  }
 
   #ifdef CHDK // Check if pin should be set to LOW after M240 set it to HIGH
     if (chdkActive && ms > chdkHigh + CHDK_DELAY) {

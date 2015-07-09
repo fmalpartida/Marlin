@@ -40,13 +40,20 @@
     #define ENCODER_STEPS_PER_MENU_ITEM 1
   #endif
 
-// FMC LCD New
+// OLED LCD support
   // Generic support for SSD1306 OLED based LCDs.
   #if defined(U8GLIB_SSD1306)
     #define ULTRA_LCD  //general LCD support, also 16x2
     #define DOGLCD  // Support for I2C LCD 128x64 (Controller SSD1306 graphic Display Family)
     #define ULTIMAKERCONTROLLER
   #endif
+
+// Generic support for SH1106 OLED based LCDs.
+#if defined(U8GLIB_SH1106)
+  #define ULTRA_LCD  //general LCD support, also 16x2
+  #define DOGLCD  // Support for I2C LCD 128x64 (Controller SSD1306 graphic Display Family)
+  #define ULTIMAKERCONTROLLER
+#endif
 
 
   #ifdef PANEL_ONE

@@ -77,7 +77,7 @@
   #define FILRUNOUT_PIN        4
 #endif
 
-#if MB(RAMPS_13_EFB) || MB(RAMPS_13_EFF) || defined(IS_RAMPS_EFB)
+#if MB(RAMPS_13_EFF) || defined(IS_RAMPS_EFB)
   #define FAN_PIN            9 // (Sprinter config)
   #if MB(RAMPS_13_EFF)
     #define CONTROLLERFAN_PIN  -1 // Pin used for the fan to cool controller
@@ -102,7 +102,7 @@
   #define HEATER_0_PIN       10   // EXTRUDER 1
 #endif
 
-#if MB(RAMPS_13_EFB) || MB(RAMPS_13_SF) || defined(IS_RAMPS_EFB)
+#if MB(RAMPS_13_SF) || defined(IS_RAMPS_EFB)
   #define HEATER_1_PIN       -1
 #else
   #define HEATER_1_PIN       9    // EXTRUDER 2 (FAN On Sprinter)
@@ -142,6 +142,7 @@
 #ifdef ULTRA_LCD
 
   #ifdef NEWPANEL
+
     #ifdef PANEL_ONE
       #define LCD_PINS_RS 40
       #define LCD_PINS_ENABLE 42
@@ -157,7 +158,6 @@
       #define LCD_PINS_D6 27
       #define LCD_PINS_D7 29
     #endif
-
 
     #ifdef REPRAP_DISCOUNT_SMART_CONTROLLER
       #define BEEPER 37
@@ -220,8 +220,8 @@
       #endif
 
     #endif
-  #else // Old-style panel with shift register
-    // Arduino pin witch triggers an piezzo beeper
+  #else // !NEWPANEL (Old-style panel with shift register)
+    // Arduino pin to trigger a piezzo beeper
     #define BEEPER 33   // No Beeper added
 
     // Buttons are attached to a shift register
@@ -237,7 +237,9 @@
     #define LCD_PINS_D5 25
     #define LCD_PINS_D6 27
     #define LCD_PINS_D7 29
-  #endif
+
+  #endif // !NEWPANEL
+
 #endif // ULTRA_LCD
 
 // SPI for Max6675 Thermocouple

@@ -34,7 +34,9 @@
   #include "pins_SETHI.h"
 #elif MB(RAMPS_OLD)
   #include "pins_RAMPS_OLD.h"
-#elif MB(RAMPS_13_EFB) || MB(RAMPS_13_EEB) || MB(RAMPS_13_EFF) || MB(RAMPS_13_EEF) || MB(RAMPS_13_SF)
+#elif MB(RAMPS_13_EFB)
+  #include "pins_RAMPS_13_EFB.h"
+#elif MB(RAMPS_13_EEB) || MB(RAMPS_13_EFF) || MB(RAMPS_13_EEF) || MB(RAMPS_13_SF)
   #include "pins_RAMPS_13.h"
 #elif MB(GEN6)
   #include "pins_GEN6.h"
@@ -50,8 +52,8 @@
   #include "pins_STB_11.h"
 #elif MB(AZTEEG_X1)
   #include "pins_AZTEEG_X1.h"
-#elif MB(MELZI_1284)
-  #include "pins_MELZI_1284.h"
+#elif MB(MELZI_MAKR3D)
+  #include "pins_MELZI_MAKR3D.h"
 #elif MB(AZTEEG_X3)
   #include "pins_AZTEEG_X3.h"
 #elif MB(AZTEEG_X3_PRO)
@@ -112,6 +114,10 @@
   #include "pins_BAM_DICE_DUE.h"
 #elif MB(FELIX2)
   #include "pins_FELIX2.h"
+#elif MB(MKS_BASE)
+  #include "pins_MKS_BASE.h"
+#elif MB(RIGIDBOARD)
+  #include "pins_RIGIDBOARD.h"
 #elif MB(99)
   #include "pins_99.h"
 #else

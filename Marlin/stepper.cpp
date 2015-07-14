@@ -629,7 +629,7 @@ ISR(TIMER1_COMPA_vect) {
 
     // Take multiple steps per interrupt (For high speed moves)
     for (int8_t i = 0; i < step_loops; i++) {
-      #ifndef AT90USB
+      #ifndef USBCON
         MSerial.checkRx(); // Check for serial chars.
       #endif
 
@@ -1073,13 +1073,7 @@ long st_get_position(uint8_t axis) {
   return count_pos;
 }
 
-#ifdef ENABLE_AUTO_BED_LEVELING
-
-  float st_get_position_mm(AxisEnum axis) {
-    return st_get_position(axis) / axis_steps_per_unit[axis];
-  }
-
-#endif  // ENABLE_AUTO_BED_LEVELING
+float st_get_position_mm(AxisEnum axis) { return st_get_position(axis) / axis_steps_per_unit[axis]; }
 
 void finishAndDisableSteppers() {
   st_synchronize();

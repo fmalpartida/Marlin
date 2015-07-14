@@ -9,7 +9,8 @@
   #error Oops!  Make sure you have 'Teensy++ 2.0' selected from the 'Tools -> Boards' menu.
 #endif
 
-#define AT90USB 1286  // Disable MarlinSerial etc.
+#define AT90USB  1286
+#define USBCON
 
 #define LARGE_FLASH        true
 
@@ -38,8 +39,8 @@
 
 #define X_STOP_PIN         13
 #define Y_STOP_PIN         14
-//#define Z_STOP_PIN         15
-#define Z_STOP_PIN         36  // For inductive sensor.
+#define Z_STOP_PIN         15
+//#define Z_STOP_PIN         36  // For inductive sensor.
 
 #define TEMP_0_PIN          7  // Extruder / Analog pin numbering
 #define TEMP_BED_PIN        6  // Bed / Analog pin numbering

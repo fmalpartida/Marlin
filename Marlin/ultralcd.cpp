@@ -398,7 +398,7 @@ static void lcd_main_menu() {
       MENU_ITEM(submenu, MSG_DELTA_CALIBRATE, lcd_delta_calibrate_menu);
     #endif
   }
-  //MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
+  MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
 
   #ifdef SDSUPPORT
     if (card.cardOK) {
@@ -508,7 +508,7 @@ static void lcd_tune_menu() {
     MENU_ITEM(submenu, MSG_BABYSTEP_Z, lcd_babystep_z);
   #endif
   #ifdef FILAMENTCHANGEENABLE
-     //MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
+     MENU_ITEM(gcode, MSG_FILAMENTCHANGE, PSTR("M600"));
   #endif
   END_MENU();
 }
@@ -812,7 +812,7 @@ static void lcd_control_menu() {
 
   #ifdef HAS_LCD_CONTRAST
     //MENU_ITEM_EDIT(int3, MSG_CONTRAST, &lcd_contrast, 0, 63);
-    //MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
+    MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
   #endif
   #ifdef FWRETRACT
     MENU_ITEM(submenu, MSG_RETRACT, lcd_control_retract_menu);
@@ -821,7 +821,7 @@ static void lcd_control_menu() {
     //MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
     //MENU_ITEM(function, MSG_LOAD_EPROM, Config_RetrieveSettings);
   #endif
-  //MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
+  MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
   END_MENU();
 }
 

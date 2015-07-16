@@ -215,7 +215,10 @@
     #endif
     #ifdef U8GLIB_SSD1306
       #undef HAS_LCD_CONTRAST
-    #endif  
+    #endif
+    #if defined(U8GLIB_SSD1306) || defined(U8GLIB_SH1106)
+      #undef HAS_LCD_CONTRAST
+    #endif
   #endif
 
 #else // CONFIGURATION_LCD

@@ -36,7 +36,7 @@
   #endif
 #endif // ENABLE_AUTO_BED_LEVELING
 
-#define SERVO_LEVELING (defined(ENABLE_AUTO_BED_LEVELING) && PROBE_SERVO_DEACTIVATION_DELAY > 0)
+#define SERVO_LEVELING (defined(ENABLE_AUTO_BED_LEVELING) && defined(DEACTIVATE_SERVOS_AFTER_MOVE))
 
 #ifdef MESH_BED_LEVELING
   #include "mesh_bed_leveling.h"
@@ -570,14 +570,21 @@ void servo_init() {
   #ifdef SERVO_ENDSTOPS
     for (int i = 0; i < 3; i++)
       if (servo_endstops[i] >= 0)
-        servo[servo_endstops[i]].write(servo_endstop_angles[i * 2 + 1]);
+        servo[servo_endstops[i]].move(0, servo_endstop_angles[i * 2 + 1]);
   #endif
 
-  #if SERVO_LEVELING
-    delay(PROBE_SERVO_DEACTIVATION_DELAY);
-    servo[servo_endstops[Z_AXIS]].detach();
-  #endif
 }
+
+/**
+ * Stepper Reset (RigidBoard, et.al.)
+ */
+#if HAS_STEPPER_RESET
+  void disableStepperDrivers() {
+    pinMode(STEPPER_RESET_PIN, OUTPUT);
+    digitalWrite(STEPPER_RESET_PIN, LOW);  // drive it down to hold in reset motor driver chips
+  }
+  void enableStepperDrivers() { pinMode(STEPPER_RESET_PIN, INPUT); }  // set to input, which allows it to be pulled high by pullups
+#endif
 
 /**
  * Marlin entry-point: Set up before the program loop
@@ -601,6 +608,11 @@ void setup() {
   setup_killpin();
   setup_filrunoutpin();
   setup_powerhold();
+
+  #if HAS_STEPPER_RESET
+    disableStepperDrivers();
+  #endif
+
   MYSERIAL.begin(BAUDRATE);
   SERIAL_PROTOCOLLNPGM("start");
   SERIAL_ECHO_START;
@@ -654,6 +666,10 @@ void setup() {
 
   #if HAS_CONTROLLERFAN
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
+  #endif
+
+  #if HAS_STEPPER_RESET
+    enableStepperDrivers();
   #endif
 
   #ifdef DIGIPOT_I2C
@@ -1295,14 +1311,7 @@ static void setup_for_endstop_move() {
       // Engage Z Servo endstop if enabled
       if (servo_endstops[Z_AXIS] >= 0) {
         Servo *srv = &servo[servo_endstops[Z_AXIS]];
-        #if SERVO_LEVELING
-          srv->attach(0);
-        #endif
-        srv->write(servo_endstop_angles[Z_AXIS * 2]);
-        #if SERVO_LEVELING
-          delay(PROBE_SERVO_DEACTIVATION_DELAY);
-          srv->detach();
-        #endif
+        srv->move(0, servo_endstop_angles[Z_AXIS * 2]);
       }
 
     #elif defined(Z_PROBE_ALLEN_KEY)
@@ -1404,14 +1413,7 @@ static void setup_for_endstop_move() {
 
         // Change the Z servo angle
         Servo *srv = &servo[servo_endstops[Z_AXIS]];
-        #if SERVO_LEVELING
-          srv->attach(0);
-        #endif
-        srv->write(servo_endstop_angles[Z_AXIS * 2 + 1]);
-        #if SERVO_LEVELING
-          delay(PROBE_SERVO_DEACTIVATION_DELAY);
-          srv->detach();
-        #endif
+        srv->move(0, servo_endstop_angles[Z_AXIS * 2 + 1]);
       }
 
     #elif defined(Z_PROBE_ALLEN_KEY)
@@ -1663,7 +1665,7 @@ static void homeaxis(AxisEnum axis) {
       if (axis != Z_AXIS) {
         // Engage Servo endstop if enabled
         if (servo_endstops[axis] > -1)
-          servo[servo_endstops[axis]].write(servo_endstop_angles[axis * 2]);
+          servo[servo_endstops[axis]].move(0, servo_endstop_angles[axis * 2]);
       }
     #endif
 
@@ -1762,13 +1764,13 @@ static void homeaxis(AxisEnum axis) {
 
     #endif
 
-    #ifdef SERVO_ENDSTOPS
-      {
+    {
+      #ifdef SERVO_ENDSTOPS
         // Retract Servo endstop if enabled
         if (servo_endstops[axis] > -1)
-          servo[servo_endstops[axis]].write(servo_endstop_angles[axis * 2 + 1]);
-      }
-    #endif
+          servo[servo_endstops[axis]].move(0, servo_endstop_angles[axis * 2 + 1]);
+      #endif
+    }
 
   }
 }
@@ -2771,6 +2773,9 @@ inline void gcode_G28() {
           }
         }
 
+        if (!dryrun) set_bed_level_equation_lsq(plane_equation_coefficients);
+        free(plane_equation_coefficients);
+
         // Show the Topography map if enabled
         if (do_topography_map) {
 
@@ -2781,10 +2786,22 @@ inline void gcode_G28() {
           SERIAL_PROTOCOLPGM("|...Front...|\n");
           SERIAL_PROTOCOLPGM("+-----------+\n");
 
+          float min_diff = 999;
+
           for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
             for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
               int ind = yy * auto_bed_leveling_grid_points + xx;
               float diff = eqnBVector[ind] - mean;
+
+              float x_tmp = eqnAMatrix[ind + 0 * abl2],
+                y_tmp = eqnAMatrix[ind + 1 * abl2],
+                z_tmp = 0;
+
+              apply_rotation_xyz(plan_bed_level_matrix,x_tmp,y_tmp,z_tmp);
+
+              if (eqnBVector[ind] - z_tmp < min_diff)
+                min_diff = eqnBVector[ind] - z_tmp;
+
               if (diff >= 0.0)
                 SERIAL_PROTOCOLPGM(" +");   // Include + for column alignment
               else
@@ -2794,13 +2811,31 @@ inline void gcode_G28() {
             SERIAL_EOL;
           } // yy
           SERIAL_EOL;
+          if (verbose_level > 3) {
+            SERIAL_PROTOCOLPGM(" \nCorrected Bed Height vs. Bed Topology: \n");
 
+            for (int yy = auto_bed_leveling_grid_points - 1; yy >= 0; yy--) {
+              for (int xx = 0; xx < auto_bed_leveling_grid_points; xx++) {
+                int ind = yy * auto_bed_leveling_grid_points + xx;
+                float x_tmp = eqnAMatrix[ind + 0 * abl2],
+                  y_tmp = eqnAMatrix[ind + 1 * abl2],
+                  z_tmp = 0;
+
+                apply_rotation_xyz(plan_bed_level_matrix,x_tmp,y_tmp,z_tmp);
+
+                float diff = eqnBVector[ind] - z_tmp - min_diff;
+                if (diff >= 0.0)
+                  SERIAL_PROTOCOLPGM(" +");
+                // Include + for column alignment
+                else
+                  SERIAL_PROTOCOLCHAR(' ');
+                SERIAL_PROTOCOL_F(diff, 5);
+              } // xx
+              SERIAL_EOL;
+            } // yy
+            SERIAL_EOL;
+          }
         } //do_topography_map
-
-
-        if (!dryrun) set_bed_level_equation_lsq(plane_equation_coefficients);
-        free(plane_equation_coefficients);
-
       #endif //!DELTA
 
     #else // !AUTO_BED_LEVELING_GRID
@@ -2832,11 +2867,11 @@ inline void gcode_G28() {
         float x_tmp = current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER,
               y_tmp = current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER,
               z_tmp = current_position[Z_AXIS],
-              real_z = (float)st_get_position(Z_AXIS) / axis_steps_per_unit[Z_AXIS];  //get the real Z (since the auto bed leveling is already correcting the plane)
+              real_z = st_get_position_mm(Z_AXIS);  //get the real Z (since the auto bed leveling is already correcting the plane)
 
         apply_rotation_xyz(plan_bed_level_matrix, x_tmp, y_tmp, z_tmp); // Apply the correction sending the probe offset
-        //line below controls z probe offset, zprobe_zoffset is the actual offset that can be modified via m851
-        current_position[Z_AXIS] = z_tmp - real_z + zprobe_zoffset;                     // The difference is added to current position and sent to planner.
+        //line below controls z probe offset, zprobe_zoffset is the actual offset that can be modified via m851 or is read from EEPROM
+        current_position[Z_AXIS] = z_tmp - real_z - zprobe_zoffset; // The difference is added to current position and sent to planner.
         sync_plan_position();
       }
     #endif // !DELTA
@@ -3636,17 +3671,17 @@ inline void gcode_M109() {
 inline void gcode_M111() {
   marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_INFO|DEBUG_COMMUNICATION;
   
-  SERIAL_ECHO_START;
-  if (marlin_debug_flags & DEBUG_ECHO) SERIAL_ECHOLNPGM(MSG_DEBUG_ECHO);
+  if (marlin_debug_flags & DEBUG_ECHO) {
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM(MSG_DEBUG_ECHO);
+  }
   // FOR MOMENT NOT ACTIVE
   //if (marlin_debug_flags & DEBUG_INFO) SERIAL_ECHOLNPGM(MSG_DEBUG_INFO);
   //if (marlin_debug_flags & DEBUG_ERRORS) SERIAL_ECHOLNPGM(MSG_DEBUG_ERRORS);
   if (marlin_debug_flags & DEBUG_DRYRUN) {
+    SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM(MSG_DEBUG_DRYRUN);
-    setTargetBed(0);
-    for (int8_t cur_hotend = 0; cur_hotend < EXTRUDERS; ++cur_hotend) {
-      setTargetHotend(0, cur_hotend);
-    }
+    disable_all_heaters();
   }
 }
 
@@ -3889,11 +3924,11 @@ inline void gcode_M114() {
   SERIAL_PROTOCOL(current_position[E_AXIS]);
 
   SERIAL_PROTOCOLPGM(MSG_COUNT_X);
-  SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
+  SERIAL_PROTOCOL(st_get_position_mm(X_AXIS));
   SERIAL_PROTOCOLPGM(" Y:");
-  SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
+  SERIAL_PROTOCOL(st_get_position_mm(Y_AXIS));
   SERIAL_PROTOCOLPGM(" Z:");
-  SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
+  SERIAL_PROTOCOL(st_get_position_mm(Z_AXIS));
 
   SERIAL_EOL;
 
@@ -4334,14 +4369,7 @@ inline void gcode_M226() {
       servo_position = code_value_short();
       if (servo_index >= 0 && servo_index < NUM_SERVOS) {
         Servo *srv = &servo[servo_index];
-        #if SERVO_LEVELING
-          srv->attach(0);
-        #endif
-        srv->write(servo_position);
-        #if SERVO_LEVELING
-          delay(PROBE_SERVO_DEACTIVATION_DELAY);
-          srv->detach();
-        #endif
+        srv->move(0, servo_position);
       }
       else {
         SERIAL_ECHO_START;
@@ -5287,13 +5315,13 @@ void process_next_command() {
   //  - Bypass N[0-9][0-9]*[ ]*
   //  - Overwrite * with nul to mark the end
   while (*current_command == ' ') ++current_command;
-  if (*current_command == 'N' && current_command[1] >= '0' && current_command[1] <= '9') {
-    current_command += 2; // skip N[0-9]
+  if (*current_command == 'N' && ((current_command[1] >= '0' && current_command[1] <= '9') || current_command[1] == '-')) {
+    current_command += 2; // skip N[-0-9]
     while (*current_command >= '0' && *current_command <= '9') ++current_command; // skip [0-9]*
     while (*current_command == ' ') ++current_command; // skip [ ]*
   }
   char *starpos = strchr(current_command, '*');  // * should always be the last parameter
-  if (starpos) *starpos = '\0';
+  if (starpos) while (*starpos == ' ' || *starpos == '*') *starpos-- = '\0'; // nullify '*' and ' '
 
   // Get the command code, which must be G, M, or T
   char command_code = *current_command;

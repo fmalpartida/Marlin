@@ -43,7 +43,7 @@ typedef unsigned long millis_t;
   #define analogInputToDigitalPin(p) ((p) + 0xA0)
 #endif
 
-#ifdef AT90USB
+#ifdef USBCON
   #include "HardwareSerial.h"
 #endif
 
@@ -58,7 +58,7 @@ typedef unsigned long millis_t;
 
 #include "WString.h"
 
-#ifdef AT90USB
+#ifdef USBCON
   #ifdef BTENABLED
     #define MYSERIAL bt
   #else
@@ -75,8 +75,8 @@ typedef unsigned long millis_t;
 #define SERIAL_PROTOCOL(x) MYSERIAL.print(x)
 #define SERIAL_PROTOCOL_F(x,y) MYSERIAL.print(x,y)
 #define SERIAL_PROTOCOLPGM(x) serialprintPGM(PSTR(x))
-#define SERIAL_PROTOCOLLN(x) do{ MYSERIAL.print(x),MYSERIAL.write('\n'); }while(0)
-#define SERIAL_PROTOCOLLNPGM(x) do{ serialprintPGM(PSTR(x)),MYSERIAL.write('\n'); }while(0)
+#define SERIAL_PROTOCOLLN(x) do{ MYSERIAL.print(x); SERIAL_EOL; }while(0)
+#define SERIAL_PROTOCOLLNPGM(x) do{ serialprintPGM(PSTR(x)); SERIAL_EOL; }while(0)
 
 
 extern const char errormagic[] PROGMEM;

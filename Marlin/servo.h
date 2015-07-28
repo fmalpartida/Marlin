@@ -40,6 +40,8 @@
    readMicroseconds()   - Gets the last written servo pulse width in microseconds. (was read_us() in first release)
    attached()  - Returns true if there is a servo attached.
    detach()    - Stops an attached servos from pulsing its i/o pin.
+   move(pin, angel) - Sequence of attach(pin), write(angel),
+                      With DEACTIVATE_SERVOS_AFTER_MOVE it waits SERVO_DEACTIVATION_DELAY and detaches.
  */
 
 #ifndef servo_h
@@ -120,12 +122,13 @@ class Servo {
     void detach();
     void write(int value);             // if value is < 200 it is treated as an angle, otherwise as pulse width in microseconds
     void writeMicroseconds(int value); // Write pulse width in microseconds
+    uint8_t move(int pin, int value);  // attach the given pin to the next free channel, sets pinMode, returns channel number or 0 if failure.
+                                       // if value is < 200 it is treated as an angle, otherwise as pulse width in microseconds.
+                                       // if DEACTIVATE_SERVOS_AFTER_MOVE is defined waits SERVO_DEACTIVATION_DELAY, than detaches.
     int read();                        // returns current pulse width as an angle between 0 and 180 degrees
     int readMicroseconds();            // returns current pulse width in microseconds for this servo (was read_us() in first release)
     bool attached();                   // return true if this servo is attached, otherwise false
-    #if defined(ENABLE_AUTO_BED_LEVELING) && PROBE_SERVO_DEACTIVATION_DELAY > 0
-      int pin;                           // store the hardware pin of the servo
-    #endif
+
   private:
     uint8_t servoIndex;               // index into the channel data for this servo
     int8_t min;                       // minimum is this value times 4 added to MIN_PULSE_WIDTH

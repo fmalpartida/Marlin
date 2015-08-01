@@ -286,271 +286,107 @@ void checkHitEndstops() {
 
 void enable_endstops(bool check) { check_endstops = check; }
 
-//         __________________________
-//        /|                        |\     _________________         ^
-//       / |                        | \   /|               |\        |
-//      /  |                        |  \ / |               | \       s
-//     /   |                        |   |  |               |  \      p
-//    /    |                        |   |  |               |   \     e
-//   +-----+------------------------+---+--+---------------+----+    e
-//   |               BLOCK 1            |      BLOCK 2          |    d
-//
-//                           time ----->
-//
-//  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
-//  first block->accelerate_until step_events_completed, then keeps going at constant speed until
-//  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
-//  The slope of acceleration is calculated using v = u + at where t is the accumulated timer values of the steps so far.
-
-void st_wake_up() {
-  //  TCNT1 = 0;
-  ENABLE_STEPPER_DRIVER_INTERRUPT();
-}
-
-FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
-  unsigned short timer;
-  if (step_rate > MAX_STEP_FREQUENCY) step_rate = MAX_STEP_FREQUENCY;
-
-  if (step_rate > 20000) { // If steprate > 20kHz >> step 4 times
-    step_rate = (step_rate >> 2) & 0x3fff;
-    step_loops = 4;
-  }
-  else if (step_rate > 10000) { // If steprate > 10kHz >> step 2 times
-    step_rate = (step_rate >> 1) & 0x7fff;
-    step_loops = 2;
-  }
-  else {
-    step_loops = 1;
-  }
-
-  if (step_rate < (F_CPU / 500000)) step_rate = (F_CPU / 500000);
-  step_rate -= (F_CPU / 500000); // Correct for minimal speed
-  if (step_rate >= (8 * 256)) { // higher step rate
-    unsigned short table_address = (unsigned short)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
-    unsigned char tmp_step_rate = (step_rate & 0x00ff);
-    unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
-    MultiU16X8toH16(timer, tmp_step_rate, gain);
-    timer = (unsigned short)pgm_read_word_near(table_address) - timer;
-  }
-  else { // lower step rates
-    unsigned short table_address = (unsigned short)&speed_lookuptable_slow[0][0];
-    table_address += ((step_rate)>>1) & 0xfffc;
-    timer = (unsigned short)pgm_read_word_near(table_address);
-    timer -= (((unsigned short)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
-  }
-  if (timer < 100) { timer = 100; MYSERIAL.print(MSG_STEPPER_TOO_HIGH); MYSERIAL.println(step_rate); }//(20kHz this should never happen)
-  return timer;
-}
-
-// set the stepper direction of each axis
-void set_stepper_direction() {
+// Check endstops
+inline void update_endstops() {
   
-  // Set the direction bits (X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY)
-  if (TEST(out_bits, X_AXIS)) {
-    X_APPLY_DIR(INVERT_X_DIR,0);
-    count_direction[X_AXIS] = -1;
-  }
-  else {
-    X_APPLY_DIR(!INVERT_X_DIR,0);
-    count_direction[X_AXIS] = 1;
-  }
-
-  if (TEST(out_bits, Y_AXIS)) {
-    Y_APPLY_DIR(INVERT_Y_DIR,0);
-    count_direction[Y_AXIS] = -1;
-  }
-  else {
-    Y_APPLY_DIR(!INVERT_Y_DIR,0);
-    count_direction[Y_AXIS] = 1;
-  }
-  
-  if (TEST(out_bits, Z_AXIS)) {
-    Z_APPLY_DIR(INVERT_Z_DIR,0);
-    count_direction[Z_AXIS] = -1;
-  }
-  else {
-    Z_APPLY_DIR(!INVERT_Z_DIR,0);
-    count_direction[Z_AXIS] = 1;
-  }
-  
-  #ifndef ADVANCE
-    if (TEST(out_bits, E_AXIS)) {
-      REV_E_DIR();
-      count_direction[E_AXIS] = -1;
-    }
-    else {
-      NORM_E_DIR();
-      count_direction[E_AXIS] = 1;
-    }
-  #endif //!ADVANCE
-}
-
-// Initializes the trapezoid generator from the current block. Called whenever a new
-// block begins.
-FORCE_INLINE void trapezoid_generator_reset() {
-
-  if (current_block->direction_bits != out_bits) {
-    out_bits = current_block->direction_bits;
-    set_stepper_direction();
-  }
-  
-  #ifdef ADVANCE
-    advance = current_block->initial_advance;
-    final_advance = current_block->final_advance;
-    // Do E steps + advance steps
-    e_steps[current_block->active_extruder] += ((advance >>8) - old_advance);
-    old_advance = advance >>8;
+  #ifdef Z_DUAL_ENDSTOPS
+    uint16_t
+  #else
+    byte
   #endif
-  deceleration_time = 0;
-  // step_rate to timer interval
-  OCR1A_nominal = calc_timer(current_block->nominal_rate);
-  // make a note of the number of step loops required at nominal speed
-  step_loops_nominal = step_loops;
-  acc_step_rate = current_block->initial_rate;
-  acceleration_time = calc_timer(acc_step_rate);
-  OCR1A = acceleration_time;
+      current_endstop_bits = 0;
 
-  // SERIAL_ECHO_START;
-  // SERIAL_ECHOPGM("advance :");
-  // SERIAL_ECHO(current_block->advance/256.0);
-  // SERIAL_ECHOPGM("advance rate :");
-  // SERIAL_ECHO(current_block->advance_rate/256.0);
-  // SERIAL_ECHOPGM("initial advance :");
-  // SERIAL_ECHO(current_block->initial_advance/256.0);
-  // SERIAL_ECHOPGM("final advance :");
-  // SERIAL_ECHOLN(current_block->final_advance/256.0);
-}
+  #define _ENDSTOP_PIN(AXIS, MINMAX) AXIS ##_## MINMAX ##_PIN
+  #define _ENDSTOP_INVERTING(AXIS, MINMAX) AXIS ##_## MINMAX ##_ENDSTOP_INVERTING
+  #define _AXIS(AXIS) AXIS ##_AXIS
+  #define _ENDSTOP_HIT(AXIS) endstop_hit_bits |= BIT(_ENDSTOP(AXIS, MIN))
+  #define _ENDSTOP(AXIS, MINMAX) AXIS ##_## MINMAX
 
-// "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
-// It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
-ISR(TIMER1_COMPA_vect) {
+  // SET_ENDSTOP_BIT: set the current endstop bits for an endstop to its status
+  #define SET_ENDSTOP_BIT(AXIS, MINMAX) SET_BIT(current_endstop_bits, _ENDSTOP(AXIS, MINMAX), (READ(_ENDSTOP_PIN(AXIS, MINMAX)) != _ENDSTOP_INVERTING(AXIS, MINMAX)))
+  // COPY_BIT: copy the value of COPY_BIT to BIT in bits
+  #define COPY_BIT(bits, COPY_BIT, BIT) SET_BIT(bits, BIT, TEST(bits, COPY_BIT))
+  // TEST_ENDSTOP: test the old and the current status of an endstop
+  #define TEST_ENDSTOP(ENDSTOP) (TEST(current_endstop_bits, ENDSTOP) && TEST(old_endstop_bits, ENDSTOP))
 
-  if (cleaning_buffer_counter)
-  {
-    current_block = NULL;
-    plan_discard_current_block();
-    #ifdef SD_FINISHED_RELEASECOMMAND
-      if ((cleaning_buffer_counter == 1) && (SD_FINISHED_STEPPERRELEASE)) enqueuecommands_P(PSTR(SD_FINISHED_RELEASECOMMAND));
-    #endif
-    cleaning_buffer_counter--;
-    OCR1A = 200;
-    return;
-  }
-
-  // If there is no current block, attempt to pop one from the buffer
-  if (!current_block) {
-    // Anything in the buffer?
-    current_block = plan_get_current_block();
-    if (current_block) {
-      current_block->busy = true;
-      trapezoid_generator_reset();
-      counter_x = -(current_block->step_event_count >> 1);
-      counter_y = counter_z = counter_e = counter_x;
-      step_events_completed = 0;
-
-      #ifdef Z_LATE_ENABLE
-        if (current_block->steps[Z_AXIS] > 0) {
-          enable_z();
-          OCR1A = 2000; //1ms wait
-          return;
-        }
-      #endif
-
-      // #ifdef ADVANCE
-      //   e_steps[current_block->active_extruder] = 0;
-      // #endif
+  #define UPDATE_ENDSTOP(AXIS,MINMAX) \
+    SET_ENDSTOP_BIT(AXIS, MINMAX); \
+    if (TEST_ENDSTOP(_ENDSTOP(AXIS, MINMAX))  && (current_block->steps[_AXIS(AXIS)] > 0)) { \
+      endstops_trigsteps[_AXIS(AXIS)] = count_position[_AXIS(AXIS)]; \
+      _ENDSTOP_HIT(AXIS); \
+      step_events_completed = current_block->step_event_count; \
     }
-    else {
-      OCR1A = 2000; // 1kHz.
+  
+  #ifdef COREXY
+    // Head direction in -X axis for CoreXY bots.
+    // If DeltaX == -DeltaY, the movement is only in Y axis
+    if ((current_block->steps[A_AXIS] != current_block->steps[B_AXIS]) || (TEST(out_bits, A_AXIS) == TEST(out_bits, B_AXIS))) {
+      if (TEST(out_bits, X_HEAD))
+  #elif defined(COREXZ)
+    // Head direction in -X axis for CoreXZ bots.
+    // If DeltaX == -DeltaZ, the movement is only in Z axis
+    if ((current_block->steps[A_AXIS] != current_block->steps[C_AXIS]) || (TEST(out_bits, A_AXIS) == TEST(out_bits, C_AXIS))) {
+      if (TEST(out_bits, X_HEAD))
+  #else
+      if (TEST(out_bits, X_AXIS))   // stepping along -X axis (regular Cartesian bot)
+  #endif
+      { // -direction
+        #ifdef DUAL_X_CARRIAGE
+          // with 2 x-carriages, endstops are only checked in the homing direction for the active extruder
+          if ((current_block->active_extruder == 0 && X_HOME_DIR == -1) || (current_block->active_extruder != 0 && X2_HOME_DIR == -1))
+        #endif
+          {
+            #if HAS_X_MIN
+              UPDATE_ENDSTOP(X, MIN);
+            #endif
+          }
+      }
+      else { // +direction
+        #ifdef DUAL_X_CARRIAGE
+          // with 2 x-carriages, endstops are only checked in the homing direction for the active extruder
+          if ((current_block->active_extruder == 0 && X_HOME_DIR == 1) || (current_block->active_extruder != 0 && X2_HOME_DIR == 1))
+        #endif
+          {
+            #if HAS_X_MAX
+              UPDATE_ENDSTOP(X, MAX);
+            #endif
+          }
+      }
+  #if defined(COREXY) || defined(COREXZ)
     }
-  }
+  #endif
 
-  if (current_block != NULL) {
+  #ifdef COREXY
+    // Head direction in -Y axis for CoreXY bots.
+    // If DeltaX == DeltaY, the movement is only in X axis
+    if ((current_block->steps[A_AXIS] != current_block->steps[B_AXIS]) || (TEST(out_bits, A_AXIS) != TEST(out_bits, B_AXIS))) {
+      if (TEST(out_bits, Y_HEAD))
+  #else
+      if (TEST(out_bits, Y_AXIS))   // -direction
+  #endif
+      { // -direction
+        #if HAS_Y_MIN
+          UPDATE_ENDSTOP(Y, MIN);
+        #endif
+      }
+      else { // +direction
+        #if HAS_Y_MAX
+          UPDATE_ENDSTOP(Y, MAX);
+        #endif
+      }
+  #if defined(COREXY)
+    }
+  #endif
 
-    // Check endstops
-    if (check_endstops) {
-      
-      #ifdef Z_DUAL_ENDSTOPS
-        uint16_t
-      #else
-        byte
-      #endif
-          current_endstop_bits = 0;
-
-      #define _ENDSTOP_PIN(AXIS, MINMAX) AXIS ##_## MINMAX ##_PIN
-      #define _ENDSTOP_INVERTING(AXIS, MINMAX) AXIS ##_## MINMAX ##_ENDSTOP_INVERTING
-      #define _AXIS(AXIS) AXIS ##_AXIS
-      #define _ENDSTOP_HIT(AXIS) endstop_hit_bits |= BIT(_ENDSTOP(AXIS, MIN))
-      #define _ENDSTOP(AXIS, MINMAX) AXIS ##_## MINMAX
-
-      // SET_ENDSTOP_BIT: set the current endstop bits for an endstop to its status
-      #define SET_ENDSTOP_BIT(AXIS, MINMAX) SET_BIT(current_endstop_bits, _ENDSTOP(AXIS, MINMAX), (READ(_ENDSTOP_PIN(AXIS, MINMAX)) != _ENDSTOP_INVERTING(AXIS, MINMAX)))
-      // COPY_BIT: copy the value of COPY_BIT to BIT in bits
-      #define COPY_BIT(bits, COPY_BIT, BIT) SET_BIT(bits, BIT, TEST(bits, COPY_BIT))
-      // TEST_ENDSTOP: test the old and the current status of an endstop
-      #define TEST_ENDSTOP(ENDSTOP) (TEST(current_endstop_bits, ENDSTOP) && TEST(old_endstop_bits, ENDSTOP))
-
-      #define UPDATE_ENDSTOP(AXIS,MINMAX) \
-        SET_ENDSTOP_BIT(AXIS, MINMAX); \
-        if (TEST_ENDSTOP(_ENDSTOP(AXIS, MINMAX))  && (current_block->steps[_AXIS(AXIS)] > 0)) { \
-          endstops_trigsteps[_AXIS(AXIS)] = count_position[_AXIS(AXIS)]; \
-          _ENDSTOP_HIT(AXIS); \
-          step_events_completed = current_block->step_event_count; \
-        }
-      
-      #ifdef COREXY
-        // Head direction in -X axis for CoreXY bots.
-        // If DeltaX == -DeltaY, the movement is only in Y axis
-        if ((current_block->steps[A_AXIS] != current_block->steps[B_AXIS]) || (TEST(out_bits, A_AXIS) == TEST(out_bits, B_AXIS))) {
-          if (TEST(out_bits, X_HEAD))
-      #else
-          if (TEST(out_bits, X_AXIS))   // stepping along -X axis (regular Cartesian bot)
-      #endif
-          { // -direction
-            #ifdef DUAL_X_CARRIAGE
-              // with 2 x-carriages, endstops are only checked in the homing direction for the active extruder
-              if ((current_block->active_extruder == 0 && X_HOME_DIR == -1) || (current_block->active_extruder != 0 && X2_HOME_DIR == -1))
-            #endif
-              {
-                #if HAS_X_MIN
-                  UPDATE_ENDSTOP(X, MIN);
-                #endif
-              }
-          }
-          else { // +direction
-            #ifdef DUAL_X_CARRIAGE
-              // with 2 x-carriages, endstops are only checked in the homing direction for the active extruder
-              if ((current_block->active_extruder == 0 && X_HOME_DIR == 1) || (current_block->active_extruder != 0 && X2_HOME_DIR == 1))
-            #endif
-              {
-                #if HAS_X_MAX
-                  UPDATE_ENDSTOP(X, MAX);
-                #endif
-              }
-          }
-      #ifdef COREXY
-        }
-        // Head direction in -Y axis for CoreXY bots.
-        // If DeltaX == DeltaY, the movement is only in X axis
-        if ((current_block->steps[A_AXIS] != current_block->steps[B_AXIS]) || (TEST(out_bits, A_AXIS) != TEST(out_bits, B_AXIS))) {
-          if (TEST(out_bits, Y_HEAD))
-      #else
-          if (TEST(out_bits, Y_AXIS))   // -direction
-      #endif
-          { // -direction
-            #if HAS_Y_MIN
-              UPDATE_ENDSTOP(Y, MIN);
-            #endif
-          }
-          else { // +direction
-            #if HAS_Y_MAX
-              UPDATE_ENDSTOP(Y, MAX);
-            #endif
-          }
-      #ifdef COREXY
-        }
-      #endif
-      if (TEST(out_bits, Z_AXIS)) { // z -direction
+  #ifdef COREXZ
+    // Head direction in -Z axis for CoreXZ bots.
+    // If DeltaX == DeltaZ, the movement is only in X axis
+    if ((current_block->steps[A_AXIS] != current_block->steps[C_AXIS]) || (TEST(out_bits, A_AXIS) != TEST(out_bits, C_AXIS))) {
+      if (TEST(out_bits, Z_HEAD))
+  #else
+      if (TEST(out_bits, Z_AXIS))
+  #endif
+      { // z -direction
         #if HAS_Z_MIN
 
           #ifdef Z_DUAL_ENDSTOPS
@@ -623,9 +459,198 @@ ISR(TIMER1_COMPA_vect) {
           }
         #endif
       }
-      old_endstop_bits = current_endstop_bits;
+  #if defined(COREXZ)
     }
+  #endif  
+  old_endstop_bits = current_endstop_bits;
+}
 
+//         __________________________
+//        /|                        |\     _________________         ^
+//       / |                        | \   /|               |\        |
+//      /  |                        |  \ / |               | \       s
+//     /   |                        |   |  |               |  \      p
+//    /    |                        |   |  |               |   \     e
+//   +-----+------------------------+---+--+---------------+----+    e
+//   |               BLOCK 1            |      BLOCK 2          |    d
+//
+//                           time ----->
+//
+//  The trapezoid is the shape the speed curve over time. It starts at block->initial_rate, accelerates
+//  first block->accelerate_until step_events_completed, then keeps going at constant speed until
+//  step_events_completed reaches block->decelerate_after after which it decelerates until the trapezoid generator is reset.
+//  The slope of acceleration is calculated using v = u + at where t is the accumulated timer values of the steps so far.
+
+void st_wake_up() {
+  //  TCNT1 = 0;
+  ENABLE_STEPPER_DRIVER_INTERRUPT();
+}
+
+FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
+  unsigned short timer;
+  if (step_rate > MAX_STEP_FREQUENCY) step_rate = MAX_STEP_FREQUENCY;
+
+  if (step_rate > 20000) { // If steprate > 20kHz >> step 4 times
+    step_rate = (step_rate >> 2) & 0x3fff;
+    step_loops = 4;
+  }
+  else if (step_rate > 10000) { // If steprate > 10kHz >> step 2 times
+    step_rate = (step_rate >> 1) & 0x7fff;
+    step_loops = 2;
+  }
+  else {
+    step_loops = 1;
+  }
+
+  if (step_rate < (F_CPU / 500000)) step_rate = (F_CPU / 500000);
+  step_rate -= (F_CPU / 500000); // Correct for minimal speed
+  if (step_rate >= (8 * 256)) { // higher step rate
+    unsigned short table_address = (unsigned short)&speed_lookuptable_fast[(unsigned char)(step_rate>>8)][0];
+    unsigned char tmp_step_rate = (step_rate & 0x00ff);
+    unsigned short gain = (unsigned short)pgm_read_word_near(table_address+2);
+    MultiU16X8toH16(timer, tmp_step_rate, gain);
+    timer = (unsigned short)pgm_read_word_near(table_address) - timer;
+  }
+  else { // lower step rates
+    unsigned short table_address = (unsigned short)&speed_lookuptable_slow[0][0];
+    table_address += ((step_rate)>>1) & 0xfffc;
+    timer = (unsigned short)pgm_read_word_near(table_address);
+    timer -= (((unsigned short)pgm_read_word_near(table_address+2) * (unsigned char)(step_rate & 0x0007))>>3);
+  }
+  if (timer < 100) { timer = 100; MYSERIAL.print(MSG_STEPPER_TOO_HIGH); MYSERIAL.println(step_rate); }//(20kHz this should never happen)
+  return timer;
+}
+
+/**
+ * Set the stepper direction of each axis
+ *
+ *   X_AXIS=A_AXIS and Y_AXIS=B_AXIS for COREXY
+ *   X_AXIS=A_AXIS and Z_AXIS=C_AXIS for COREXZ
+ */
+void set_stepper_direction() {
+
+  if (TEST(out_bits, X_AXIS)) { // A_AXIS
+    X_APPLY_DIR(INVERT_X_DIR, 0);
+    count_direction[X_AXIS] = -1;
+  }
+  else {
+    X_APPLY_DIR(!INVERT_X_DIR, 0);
+    count_direction[X_AXIS] = 1;
+  }
+
+  if (TEST(out_bits, Y_AXIS)) { // B_AXIS
+    Y_APPLY_DIR(INVERT_Y_DIR, 0);
+    count_direction[Y_AXIS] = -1;
+  }
+  else {
+    Y_APPLY_DIR(!INVERT_Y_DIR, 0);
+    count_direction[Y_AXIS] = 1;
+  }
+  
+  if (TEST(out_bits, Z_AXIS)) { // C_AXIS
+    Z_APPLY_DIR(INVERT_Z_DIR, 0);
+    count_direction[Z_AXIS] = -1;
+  }
+  else {
+    Z_APPLY_DIR(!INVERT_Z_DIR, 0);
+    count_direction[Z_AXIS] = 1;
+  }
+  
+  #ifndef ADVANCE
+    if (TEST(out_bits, E_AXIS)) {
+      REV_E_DIR();
+      count_direction[E_AXIS] = -1;
+    }
+    else {
+      NORM_E_DIR();
+      count_direction[E_AXIS] = 1;
+    }
+  #endif //!ADVANCE
+}
+
+// Initializes the trapezoid generator from the current block. Called whenever a new
+// block begins.
+FORCE_INLINE void trapezoid_generator_reset() {
+
+  if (current_block->direction_bits != out_bits) {
+    out_bits = current_block->direction_bits;
+    set_stepper_direction();
+  }
+  
+  #ifdef ADVANCE
+    advance = current_block->initial_advance;
+    final_advance = current_block->final_advance;
+    // Do E steps + advance steps
+    e_steps[current_block->active_extruder] += ((advance >>8) - old_advance);
+    old_advance = advance >>8;
+  #endif
+  deceleration_time = 0;
+  // step_rate to timer interval
+  OCR1A_nominal = calc_timer(current_block->nominal_rate);
+  // make a note of the number of step loops required at nominal speed
+  step_loops_nominal = step_loops;
+  acc_step_rate = current_block->initial_rate;
+  acceleration_time = calc_timer(acc_step_rate);
+  OCR1A = acceleration_time;
+
+  // SERIAL_ECHO_START;
+  // SERIAL_ECHOPGM("advance :");
+  // SERIAL_ECHO(current_block->advance/256.0);
+  // SERIAL_ECHOPGM("advance rate :");
+  // SERIAL_ECHO(current_block->advance_rate/256.0);
+  // SERIAL_ECHOPGM("initial advance :");
+  // SERIAL_ECHO(current_block->initial_advance/256.0);
+  // SERIAL_ECHOPGM("final advance :");
+  // SERIAL_ECHOLN(current_block->final_advance/256.0);
+}
+
+// "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
+// It pops blocks from the block_buffer and executes them by pulsing the stepper pins appropriately.
+ISR(TIMER1_COMPA_vect) {
+
+  if (cleaning_buffer_counter) {
+    current_block = NULL;
+    plan_discard_current_block();
+    #ifdef SD_FINISHED_RELEASECOMMAND
+      if ((cleaning_buffer_counter == 1) && (SD_FINISHED_STEPPERRELEASE)) enqueuecommands_P(PSTR(SD_FINISHED_RELEASECOMMAND));
+    #endif
+    cleaning_buffer_counter--;
+    OCR1A = 200;
+    return;
+  }
+
+  // If there is no current block, attempt to pop one from the buffer
+  if (!current_block) {
+    // Anything in the buffer?
+    current_block = plan_get_current_block();
+    if (current_block) {
+      current_block->busy = true;
+      trapezoid_generator_reset();
+      counter_x = -(current_block->step_event_count >> 1);
+      counter_y = counter_z = counter_e = counter_x;
+      step_events_completed = 0;
+
+      #ifdef Z_LATE_ENABLE
+        if (current_block->steps[Z_AXIS] > 0) {
+          enable_z();
+          OCR1A = 2000; //1ms wait
+          return;
+        }
+      #endif
+
+      // #ifdef ADVANCE
+      //   e_steps[current_block->active_extruder] = 0;
+      // #endif
+    }
+    else {
+      OCR1A = 2000; // 1kHz.
+    }
+  }
+
+  if (current_block != NULL) {
+
+    // Update endstops state, if enabled
+    if (check_endstops) update_endstops();
 
     // Take multiple steps per interrupt (For high speed moves)
     for (int8_t i = 0; i < step_loops; i++) {
@@ -1227,7 +1252,7 @@ void microstep_init() {
     pinMode(E0_MS1_PIN,OUTPUT);
     pinMode(E0_MS2_PIN,OUTPUT);
     const uint8_t microstep_modes[] = MICROSTEP_MODES;
-    for (uint16_t i = 0; i < sizeof(microstep_modes) / sizeof(microstep_modes[0]); i++)
+    for (uint16_t i = 0; i < COUNT(microstep_modes); i++)
       microstep_mode(i, microstep_modes[i]);
   #endif
 }

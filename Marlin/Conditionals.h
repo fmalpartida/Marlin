@@ -84,6 +84,14 @@
     #define NEWPANEL
   #endif
 
+  #ifdef MINIPANEL
+   #define DOGLCD
+   #define SDSUPPORT
+   #define ULTIPANEL
+   #define NEWPANEL
+   #define DEFAULT_LCD_CONTRAST 17
+  #endif
+
   /**
    * I2C PANELS
    */
@@ -291,6 +299,8 @@
     #define MAX_PROBE_Y (min(Y_MAX_POS, Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
   #endif
 
+  #define SERVO_LEVELING (defined(ENABLE_AUTO_BED_LEVELING) && defined(DEACTIVATE_SERVOS_AFTER_MOVE))
+
    /**
     * Sled Options
     */ 
@@ -408,6 +418,8 @@
     #define ARRAY_BY_EXTRUDERS(v1, v2, v3, v4) { v1 }
   #endif
 
+  #define ARRAY_BY_EXTRUDERS1(v1) ARRAY_BY_EXTRUDERS(v1, v1, v1, v1)
+
   /**
    * Shorthand for pin tests, used wherever needed
    */
@@ -512,6 +524,22 @@
   #endif
 
   #define HAS_BUZZER ((defined(BEEPER) && BEEPER >= 0) || defined(LCD_USE_I2C_BUZZER))
+
+
+  #if defined( NUM_SERVOS ) && (NUM_SERVOS > 0)
+    #ifndef X_ENDSTOP_SERVO_NR
+      #define X_ENDSTOP_SERVO_NR -1
+    #endif
+    #ifndef Y_ENDSTOP_SERVO_NR
+      #define Y_ENDSTOP_SERVO_NR -1
+    #endif
+    #ifndef Z_ENDSTOP_SERVO_NR
+      #define Z_ENDSTOP_SERVO_NR -1
+    #endif
+    #if (X_ENDSTOP_SERVO_NR >= 0) || (Y_ENDSTOP_SERVO_NR >= 0) || (Z_ENDSTOP_SERVO_NR >= 0)
+      #define SERVO_ENDSTOPS {X_ENDSTOP_SERVO_NR, Y_ENDSTOP_SERVO_NR, Z_ENDSTOP_SERVO_NR}
+    #endif
+  #endif
 
 #endif //CONFIGURATION_LCD
 #endif //CONDITIONALS_H

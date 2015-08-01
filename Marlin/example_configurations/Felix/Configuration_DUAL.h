@@ -2,6 +2,7 @@
 #define CONFIGURATION_H
 
 #include "boards.h"
+#include "macros.h"
 
 //===========================================================================
 //============================= Getting Started =============================
@@ -273,6 +274,9 @@ Here are some standard links for getting your machine calibrated:
 // Uncomment this option to enable CoreXY kinematics
 // #define COREXY
 
+// Uncomment this option to enable CoreXZ kinematics
+// #define COREXZ
+
 // Enable this option for Toshiba steppers
 //#define CONFIG_STEPPERS_TOSHIBA
 
@@ -445,9 +449,6 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 
   //If defined, the Probe servo will be turned on only during movement and then turned off to avoid jerk
   //The value is the delay to turn the servo off after powered on - depends on the servo speed; 300ms is good value, but you can try lower it.
-  // You MUST HAVE the SERVO_ENDSTOPS defined to use here a value higher than zero otherwise your code will not compile.
-
-//  #define PROBE_SERVO_DEACTIVATION_DELAY 300
 
 
 //If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
@@ -472,7 +473,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
   // If you want to still use the Z min endstop for homing, disable Z_SAFE_HOMING above. Eg; to park the head outside the bed area when homing with G28.
   // WARNING: The Z MIN endstop will need to set properly as it would without a Z PROBE to prevent head crashes and premature stopping during a print.
   // To use a separate Z PROBE endstop, you must have a Z_PROBE_PIN defined in the pins.h file for your control board.
-  // If you are using a servo based Z PROBE, you will need to enable NUM_SERVOS, SERVO_ENDSTOPS and SERVO_ENDSTOPS_ANGLES in the R/C Servo below.
+  // If you are using a servo based Z PROBE, you will need to enable NUM_SERVOS, Z_ENDSTOP_SERVO_NR and SERVO_ENDSTOPS_ANGLES in the R/C Servo below.
   // RAMPS 1.3/1.4 boards may be able to use the 5V, Ground and the D32 pin in the Aux 4 section of the RAMPS board. Use 5V for powered sensors, otherwise connect to ground and D32
   // for normally closed configuration and 5V and D32 for normally open configurations. Normally closed configuration is advised and assumed.
   // The D32 pin in Aux 4 on RAMPS maps to the Arduino D32 pin. Z_PROBE_PIN is setting the pin to use on the Arduino. Since the D32 pin on the RAMPS maps to D32 on Arduino, this works.
@@ -586,6 +587,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 //#define ENCODER_STEPS_PER_MENU_ITEM 5 // Set according to ENCODER_PULSES_PER_STEP or your liking
 //#define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 //#define ULTIPANEL  //the UltiPanel as on Thingiverse
+//#define SPEAKER // The sound device is a speaker - not a buzzer. A buzzer resonates with his own frequency.
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000         // this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
                                                  // 0 to disable buzzer feedback. Test with M300 S<frequency Hz> P<duration ms>
@@ -633,6 +635,10 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // http://www.elefu.com/index.php?route=product/product&product_id=53
 // REMEMBER TO INSTALL LiquidCrystal_I2C.h in your ARDUINO library folder: https://github.com/kiyoshigawa/LiquidCrystal_I2C
 //#define RA_CONTROL_PANEL
+
+// The MakerLab Mini Panel with graphic controller and SD support
+// http://reprap.org/wiki/Mini_panel
+// #define MINIPANEL
 
 /**
  * I2C Panels
@@ -710,8 +716,22 @@ const bool Z_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the logic
 // This allows for servo actuated endstops, primary usage is for the Z Axis to eliminate calibration or bed height changes.
 // Use M851 to set the z-probe vertical offset from the nozzle. Store that setting with M500.
 //
-//#define SERVO_ENDSTOPS {-1, -1, 0} // Servo index for X, Y, Z. Disable with -1
+//#define X_ENDSTOP_SERVO_NR 1
+//#define Y_ENDSTOP_SERVO_NR 2
+//#define Z_ENDSTOP_SERVO_NR 0
 //#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 70,0} // X,Y,Z Axis Extend and Retract angles
+
+// Servo deactivation
+//
+// With this option servos are powered only during movement, then turned off to prevent jitter.
+//#define DEACTIVATE_SERVOS_AFTER_MOVE
+
+#ifdef DEACTIVATE_SERVOS_AFTER_MOVE
+  // Delay (in microseconds) before turning the servo off. This depends on the servo speed.
+  // 300ms is a good value but you can try less delay.
+  // If the servo can't reach the requested position, increase it.
+  #define SERVO_DEACTIVATION_DELAY 300
+#endif
 
 /**********************************************************************\
  * Support for a filament diameter sensor

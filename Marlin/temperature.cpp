@@ -80,7 +80,7 @@ unsigned char soft_pwm_bed;
     static TRState thermal_runaway_state_machine[4] = { TRReset, TRReset, TRReset, TRReset };
     static millis_t thermal_runaway_timer[4]; // = {0,0,0,0};
   #endif
-  #ifdef THERMAL_PROTECTION_BED
+  #if defined(THERMAL_PROTECTION_BED) && TEMP_SENSOR_BED != 0
     static TRState thermal_runaway_bed_state_machine = TRReset;
     static millis_t thermal_runaway_bed_timer;
   #endif
@@ -130,11 +130,11 @@ static volatile bool temp_meas_ready = false;
 
 #ifdef PIDTEMP
   #ifdef PID_PARAMS_PER_EXTRUDER
-    float Kp[EXTRUDERS] = ARRAY_BY_EXTRUDERS(DEFAULT_Kp, DEFAULT_Kp, DEFAULT_Kp, DEFAULT_Kp);
-    float Ki[EXTRUDERS] = ARRAY_BY_EXTRUDERS(DEFAULT_Ki*PID_dT, DEFAULT_Ki*PID_dT, DEFAULT_Ki*PID_dT, DEFAULT_Ki*PID_dT);
-    float Kd[EXTRUDERS] = ARRAY_BY_EXTRUDERS(DEFAULT_Kd / PID_dT, DEFAULT_Kd / PID_dT, DEFAULT_Kd / PID_dT, DEFAULT_Kd / PID_dT);
+    float Kp[EXTRUDERS] = ARRAY_BY_EXTRUDERS1(DEFAULT_Kp);
+    float Ki[EXTRUDERS] = ARRAY_BY_EXTRUDERS1(DEFAULT_Ki*PID_dT);
+    float Kd[EXTRUDERS] = ARRAY_BY_EXTRUDERS1(DEFAULT_Kd / PID_dT);
     #ifdef PID_ADD_EXTRUSION_RATE
-      float Kc[EXTRUDERS] = ARRAY_BY_EXTRUDERS(DEFAULT_Kc, DEFAULT_Kc, DEFAULT_Kc, DEFAULT_Kc);
+      float Kc[EXTRUDERS] = ARRAY_BY_EXTRUDERS1(DEFAULT_Kc);
     #endif // PID_ADD_EXTRUSION_RATE
   #else //PID_PARAMS_PER_EXTRUDER
     float Kp = DEFAULT_Kp;
@@ -150,7 +150,7 @@ static volatile bool temp_meas_ready = false;
 static int minttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_LO_TEMP , HEATER_1_RAW_LO_TEMP , HEATER_2_RAW_LO_TEMP, HEATER_3_RAW_LO_TEMP);
 static int maxttemp_raw[EXTRUDERS] = ARRAY_BY_EXTRUDERS( HEATER_0_RAW_HI_TEMP , HEATER_1_RAW_HI_TEMP , HEATER_2_RAW_HI_TEMP, HEATER_3_RAW_HI_TEMP);
 static int minttemp[EXTRUDERS] = { 0 };
-static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS( 16383, 16383, 16383, 16383 );
+static int maxttemp[EXTRUDERS] = ARRAY_BY_EXTRUDERS1(16383);
 #ifdef BED_MINTEMP
 static int bed_minttemp_raw = HEATER_BED_RAW_LO_TEMP;
 #endif
@@ -1013,7 +1013,7 @@ void tp_init() {
   void start_watching_heater(int e) {
     if (degHotend(e) < degTargetHotend(e) - (WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1)) {
       watch_target_temp[e] = degHotend(e) + WATCH_TEMP_INCREASE;
-      watch_heater_next_ms[e] = millis() + WATCH_TEMP_PERIOD * 1000;
+      watch_heater_next_ms[e] = millis() + WATCH_TEMP_PERIOD * 1000UL;
     }
     else
       watch_heater_next_ms[e] = 0;
@@ -1550,7 +1550,7 @@ ISR(TIMER0_COMPB_vect) {
       if (minttemp_raw[0] GE0 current_temperature_raw[0]) min_temp_error(0);
     #endif
 
-    #if HAS_TEMP_1
+    #if HAS_TEMP_1 && EXTRUDERS > 1
       #if HEATER_1_RAW_LO_TEMP > HEATER_1_RAW_HI_TEMP
         #define GE1 <=
       #else
@@ -1560,7 +1560,7 @@ ISR(TIMER0_COMPB_vect) {
       if (minttemp_raw[1] GE1 current_temperature_raw[1]) min_temp_error(1);
     #endif // TEMP_SENSOR_1
 
-    #if HAS_TEMP_2
+    #if HAS_TEMP_2 && EXTRUDERS > 2
       #if HEATER_2_RAW_LO_TEMP > HEATER_2_RAW_HI_TEMP
         #define GE2 <=
       #else
@@ -1570,7 +1570,7 @@ ISR(TIMER0_COMPB_vect) {
       if (minttemp_raw[2] GE2 current_temperature_raw[2]) min_temp_error(2);
     #endif // TEMP_SENSOR_2
 
-    #if HAS_TEMP_3
+    #if HAS_TEMP_3 && EXTRUDERS > 3
       #if HEATER_3_RAW_LO_TEMP > HEATER_3_RAW_HI_TEMP
         #define GE3 <=
       #else

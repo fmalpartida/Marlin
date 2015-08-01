@@ -131,6 +131,9 @@
 #elif defined(U8GLIB_SH1106)
   // Generic support for SSD1306 OLED I2C LCDs
   U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NONE | U8G_I2C_OPT_FAST);
+#elif defined(MINIPANEL)
+  // The MINIPanel display
+  U8GLIB_MINI12864 u8g(DOGLCD_CS, DOGLCD_A0);  
 #else
   // for regular DOGM128 display with HW-SPI
   U8GLIB_DOGM128 u8g(DOGLCD_CS, DOGLCD_A0);  // HW-SPI Com: CS, A0
@@ -204,8 +207,9 @@ static void lcd_implementation_init() {
     pinMode(LCD_PIN_RESET, OUTPUT);           
     digitalWrite(LCD_PIN_RESET, HIGH);
   #endif
-
-  u8g.setContrast(lcd_contrast);	
+  #ifndef MINIPANEL//setContrast not working for Mini Panel
+    u8g.setContrast(lcd_contrast);	
+  #endif
 	// FIXME: remove this workaround
   // Uncomment this if you have the first generation (V1.10) of STBs board
   // pinMode(17, OUTPUT);	// Enable LCD backlight

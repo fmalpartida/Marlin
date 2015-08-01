@@ -4,7 +4,7 @@
 
 #include "pins_RAMPS_13.h"
 
-#ifdef Z_PROBE_ENDSTOP
+#if ENABLED(Z_PROBE_ENDSTOP)
   #define Z_PROBE_PIN      19
 #endif
 
@@ -20,10 +20,10 @@
 
 // LCD Panel options for the RigidBoard
 
-#ifdef RIGIDBOT_PANEL
+#if ENABLED(RIGIDBOT_PANEL)
 
-  #undef BEEPER
-  #define BEEPER -1
+  #undef BEEPER_PIN
+  #define BEEPER_PIN -1
 
   #undef SDCARDDETECT
   #define SDCARDDETECT 22
@@ -48,8 +48,8 @@
 
 #elif defined(REPRAP_DISCOUNT_SMART_CONTROLLER)
 
-  #undef BEEPER
-  #define BEEPER -1
+  #undef BEEPER_PIN
+  #define BEEPER_PIN -1
 
   #undef  SDCARDDETECT
   #define SDCARDDETECT 22

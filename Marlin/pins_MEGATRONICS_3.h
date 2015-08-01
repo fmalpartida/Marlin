@@ -9,12 +9,12 @@
 #define LARGE_FLASH        true
 
 
-#ifdef Z_PROBE_SLED
+#if ENABLED(Z_PROBE_SLED)
   #define SLED_PIN         -1
 #endif
 
 // Servo support
-#ifdef NUM_SERVOS
+#if HAS_SERVOS
   #define SERVO0_PIN       46 //AUX3-6
   #if NUM_SERVOS > 1
     #define SERVO1_PIN     47 //AUX3-5
@@ -76,7 +76,7 @@
 #define TEMP_2_PIN   (TEMP_SENSOR_2 == -1 ?   9 : 12) // ANALOG NUMBERING
 #define TEMP_BED_PIN (TEMP_SENSOR_BED == -1 ? 8 : 14) // ANALOG NUMBERING
 
-#define BEEPER 61
+#define BEEPER_PIN 61
 
 #define LCD_PINS_RS 32
 #define LCD_PINS_ENABLE 31

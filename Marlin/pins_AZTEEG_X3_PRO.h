@@ -6,7 +6,7 @@
 
 #undef FAN_PIN
 #define FAN_PIN             6 //Part Cooling System
-#define BEEPER             33
+#define BEEPER_PIN         33
 #define CONTROLLERFAN_PIN   4 //Pin used for the fan to cool motherboard (-1 to disable)
 //Fans/Water Pump to cool the hotend cool side.
 #define EXTRUDER_0_AUTO_FAN_PIN   5
@@ -18,7 +18,7 @@
 //MIN endstops soldered onto the board. Delta code wants the homing endstops to be 
 //the MAX so I swapped them here.
 //
- #ifdef DELTA
+ #if ENABLED(DELTA)
   #undef X_MIN_PIN
   #undef X_MAX_PIN
   #undef Y_MIN_PIN
@@ -34,7 +34,7 @@
   #define Z_MAX_PIN        18
  #endif
 //
- #ifdef Z_PROBE_ENDSTOP
+ #if ENABLED(Z_PROBE_ENDSTOP)
 //#undef Z_MIN_PIN
 //#define Z_MIN_PIN        15
   #define Z_PROBE_PIN      19
@@ -81,7 +81,7 @@
  #undef SERVO2_PIN
  #undef SERVO3_PIN
 
- #ifdef NUM_SERVOS
+ #if HAS_SERVOS
    #define SERVO0_PIN       47
    #if NUM_SERVOS > 1
      #define SERVO1_PIN     -1
@@ -96,8 +96,8 @@
 
 //LCD Pins//
 
- #if defined(VIKI2) || defined(miniVIKI)
-  #define BEEPER           33
+ #if ENABLED(VIKI2) || ENABLED(miniVIKI)
+  #define BEEPER_PIN       33
  // Pins for DOGM SPI LCD Support
   #define DOGLCD_A0        44
   #define DOGLCD_CS        45
@@ -114,7 +114,7 @@
   #define KILL_PIN         31
  #endif
 
- #ifdef TEMP_STAT_LEDS
+ #if ENABLED(TEMP_STAT_LEDS)
   #define STAT_LED_RED     32
   #define STAT_LED_BLUE    35
  #endif

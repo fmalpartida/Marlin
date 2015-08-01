@@ -55,11 +55,11 @@
 #define SUICIDE_PIN        54  //PIN that has to be turned on right after start, to keep power flowing.
 #define SERVO0_PIN         13  // untested
 
-#ifdef ULTRA_LCD
+#if ENABLED(ULTRA_LCD)
 
-  #ifdef NEWPANEL
-  //arduino pin witch triggers an piezzo beeper
-    #define BEEPER 18
+  #define BEEPER_PIN 18
+
+  #if ENABLED(NEWPANEL)
 
     #define LCD_PINS_RS 20
     #define LCD_PINS_ENABLE 17
@@ -71,14 +71,11 @@
     //buttons are directly attached
     #define BTN_EN1 40
     #define BTN_EN2 42
-    #define BTN_ENC 19  //the click
+    #define BTN_ENC 19
 
     #define SDCARDDETECT 38
 
   #else //!NEWPANEL - Old style panel with shift register
-
-    //arduino pin witch triggers an piezzo beeper
-    #define BEEPER 18
 
     //buttons are attached to a shift register
     #define SHIFT_CLK 38

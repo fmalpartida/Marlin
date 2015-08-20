@@ -205,8 +205,11 @@
   /**
    * Default LCD contrast for dogm-like LCD displays
    */
-  #if ENABLED(DOGLCD) && DISABLED(DEFAULT_LCD_CONTRAST)
-    #define DEFAULT_LCD_CONTRAST 32
+  #if ENABLED(DOGLCD)
+    #define HAS_LCD_CONTRAST (DISABLED(U8GLIB_ST7920) && DISABLED(U8GLIB_SSD1306) && DISABLED(U8GLIB_SH1106))
+    #if HAS_LCD_CONTRAST && !defined(DEFAULT_LCD_CONTRAST)
+      #define DEFAULT_LCD_CONTRAST 32
+    #endif
   #endif
 
   #if ENABLED(DOGLCD)

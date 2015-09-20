@@ -37,19 +37,6 @@
   #define SLED_PIN         -1
 #endif
 
-#if HAS_SERVOS
-  #define SERVO0_PIN       -1
-  #if NUM_SERVOS > 1
-    #define SERVO1_PIN     -1
-    #if NUM_SERVOS > 2
-      #define SERVO2_PIN   -1
-      #if NUM_SERVOS > 3
-        #define SERVO3_PIN -1
-      #endif
-    #endif
-  #endif
-#endif
-
 #define PS_ON_PIN          -1
 #define KILL_PIN           -1
 
@@ -108,9 +95,9 @@
         #define LCD_PINS_D4     17 //SCK (CLK) clock
         #define BEEPER_PIN      27 // Pin 27 is taken by LED_PIN, but Melzi LED does nothing with Marlin so this can be used for BEEPER_PIN. You can use this pin with M42 instead of BEEPER_PIN.
       #else         // Sanguinololu 1.3
-        #define LCD_PINS_RS      4 
-        #define LCD_PINS_ENABLE 17 
-        #define LCD_PINS_D4     30 
+        #define LCD_PINS_RS      4
+        #define LCD_PINS_ENABLE 17
+        #define LCD_PINS_D4     30
         #define LCD_PINS_D5     29
         #define LCD_PINS_D6     28
         #define LCD_PINS_D7     27
@@ -123,12 +110,12 @@
       #define LCD_CONTRAST       1
 
     #endif
-  
+
     // Uncomment screen orientation
     #define LCD_SCREEN_ROT_0
-    // #define LCD_SCREEN_ROT_90
-    // #define LCD_SCREEN_ROT_180
-    // #define LCD_SCREEN_ROT_270
+    //#define LCD_SCREEN_ROT_90
+    //#define LCD_SCREEN_ROT_180
+    //#define LCD_SCREEN_ROT_270
 
   #else // !DOGLCD - Standard Hitachi LCD controller
 
@@ -156,7 +143,7 @@
     #define LCD_SDSS            28 // Smart Controller SD card reader rather than the Melzi
   #endif //Panelolu2
 
-  #define SDCARDDETECT          -1
+  #define SD_DETECT_PIN         -1
 
 #elif ENABLED(MAKRPANEL)
 
@@ -170,18 +157,18 @@
   #define LCD_CONTRAST           1
   // Uncomment screen orientation
   #define LCD_SCREEN_ROT_0
-  // #define LCD_SCREEN_ROT_90
-  // #define LCD_SCREEN_ROT_180
-  // #define LCD_SCREEN_ROT_270
+  //#define LCD_SCREEN_ROT_90
+  //#define LCD_SCREEN_ROT_180
+  //#define LCD_SCREEN_ROT_270
   //The encoder and click button
   #define BTN_EN1               11
   #define BTN_EN2               10
   #define BTN_ENC               16
 
-  #define SDCARDDETECT          -1
+  #define SD_DETECT_PIN         -1
 
 #endif // MAKRPANEL
 
 // #if FAN_PIN == 12 || FAN_PIN ==13
-//   #define FAN_SOFT_PWM
+//#define FAN_SOFT_PWM
 // #endif

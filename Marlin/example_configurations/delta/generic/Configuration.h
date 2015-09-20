@@ -38,7 +38,7 @@ Here are some standard links for getting your machine calibrated:
 
 // @section info
 
-#if ENABLED(HAS_AUTOMATIC_VERSIONING)
+#if ENABLED(USE_AUTOMATIC_VERSIONING)
   #include "_Version.h"
 #else
   #include "Default_Version.h"
@@ -48,7 +48,8 @@ Here are some standard links for getting your machine calibrated:
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
 #define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
-#define STRING_SPLASH_LINE1 BUILD_VERSION // will be shown during bootup in line 1
+#define SHOW_BOOTSCREEN
+#define STRING_SPLASH_LINE1 SHORT_BUILD_VERSION // will be shown during bootup in line 1
 //#define STRING_SPLASH_LINE2 STRING_DISTRIBUTION_DATE // will be shown during bootup in line 2
 
 // @section machine
@@ -63,8 +64,8 @@ Here are some standard links for getting your machine calibrated:
 // :[2400,9600,19200,38400,57600,115200,250000]
 #define BAUDRATE 250000
 
-// This enables the serial port associated to the Bluetooth interface
-//#define BTENABLED              // Enable BT interface on AT90USB devices
+// Enable the Bluetooth serial interface on AT90USB devices
+//#define BLUETOOTH
 
 // The following define selects which electronics board you have.
 // Please choose the name from boards.h that matches your setup
@@ -78,7 +79,7 @@ Here are some standard links for getting your machine calibrated:
 
 // Define this to set a unique identifier for this printer, (Used by some programs to differentiate between machines)
 // You can use an online service to generate a random UUID. (eg http://www.uuidgenerator.net/version4)
-// #define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
+//#define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
 
 // This defines the number of extruders
 // :[1,2,3,4]
@@ -141,8 +142,8 @@ Here are some standard links for getting your machine calibrated:
 // 110 is Pt100 with 1k pullup (non standard)
 // 998 and 999 are Dummy Tables. They will ALWAYS read 25°C or the temperature defined below.
 //     Use it for Testing or Development purposes. NEVER for production machine.
-//     #define DUMMY_THERMISTOR_998_VALUE 25
-//     #define DUMMY_THERMISTOR_999_VALUE 100
+//#define DUMMY_THERMISTOR_998_VALUE 25
+//#define DUMMY_THERMISTOR_999_VALUE 100
 // :{ '0': "Not used", '4': "10k !! do not use for a hotend. Bad resolution at high temp. !!", '1': "100k / 4.7k - EPCOS", '51': "100k / 1k - EPCOS", '6': "100k / 4.7k EPCOS - Not as accurate as Table 1", '5': "100K / 4.7k - ATC Semitec 104GT-2 (Used in ParCan & J-Head)", '7': "100k / 4.7k Honeywell 135-104LAG-J01", '71': "100k / 4.7k Honeywell 135-104LAF-J01", '8': "100k / 4.7k 0603 SMD Vishay NTCS0603E3104FXT", '9': "100k / 4.7k GE Sensing AL03006-58.2K-97-G1", '10': "100k / 4.7k RS 198-961", '11': "100k / 4.7k beta 3950 1%", '12': "100k / 4.7k 0603 SMD Vishay NTCS0603E3104FXT (calibrated for Makibox hot bed)", '13': "100k Hisens 3950  1% up to 300°C for hotend 'Simple ONE ' & hotend 'All In ONE'", '60': "100k Maker's Tool Works Kapton Bed Thermistor beta=3950", '55': "100k / 1k - ATC Semitec 104GT-2 (Used in ParCan & J-Head)", '2': "200k / 4.7k - ATC Semitec 204GT-2", '52': "200k / 1k - ATC Semitec 204GT-2", '-2': "Thermocouple + MAX6675 (only for sensor 0)", '-1': "Thermocouple + AD595", '3': "Mendel-parts / 4.7k", '1047': "Pt1000 / 4.7k", '1010': "Pt1000 / 1k (non standard)", '20': "PT100 (Ultimainboard V2.x)", '147': "Pt100 / 4.7k", '110': "Pt100 / 1k (non-standard)", '998': "Dummy 1", '999': "Dummy 2" }
 #define TEMP_SENSOR_0 -1
 #define TEMP_SENSOR_1 -1
@@ -200,9 +201,9 @@ Here are some standard links for getting your machine calibrated:
   //#define PID_OPENLOOP 1 // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
   //#define SLOW_PWM_HEATERS // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   //#define PID_PARAMS_PER_EXTRUDER // Uses separate PID parameters for each extruder (useful for mismatched extruders)
-                                    // Set/get with gcode: M301 E[extruder number, 0-2]
+  // Set/get with gcode: M301 E[extruder number, 0-2]
   #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
-                                  // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
+  // is more then PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
   #define PID_INTEGRAL_DRIVE_MAX PID_MAX  //limit for the integral term
   #define K1 0.95 //smoothing factor within the PID
 
@@ -305,10 +306,10 @@ Here are some standard links for getting your machine calibrated:
 // @section machine
 
 // Uncomment this option to enable CoreXY kinematics
-// #define COREXY
+//#define COREXY
 
 // Uncomment this option to enable CoreXZ kinematics
-// #define COREXZ
+//#define COREXZ
 
 //===========================================================================
 //============================== Delta Settings =============================
@@ -353,15 +354,15 @@ Here are some standard links for getting your machine calibrated:
 // coarse Endstop Settings
 #define ENDSTOPPULLUPS // Comment this out (using // at the start of the line) to disable the endstop pullup resistors
 
-#ifndef ENDSTOPPULLUPS
+#if DISABLED(ENDSTOPPULLUPS)
   // fine endstop settings: Individual pullups. will be ignored if ENDSTOPPULLUPS is defined
-  // #define ENDSTOPPULLUP_XMAX
-  // #define ENDSTOPPULLUP_YMAX
-  // #define ENDSTOPPULLUP_ZMAX
-  // #define ENDSTOPPULLUP_XMIN
-  // #define ENDSTOPPULLUP_YMIN
-  // #define ENDSTOPPULLUP_ZMIN
-  // #define ENDSTOPPULLUP_ZPROBE
+  //#define ENDSTOPPULLUP_XMAX
+  //#define ENDSTOPPULLUP_YMAX
+  //#define ENDSTOPPULLUP_ZMAX
+  //#define ENDSTOPPULLUP_XMIN
+  //#define ENDSTOPPULLUP_YMIN
+  //#define ENDSTOPPULLUP_ZMIN
+  //#define ENDSTOPPULLUP_ZMIN_PROBE
 #endif
 
 // Mechanical endstop with COM to ground and NC to Signal uses "false" here (most common setup).
@@ -371,15 +372,15 @@ const bool Z_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 const bool X_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Y_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
-const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool Z_MIN_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 //#define DISABLE_MAX_ENDSTOPS
-#define DISABLE_MIN_ENDSTOPS // Deltas only use min endstops for probing
+#define DISABLE_MIN_ENDSTOPS // Deltas only use min endstops for probing.
 
-// If you want to enable the Z Probe pin, but disable its use, uncomment the line below.
-// This only affects a Z Probe Endstop if you have separate Z min endstop as well and have
-// activated Z_PROBE_ENDSTOP below. If you are using the Z Min endstop on your Z Probe,
+// If you want to enable the Z probe pin, but disable its use, uncomment the line below.
+// This only affects a Z probe endstop if you have separate Z min endstop as well and have
+// activated Z_MIN_PROBE_ENDSTOP below. If you are using the Z Min endstop on your Z probe,
 // this has no effect.
-//#define DISABLE_Z_PROBE_ENDSTOP
+//#define DISABLE_Z_MIN_PROBE_ENDSTOP
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
 // :{0:'Low',1:'High'}
@@ -440,9 +441,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 //========================= Filament Runout Sensor ==========================
 //===========================================================================
 //#define FILAMENT_RUNOUT_SENSOR // Uncomment for defining a filament runout sensor such as a mechanical or opto endstop to check the existence of filament
-                                 // In RAMPS uses servo pin 2. Can be changed in pins file. For other boards pin definition should be made.
-                                 // It is assumed that when logic high = filament available
-                                 //                    when logic  low = filament ran out
+// In RAMPS uses servo pin 2. Can be changed in pins file. For other boards pin definition should be made.
+// It is assumed that when logic high = filament available
+//                    when logic  low = filament ran out
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
   const bool FIL_RUNOUT_INVERTING = true;  // Should be uncommented and true or false should assigned
   #define ENDSTOPPULLUP_FIL_RUNOUT // Uncomment to use internal pullup for filament runout pins if the sensor is defined.
@@ -453,11 +454,11 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 //=========================== Manual Bed Leveling ===========================
 //===========================================================================
 
-// #define MANUAL_BED_LEVELING  // Add display menu option for bed leveling
-// #define MESH_BED_LEVELING    // Enable mesh bed leveling
+//#define MANUAL_BED_LEVELING  // Add display menu option for bed leveling.
+//#define MESH_BED_LEVELING    // Enable mesh bed leveling.
 
 #if ENABLED(MANUAL_BED_LEVELING)
-  #define MBL_Z_STEP 0.025  // Step size while manually probing Z axis
+  #define MBL_Z_STEP 0.025  // Step size while manually probing Z axis.
 #endif  // MANUAL_BED_LEVELING
 
 #if ENABLED(MESH_BED_LEVELING)
@@ -465,9 +466,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
   #define MESH_MAX_X (X_MAX_POS - MESH_MIN_X)
   #define MESH_MIN_Y 10
   #define MESH_MAX_Y (Y_MAX_POS - MESH_MIN_Y)
-  #define MESH_NUM_X_POINTS 3  // Don't use more than 7 points per axis, implementation limited
+  #define MESH_NUM_X_POINTS 3  // Don't use more than 7 points per axis, implementation limited.
   #define MESH_NUM_Y_POINTS 3
-  #define MESH_HOME_SEARCH_Z 4  // Z after Home, bed somewhere below but above 0.0
+  #define MESH_HOME_SEARCH_Z 4  // Z after Home, bed somewhere below but above 0.0.
 #endif  // MESH_BED_LEVELING
 
 //===========================================================================
@@ -476,12 +477,14 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 
 // @section bedlevel
 
-//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
-//#define Z_PROBE_REPEATABILITY_TEST // Z-Probe Repeatability test is not supported in Deltas yet.
 
-#if ENABLED(ENABLE_AUTO_BED_LEVELING)
+//#define AUTO_BED_LEVELING_FEATURE // Delete the comment to enable (remove // at the start of the line)
+//#define DEBUG_LEVELING_FEATURE
+//#define Z_MIN_PROBE_REPEATABILITY_TEST  // If not commented out, Z-Probe Repeatability test will be included if Auto Bed Leveling is Enabled.
 
-  // There are 2 different ways to specify probing locations
+#if ENABLED(AUTO_BED_LEVELING_FEATURE)
+
+  // There are 2 different ways to specify probing locations.
   //
   // - "grid" mode
   //   Probe several points in a rectangular grid.
@@ -492,9 +495,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
   //   Probe 3 arbitrary points on the bed (that aren't colinear)
   //   You specify the XY coordinates of all 3 points.
 
-  // Enable this to sample the bed in a grid (least squares solution)
-  // Note: this feature generates 10KB extra code size
-  #define AUTO_BED_LEVELING_GRID  // Deltas only support grid mode
+  // Enable this to sample the bed in a grid (least squares solution).
+  // Note: this feature generates 10KB extra code size.
+  #define AUTO_BED_LEVELING_GRID  // Deltas only support grid mode.
 
   #if ENABLED(AUTO_BED_LEVELING_GRID)
 
@@ -505,7 +508,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
     #define FRONT_PROBE_BED_POSITION -DELTA_PROBABLE_RADIUS
     #define BACK_PROBE_BED_POSITION DELTA_PROBABLE_RADIUS
 
-    #define MIN_PROBE_EDGE 10 // The probe square sides can be no smaller than this
+    #define MIN_PROBE_EDGE 10 // The Z probe square sides can be no smaller than this.
 
     // Non-linear bed leveling will be used.
     // Compensate by interpolating between the nearest four Z probe values for each point.
@@ -515,37 +518,37 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 
   #else  // !AUTO_BED_LEVELING_GRID
 
-      // Arbitrary points to probe. A simple cross-product
-      // is used to estimate the plane of the bed.
-      #define ABL_PROBE_PT_1_X 15
-      #define ABL_PROBE_PT_1_Y 180
-      #define ABL_PROBE_PT_2_X 15
-      #define ABL_PROBE_PT_2_Y 20
-      #define ABL_PROBE_PT_3_X 170
-      #define ABL_PROBE_PT_3_Y 20
+    // Arbitrary points to probe.
+    // A simple cross-product is used to estimate the plane of the bed.
+    #define ABL_PROBE_PT_1_X 15
+    #define ABL_PROBE_PT_1_Y 180
+    #define ABL_PROBE_PT_2_X 15
+    #define ABL_PROBE_PT_2_Y 20
+    #define ABL_PROBE_PT_3_X 170
+    #define ABL_PROBE_PT_3_Y 20
 
   #endif // AUTO_BED_LEVELING_GRID
 
-  // Offsets to the probe relative to the extruder tip (Hotend - Probe)
-  // X and Y offsets must be integers
-  #define X_PROBE_OFFSET_FROM_EXTRUDER 0     // Probe on: -left  +right
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -10   // Probe on: -front +behind
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -3.5  // -below (always!)
+  // Offsets to the Z probe relative to the nozzle tip.
+  // X and Y offsets must be integers.
+  #define X_PROBE_OFFSET_FROM_EXTRUDER 0     // Z probe to nozzle X offset: -left  +right
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER -10   // Z probe to nozzle Y offset: -front +behind
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -3.5  // Z probe to nozzle Z offset: -below (always!)
 
-  #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
-                                        // Be sure you have this distance over your Z_MAX_POS in case
+  #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z axis before homing (G28) for Z probe clearance.
+  // Be sure you have this distance over your Z_MAX_POS in case.
 
-  #define XY_TRAVEL_SPEED 4000         // X and Y axis travel speed between probes, in mm/min
+  #define XY_TRAVEL_SPEED 4000         // X and Y axis travel speed between probes, in mm/min.
 
-  #define Z_RAISE_BEFORE_PROBING 15   //How much the extruder will be raised before traveling to the first probing point.
-  #define Z_RAISE_BETWEEN_PROBINGS 5  //How much the extruder will be raised when traveling from between next probing points
-  #define Z_RAISE_AFTER_PROBING 50    //How much the extruder will be raised after the last probing point.
+  #define Z_RAISE_BEFORE_PROBING 15   // How much the Z axis will be raised before traveling to the first probing point.
+  #define Z_RAISE_BETWEEN_PROBINGS 5  // How much the Z axis will be raised when traveling from between next probing points
+  #define Z_RAISE_AFTER_PROBING 50    // How much the Z axis will be raised after the last probing point.
 
-//   #define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" //These commands will be executed in the end of G29 routine.
-                                                                            //Useful to retract a deployable probe.
+  //#define Z_PROBE_END_SCRIPT "G1 Z10 F12000\nG1 X15 Y330\nG1 Z0.5\nG1 Z10" // These commands will be executed in the end of G29 routine.
+  // Useful to retract a deployable Z probe.
 
-  //#define Z_PROBE_SLED // turn on if you have a z-probe mounted on a sled like those designed by Charles Bell
-  //#define SLED_DOCKING_OFFSET 5 // the extra distance the X axis must travel to pickup the sled. 0 should be fine but you can push it further if you'd like.
+  //#define Z_PROBE_SLED // Turn on if you have a Z probe mounted on a sled like those designed by Charles Bell.
+  //#define SLED_DOCKING_OFFSET 5 // The extra distance the X axis must travel to pickup the sled. 0 should be fine but you can push it further if you'd like.
 
   // Allen key retractable z-probe as seen on many Kossel delta printers - http://reprap.org/wiki/Kossel#Automatic_bed_leveling_probe
   // Deploys by touching z-axis belt. Retracts by pushing the probe down. Uses Z_MIN_PIN.
@@ -558,108 +561,125 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
     #define Z_PROBE_ALLEN_KEY_DEPLOY_1_X 30.0
     #define Z_PROBE_ALLEN_KEY_DEPLOY_1_Y DELTA_PRINTABLE_RADIUS
     #define Z_PROBE_ALLEN_KEY_DEPLOY_1_Z 100.0
-    #define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE HOMING_FEEDRATE_X
+    #define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE HOMING_FEEDRATE_XYZ
     #define Z_PROBE_ALLEN_KEY_DEPLOY_2_X 0.0
     #define Z_PROBE_ALLEN_KEY_DEPLOY_2_Y DELTA_PRINTABLE_RADIUS
     #define Z_PROBE_ALLEN_KEY_DEPLOY_2_Z 100.0
-    #define Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE (HOMING_FEEDRATE_X/10)
+    #define Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE (HOMING_FEEDRATE_XYZ/10)
 
     #define Z_PROBE_ALLEN_KEY_STOW_1_X -64.0 // Move the probe into position
     #define Z_PROBE_ALLEN_KEY_STOW_1_Y 56.0
     #define Z_PROBE_ALLEN_KEY_STOW_1_Z 23.0
-    #define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_X
+    #define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_XYZ
     #define Z_PROBE_ALLEN_KEY_STOW_2_X -64.0 // Push it down
     #define Z_PROBE_ALLEN_KEY_STOW_2_Y 56.0
     #define Z_PROBE_ALLEN_KEY_STOW_2_Z 3.0
-    #define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_X/10)
+    #define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_XYZ/10)
     #define Z_PROBE_ALLEN_KEY_STOW_3_X -64.0 // Move it up to clear
     #define Z_PROBE_ALLEN_KEY_STOW_3_Y 56.0
     #define Z_PROBE_ALLEN_KEY_STOW_3_Z 50.0
-    #define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE HOMING_FEEDRATE_X
+    #define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE HOMING_FEEDRATE_XYZ
 
     // Kossel Mini
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_X 35.0
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_Y 72.0
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_Z 100.0
-    //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE (HOMING_FEEDRATE_X/10)
+    //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE (HOMING_FEEDRATE_XYZ/10)
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_X 0.0
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_Y 0.0
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_Z 100.0
-    //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE (HOMING_FEEDRATE_X/10)
+    //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE (HOMING_FEEDRATE_XYZ/10)
 
     //#define Z_PROBE_ALLEN_KEY_STOW_1_X -46.0 // Move the probe into position
     //#define Z_PROBE_ALLEN_KEY_STOW_1_Y 59.0
     //#define Z_PROBE_ALLEN_KEY_STOW_1_Z 28.0
-    //#define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_X
+    //#define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_XYZ
     //#define Z_PROBE_ALLEN_KEY_STOW_2_X -46.0 // Move the nozzle down further to push the probe into retracted position.
     //#define Z_PROBE_ALLEN_KEY_STOW_2_Y 59.0
     //#define Z_PROBE_ALLEN_KEY_STOW_2_Z 8.0
-    //#define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_Z/10)
+    //#define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_XYZ/10)
     //#define Z_PROBE_ALLEN_KEY_STOW_3_X -46.0 // Raise things back up slightly so we don't bump into anything
     //#define Z_PROBE_ALLEN_KEY_STOW_3_Y 59.0
     //#define Z_PROBE_ALLEN_KEY_STOW_3_Z 38.0
-    //#define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE HOMING_FEEDRATE_Z
+    //#define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE HOMING_FEEDRATE_XYZ
 
     // Kossel Pro
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_X -105.00 // Move left but not quite so far that we'll bump the belt
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_Y 0.00
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_Z 100.0
-    //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE HOMING_FEEDRATE_X
+    //#define Z_PROBE_ALLEN_KEY_DEPLOY_1_FEEDRATE HOMING_FEEDRATE_XYZ
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_X -110.00 // Move outward to position deploy pin to the left of the arm
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_Y -125.00
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_Z 100.0
-    //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE HOMING_FEEDRATE_X
+    //#define Z_PROBE_ALLEN_KEY_DEPLOY_2_FEEDRATE HOMING_FEEDRATE_XYZ
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_3_X 45.00 // Move right to trigger deploy pin
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_3_Y -125.00
     //#define Z_PROBE_ALLEN_KEY_DEPLOY_3_Z 100.0
-    //#define Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE (HOMING_FEEDRATE_X/2)
+    //#define Z_PROBE_ALLEN_KEY_DEPLOY_3_FEEDRATE (HOMING_FEEDRATE_XYZ/2)
 
     //#define Z_PROBE_ALLEN_KEY_STOW_1_X 36.00 // Line up with bed retaining clip
     //#define Z_PROBE_ALLEN_KEY_STOW_1_Y -122.00
     //#define Z_PROBE_ALLEN_KEY_STOW_1_Z 75.0
-    //#define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_X
+    //#define Z_PROBE_ALLEN_KEY_STOW_1_FEEDRATE HOMING_FEEDRATE_XYZ
     //#define Z_PROBE_ALLEN_KEY_STOW_2_X 36.00 // move down to retract probe
     //#define Z_PROBE_ALLEN_KEY_STOW_2_Y -122.00
     //#define Z_PROBE_ALLEN_KEY_STOW_2_Z 25.0
-    //#define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_Z/2)
+    //#define Z_PROBE_ALLEN_KEY_STOW_2_FEEDRATE (HOMING_FEEDRATE_XYZ/2)
     //#define Z_PROBE_ALLEN_KEY_STOW_3_X 0.0  // return to 0,0,100
     //#define Z_PROBE_ALLEN_KEY_STOW_3_Y 0.0
     //#define Z_PROBE_ALLEN_KEY_STOW_3_Z 100.0
-    //#define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE HOMING_FEEDRATE_Z
+    //#define Z_PROBE_ALLEN_KEY_STOW_3_FEEDRATE HOMING_FEEDRATE_XYZ
   #endif
 
-//If you have enabled the Bed Auto Leveling and are using the same Z Probe for Z Homing,
-//it is highly recommended you let this Z_SAFE_HOMING enabled!!!
+  // If you have enabled the bed auto leveling and are using the same Z probe for Z homing,
+  // it is highly recommended you let this Z_SAFE_HOMING enabled!!!
 
-  #define Z_SAFE_HOMING   // This feature is meant to avoid Z homing with probe outside the bed area.
-                          // When defined, it will:
-                          // - Allow Z homing only after X and Y homing AND stepper drivers still enabled
-                          // - If stepper drivers timeout, it will need X and Y homing again before Z homing
-                          // - Position the probe in a defined XY point before Z Homing when homing all axis (G28)
-                          // - Block Z homing only when the probe is outside bed area.
+  #define Z_SAFE_HOMING   // This feature is meant to avoid Z homing with Z probe outside the bed area.
+  // When defined, it will:
+  // - Allow Z homing only after X and Y homing AND stepper drivers still enabled.
+  // - If stepper drivers timeout, it will need X and Y homing again before Z homing.
+  // - Position the Z probe in a defined XY point before Z Homing when homing all axis (G28).
+  // - Block Z homing only when the Z probe is outside bed area.
 
   #if ENABLED(Z_SAFE_HOMING)
 
-    #define Z_SAFE_HOMING_X_POINT ((X_MIN_POS + X_MAX_POS) / 2)    // X point for Z homing when homing all axis (G28)
-    #define Z_SAFE_HOMING_Y_POINT ((Y_MIN_POS + Y_MAX_POS) / 2)    // Y point for Z homing when homing all axis (G28)
+    #define Z_SAFE_HOMING_X_POINT ((X_MIN_POS + X_MAX_POS) / 2)    // X point for Z homing when homing all axis (G28).
+    #define Z_SAFE_HOMING_Y_POINT ((Y_MIN_POS + Y_MAX_POS) / 2)    // Y point for Z homing when homing all axis (G28).
 
   #endif
 
-  // Support for a dedicated Z PROBE endstop separate from the Z MIN endstop.
-  // If you would like to use both a Z PROBE and a Z MIN endstop together or just a Z PROBE with a custom pin, uncomment #define Z_PROBE_ENDSTOP and read the instructions below.
-  // If you want to still use the Z min endstop for homing, disable Z_SAFE_HOMING above. Eg; to park the head outside the bed area when homing with G28.
-  // WARNING: The Z MIN endstop will need to set properly as it would without a Z PROBE to prevent head crashes and premature stopping during a print.
-  // To use a separate Z PROBE endstop, you must have a Z_PROBE_PIN defined in the pins.h file for your control board.
-  // If you are using a servo based Z PROBE, you will need to enable NUM_SERVOS, Z_ENDSTOP_SERVO_NR and SERVO_ENDSTOP_ANGLES in the R/C Servo below.
-  // RAMPS 1.3/1.4 boards may be able to use the 5V, Ground and the D32 pin in the Aux 4 section of the RAMPS board. Use 5V for powered sensors, otherwise connect to ground and D32
-  // for normally closed configuration and 5V and D32 for normally open configurations. Normally closed configuration is advised and assumed.
-  // The D32 pin in Aux 4 on RAMPS maps to the Arduino D32 pin. Z_PROBE_PIN is setting the pin to use on the Arduino. Since the D32 pin on the RAMPS maps to D32 on Arduino, this works.
-  // D32 is currently selected in the RAMPS 1.3/1.4 pin file. All other boards will need changes to the respective pins_XXXXX.h file.
-  // WARNING: Setting the wrong pin may have unexpected and potentially disastrous outcomes. Use with caution and do your homework.
+  // Support for a dedicated Z probe endstop separate from the Z min endstop.
+  // If you would like to use both a Z probe and a Z min endstop together,
+  // uncomment #define Z_MIN_PROBE_ENDSTOP and read the instructions below.
+  // If you still want to use the Z min endstop for homing, disable Z_SAFE_HOMING above.
+  // Example: To park the head outside the bed area when homing with G28.
+  //
+  // WARNING:
+  // The Z min endstop will need to set properly as it would without a Z probe
+  // to prevent head crashes and premature stopping during a print.
+  //
+  // To use a separate Z probe endstop, you must have a Z_MIN_PROBE_PIN
+  // defined in the pins_XXXXX.h file for your control board.
+  // If you are using a servo based Z probe, you will need to enable NUM_SERVOS,
+  // Z_ENDSTOP_SERVO_NR and SERVO_ENDSTOP_ANGLES in the R/C SERVO support below.
+  // RAMPS 1.3/1.4 boards may be able to use the 5V, Ground and the D32 pin
+  // in the Aux 4 section of the RAMPS board. Use 5V for powered sensors,
+  // otherwise connect to ground and D32 for normally closed configuration
+  // and 5V and D32 for normally open configurations.
+  // Normally closed configuration is advised and assumed.
+  // The D32 pin in Aux 4 on RAMPS maps to the Arduino D32 pin.
+  // Z_MIN_PROBE_PIN is setting the pin to use on the Arduino.
+  // Since the D32 pin on the RAMPS maps to D32 on Arduino, this works.
+  // D32 is currently selected in the RAMPS 1.3/1.4 pin file.
+  // All other boards will need changes to the respective pins_XXXXX.h file.
+  //
+  // WARNING:
+  // Setting the wrong pin may have unexpected and potentially disastrous outcomes.
+  // Use with caution and do your homework.
+  //
+  //#define Z_MIN_PROBE_ENDSTOP
 
-  //#define Z_PROBE_ENDSTOP
-
-#endif // ENABLE_AUTO_BED_LEVELING
+#endif // AUTO_BED_LEVELING_FEATURE
 
 
 // @section homing
@@ -683,7 +703,9 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
  */
 
 // delta homing speeds must be the same on xyz
-#define HOMING_FEEDRATE {200*60, 200*60, 200*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE_XYZ (200*60)
+#define HOMING_FEEDRATE_E 0
+#define HOMING_FEEDRATE { HOMING_FEEDRATE_XYZ, HOMING_FEEDRATE_XYZ, HOMING_FEEDRATE_XYZ, HOMING_FEEDRATE_E }
 
 // default settings
 // delta speeds must be the same on xyz
@@ -710,7 +732,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 // Custom M code points
 #define CUSTOM_M_CODES
 #if ENABLED(CUSTOM_M_CODES)
-  #if ENABLED(ENABLE_AUTO_BED_LEVELING)
+  #if ENABLED(AUTO_BED_LEVELING_FEATURE)
     #define CUSTOM_M_CODE_SET_Z_PROBE_OFFSET 851
     #define Z_PROBE_OFFSET_RANGE_MIN -20
     #define Z_PROBE_OFFSET_RANGE_MAX 20
@@ -731,6 +753,11 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
   // To disable EEPROM Serial responses and decrease program space by ~1700 byte: comment this out:
   #define EEPROM_CHITCHAT // Please keep turned on if you can.
 #endif
+
+//
+// M100 Free Memory Watcher
+//
+//#define M100_FREE_MEMORY_WATCHER // uncomment to add the M100 Free Memory Watcher for debug purpose
 
 // @section temperature
 
@@ -754,14 +781,15 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 // Choose ONE of these 3 charsets. This has to match your hardware. Ignored for full graphic display.
 // To find out what type you have - compile with (test) - upload - click to get the menu. You'll see two typical lines from the upper half of the charset.
 // See also documentation/LCDLanguageFont.md
-  #define DISPLAY_CHARSET_HD44780_JAPAN        // this is the most common hardware
-  //#define DISPLAY_CHARSET_HD44780_WESTERN
-  //#define DISPLAY_CHARSET_HD44780_CYRILLIC
+#define DISPLAY_CHARSET_HD44780_JAPAN        // this is the most common hardware
+//#define DISPLAY_CHARSET_HD44780_WESTERN
+//#define DISPLAY_CHARSET_HD44780_CYRILLIC
 
 //#define ULTRA_LCD  //general LCD support, also 16x2
 //#define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
 //#define SDSUPPORT // Enable SD Card Support in Hardware Console
 //#define SDSLOW // Use slower SD transfer mode (not normally needed - uncomment if you're getting volume init error)
+//#define SDEXTRASLOW // Use even slower SD transfer mode (not normally needed - uncomment if you're getting volume init error)
 //#define SD_CHECK_AND_RETRY // Use CRC checks and retries on the SD communication
 //#define ENCODER_PULSES_PER_STEP 1 // Increase if you have a high resolution encoder
 //#define ENCODER_STEPS_PER_MENU_ITEM 5 // Set according to ENCODER_PULSES_PER_STEP or your liking
@@ -770,7 +798,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 //#define SPEAKER // The sound device is a speaker - not a buzzer. A buzzer resonates with his own frequency.
 //#define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100 // the duration the buzzer plays the UI feedback sound. ie Screen Click
 //#define LCD_FEEDBACK_FREQUENCY_HZ 1000         // this is the tone frequency the buzzer plays when on UI feedback. ie Screen Click
-                                                 // 0 to disable buzzer feedback. Test with M300 S<frequency Hz> P<duration ms>
+// 0 to disable buzzer feedback. Test with M300 S<frequency Hz> P<duration ms>
 // PanelOne from T3P3 (via RAMPS 1.4 AUX2/AUX3)
 // http://reprap.org/wiki/PanelOne
 //#define PANEL_ONE
@@ -789,7 +817,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 //
 // ==> REMEMBER TO INSTALL U8glib to your ARDUINO library folder: http://code.google.com/p/u8glib/wiki/u8glib
 //#define ELB_FULL_GRAPHIC_CONTROLLER
-//#define SDCARDDETECTINVERTED
+//#define SD_DETECT_INVERTED
 
 // The RepRapDiscount Smart Controller (white PCB)
 // http://reprap.org/wiki/RepRapDiscount_Smart_Controller
@@ -820,11 +848,11 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 // See http://minow.blogspot.com/index.html#4918805519571907051
 // If needed, adjust the X, Y, Z calibration coordinates
 // in ultralcd.cpp@lcd_delta_calibrate_menu()
-// #define DELTA_CALIBRATION_MENU
+//#define DELTA_CALIBRATION_MENU
 
 // The MakerLab Mini Panel with graphic controller and SD support
 // http://reprap.org/wiki/Mini_panel
-// #define MINIPANEL
+//#define MINIPANEL
 
 /**
  * I2C Panels
@@ -843,7 +871,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 
 // Panucatt VIKI LCD with status LEDs, integrated click & L/R/U/P buttons, separate encoder inputs
 //#define LCD_I2C_VIKI
-  
+
 // SSD1306 OLED generic display support
 // ==> REMEMBER TO INSTALL U8glib to your ARDUINO library folder: http://code.google.com/p/u8glib/wiki/u8glib
 //#define U8GLIB_SSD1306
@@ -878,7 +906,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 
 // M240  Triggers a camera by emulating a Canon RC-1 Remote
 // Data from: http://www.doc-diy.net/photo/rc-1_hacked/
-// #define PHOTOGRAPH_PIN     23
+//#define PHOTOGRAPH_PIN     23
 
 // SkeinForge sends the wrong arc g-codes when using Arc Point as fillet procedure
 //#define SF_ARC_FIX
@@ -906,7 +934,7 @@ const bool Z_PROBE_ENDSTOP_INVERTING = true; // set to true to invert the logic 
 // Servo Endstops
 //
 // This allows for servo actuated endstops, primary usage is for the Z Axis to eliminate calibration or bed height changes.
-// Use M851 to set the z-probe vertical offset from the nozzle. Store that setting with M500.
+// Use M851 to set the Z probe vertical offset from the nozzle. Store that setting with M500.
 //
 //#define X_ENDSTOP_SERVO_NR 1
 //#define Y_ENDSTOP_SERVO_NR 2

@@ -61,7 +61,7 @@
 #define ALARM_PIN          -1
 
 #if DISABLED(SDSUPPORT)
-// these pins are defined in the SD library if building with SD support
+  // these pins are defined in the SD library if building with SD support
   #define SCK_PIN           9
   #define MISO_PIN         11
   #define MOSI_PIN         10
@@ -74,11 +74,11 @@
   #if ENABLED(LCD_I2C_PANELOLU2)
     #define BTN_EN1        27  //RX1 - fastio.h pin mapping 27
     #define BTN_EN2        26  //TX1 - fastio.h pin mapping 26
-    #define BTN_ENC        43  //A3 - fastio.h pin mapping 43
+    #define BTN_ENC        43  //A3  - fastio.h pin mapping 43
     #define SDSS           40  //use SD card on Panelolu2 (Teensyduino pin mapping)
   #endif // LCD_I2C_PANELOLU2
 
-  #define SDCARDDETECT     -1
+  #define SD_DETECT_PIN    -1
 
 #endif // ULTRA_LCD && NEWPANEL
 

@@ -4,8 +4,8 @@
 
 #include "pins_RAMPS_13.h"
 
-#if ENABLED(Z_PROBE_ENDSTOP)
-  #define Z_PROBE_PIN      19
+#if ENABLED(Z_MIN_PROBE_ENDSTOP)
+  #define Z_MIN_PROBE_PIN  19
 #endif
 
 #undef HEATER_0_PIN
@@ -25,8 +25,8 @@
   #undef BEEPER_PIN
   #define BEEPER_PIN -1
 
-  #undef SDCARDDETECT
-  #define SDCARDDETECT 22
+  #undef SD_DETECT_PIN
+  #define SD_DETECT_PIN 22
 
   // Extra button definitions, substitute for EN1 / EN2
   #define BTN_UP  37 // BTN_EN1
@@ -37,22 +37,22 @@
   // Marlin can respond to UP/DOWN by default
   // #undef  BTN_EN1
   // #undef  BTN_EN2
-  // #define BTN_EN1 -1
-  // #define BTN_EN2 -1
+  //#define BTN_EN1 -1
+  //#define BTN_EN2 -1
 
   #undef  BTN_ENC
   #define BTN_ENC 31
 
-  #undef  SDCARDDETECT
-  #define SDCARDDETECT 22
+  #undef  SD_DETECT_PIN
+  #define SD_DETECT_PIN 22
 
-#elif defined(REPRAP_DISCOUNT_SMART_CONTROLLER)
+#elif ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER)
 
   #undef BEEPER_PIN
   #define BEEPER_PIN -1
 
-  #undef  SDCARDDETECT
-  #define SDCARDDETECT 22
+  #undef  SD_DETECT_PIN
+  #define SD_DETECT_PIN 22
 
   #undef  KILL_PIN
   #define KILL_PIN 32
@@ -61,10 +61,10 @@
 
 // SPI for Max6675 Thermocouple
 #undef MAX6675_SS
-#ifndef SDSUPPORT
-  #define MAX6675_SS       53 // Don't use pin 53 if there is even the remote possibility of using Display/SD card
-#else
+#if ENABLED(SDSUPPORT)
   #define MAX6675_SS       49 // Don't use pin 49 as this is tied to the switch inside the SD card socket to detect if there is an SD card present
+#else
+  #define MAX6675_SS       53 // Don't use pin 53 if there is even the remote possibility of using Display/SD card
 #endif
 
 // RigidBot swaps E0 / E1 plugs vs RAMPS 1.3

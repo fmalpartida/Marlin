@@ -81,11 +81,8 @@
 #define MSG_TEMPERATURE                     "Temperatura"
 #define MSG_MOTION                          "Movimento"
 #define MSG_VOLUMETRIC                      "Filament"
-#define MSG_VOLUMETRIC_ENABLED		          "E in mm³"
-#define MSG_FILAMENT_SIZE_EXTRUDER_0        "Diam. filo 1"
-#define MSG_FILAMENT_SIZE_EXTRUDER_1        "Diam. filo 2"
-#define MSG_FILAMENT_SIZE_EXTRUDER_2        "Diam. filo 3"
-#define MSG_FILAMENT_SIZE_EXTRUDER_3        "Diam. filo 4"
+#define MSG_VOLUMETRIC_ENABLED              "E in mm³"
+#define MSG_FILAMENT_DIAM                   "Diam. filo"
 #define MSG_CONTRAST                        "Contrasto LCD"
 #define MSG_STORE_EPROM                     "Salva in EEPROM"
 #define MSG_LOAD_EPROM                      "Carica da EEPROM"
@@ -128,11 +125,11 @@
 #define MSG_END_MINUTE                      "minuti"
 
 #if ENABLED(DELTA_CALIBRATION_MENU)
-    #define MSG_DELTA_CALIBRATE             "Calibraz. Delta"
-    #define MSG_DELTA_CALIBRATE_X           "Calibra X"
-    #define MSG_DELTA_CALIBRATE_Y           "Calibra Y"
-    #define MSG_DELTA_CALIBRATE_Z           "Calibra Z"
-    #define MSG_DELTA_CALIBRATE_CENTER      "Calibra Center"
+  #define MSG_DELTA_CALIBRATE             "Calibraz. Delta"
+  #define MSG_DELTA_CALIBRATE_X           "Calibra X"
+  #define MSG_DELTA_CALIBRATE_Y           "Calibra Y"
+  #define MSG_DELTA_CALIBRATE_Z           "Calibra Z"
+  #define MSG_DELTA_CALIBRATE_CENTER      "Calibra Center"
 #endif // DELTA_CALIBRATION_MENU
 
 #endif // LANGUAGE_IT_H

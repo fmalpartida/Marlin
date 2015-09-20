@@ -8,6 +8,8 @@
 
 #define LARGE_FLASH true
 
+#define SERVO0_PIN 13 // untested
+
 #define X_STEP_PIN 25
 #define X_DIR_PIN 23
 #define X_MIN_PIN 22
@@ -53,7 +55,6 @@
 #define PS_ON_PIN          12
 #define KILL_PIN           -1
 #define SUICIDE_PIN        54  //PIN that has to be turned on right after start, to keep power flowing.
-#define SERVO0_PIN         13  // untested
 
 #if ENABLED(ULTRA_LCD)
 
@@ -73,7 +74,7 @@
     #define BTN_EN2 42
     #define BTN_ENC 19
 
-    #define SDCARDDETECT 38
+    #define SD_DETECT_PIN 38
 
   #else //!NEWPANEL - Old style panel with shift register
 
@@ -90,7 +91,7 @@
     #define LCD_PINS_D6 20
     #define LCD_PINS_D7 19
 
-    #define SDCARDDETECT -1
+    #define SD_DETECT_PIN -1
 
   #endif // !NEWPANEL
 

@@ -60,7 +60,7 @@
 
 #define BEEPER_PIN         33   // AUX-4
 
-#if defined(ULTRA_LCD) && defined(NEWPANEL)
+#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL)
 
   #define LCD_PINS_RS     16
   #define LCD_PINS_ENABLE 17
@@ -78,6 +78,6 @@
   #define BLEN_B           1
   #define BLEN_A           0
 
-  #define SDCARDDETECT    -1   // RAMPS doesn't use this
+  #define SD_DETECT_PIN   -1   // RAMPS doesn't use this
 
 #endif // ULTRA_LCD && NEWPANEL

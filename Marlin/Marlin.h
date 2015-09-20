@@ -5,6 +5,10 @@
 #define MARLIN_H
 
 #define  FORCE_INLINE __attribute__((always_inline)) inline
+/**
+ * Compiler warning on unused varable.
+ */
+#define UNUSED(x) (void) (x)
 
 #include <math.h>
 #include <stdio.h>
@@ -51,13 +55,13 @@ typedef unsigned long millis_t;
 #include "WString.h"
 
 #ifdef USBCON
-  #if ENABLED(BTENABLED)
-    #define MYSERIAL bt
+  #if ENABLED(BLUETOOTH)
+    #define MYSERIAL bluetoothSerial
   #else
     #define MYSERIAL Serial
-  #endif // BTENABLED
+  #endif // BLUETOOTH
 #else
-  #define MYSERIAL MSerial
+  #define MYSERIAL customizedSerial
 #endif
 
 #define SERIAL_CHAR(x) MYSERIAL.write(x)
@@ -88,15 +92,15 @@ extern const char echomagic[] PROGMEM;
 
 #define SERIAL_ECHOPAIR(name,value) do{ serial_echopair_P(PSTR(name),(value)); }while(0)
 
-void serial_echopair_P(const char *s_P, int v);
-void serial_echopair_P(const char *s_P, long v);
-void serial_echopair_P(const char *s_P, float v);
-void serial_echopair_P(const char *s_P, double v);
-void serial_echopair_P(const char *s_P, unsigned long v);
+void serial_echopair_P(const char* s_P, int v);
+void serial_echopair_P(const char* s_P, long v);
+void serial_echopair_P(const char* s_P, float v);
+void serial_echopair_P(const char* s_P, double v);
+void serial_echopair_P(const char* s_P, unsigned long v);
 
 
 // Things to write to serial from Program memory. Saves 400 to 2k of RAM.
-FORCE_INLINE void serialprintPGM(const char *str) {
+FORCE_INLINE void serialprintPGM(const char* str) {
   char ch;
   while ((ch = pgm_read_byte(str))) {
     MYSERIAL.write(ch);
@@ -108,7 +112,7 @@ void get_command();
 
 void idle(); // the standard idle routine calls manage_inactivity(false)
 
-void manage_inactivity(bool ignore_stepper_queue=false);
+void manage_inactivity(bool ignore_stepper_queue = false);
 
 #if ENABLED(DUAL_X_CARRIAGE) && HAS_X_ENABLE && HAS_X2_ENABLE
   #define  enable_x() do { X_ENABLE_WRITE( X_ENABLE_ON); X2_ENABLE_WRITE( X_ENABLE_ON); } while (0)
@@ -190,9 +194,9 @@ void manage_inactivity(bool ignore_stepper_queue=false);
  * A_AXIS and B_AXIS are used by COREXY printers
  * X_HEAD and Y_HEAD is used for systems that don't have a 1:1 relationship between X_AXIS and X Head movement, like CoreXY bots.
  */
-enum AxisEnum {X_AXIS=0, A_AXIS=0, Y_AXIS=1, B_AXIS=1, Z_AXIS=2, C_AXIS=2, E_AXIS=3, X_HEAD=4, Y_HEAD=5, Z_HEAD=5};
+enum AxisEnum {X_AXIS = 0, A_AXIS = 0, Y_AXIS = 1, B_AXIS = 1, Z_AXIS = 2, C_AXIS = 2, E_AXIS = 3, X_HEAD = 4, Y_HEAD = 5, Z_HEAD = 5};
 
-enum EndstopEnum {X_MIN=0, Y_MIN=1, Z_MIN=2, Z_PROBE=3, X_MAX=4, Y_MAX=5, Z_MAX=6, Z2_MIN=7, Z2_MAX=8};
+enum EndstopEnum {X_MIN = 0, Y_MIN = 1, Z_MIN = 2, Z_MIN_PROBE = 3, X_MAX = 4, Y_MAX = 5, Z_MAX = 6, Z2_MIN = 7, Z2_MAX = 8};
 
 void enable_all_steppers();
 void disable_all_steppers();
@@ -202,7 +206,7 @@ void ok_to_send();
 
 void reset_bed_level();
 void prepare_move();
-void kill(const char *);
+void kill(const char*);
 void Stop();
 
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
@@ -217,7 +221,8 @@ enum DebugFlags {
   DEBUG_INFO          = BIT(1),
   DEBUG_ERRORS        = BIT(2),
   DEBUG_DRYRUN        = BIT(3),
-  DEBUG_COMMUNICATION = BIT(4)
+  DEBUG_COMMUNICATION = BIT(4),
+  DEBUG_LEVELING      = BIT(5)
 };
 extern uint8_t marlin_debug_flags;
 
@@ -225,8 +230,8 @@ extern bool Running;
 inline bool IsRunning() { return  Running; }
 inline bool IsStopped() { return !Running; }
 
-bool enqueuecommand(const char *cmd); //put a single ASCII command at the end of the current buffer or return false when it is full
-void enqueuecommands_P(const char *cmd); //put one or many ASCII commands at the end of the current buffer, read from flash
+bool enqueuecommand(const char* cmd); //put a single ASCII command at the end of the current buffer or return false when it is full
+void enqueuecommands_P(const char* cmd); //put one or many ASCII commands at the end of the current buffer, read from flash
 
 void prepare_arc_move(char isclockwise);
 void clamp_to_software_endstops(float target[3]);
@@ -255,30 +260,47 @@ extern float min_pos[3]; // axis[n].min_pos
 extern float max_pos[3]; // axis[n].max_pos
 extern bool axis_known_position[3]; // axis[n].is_known
 
-#if ENABLED(DELTA) || ENABLED(SCARA)
-  void calculate_delta(float cartesian[3]);
-  #if ENABLED(DELTA)
-    extern float delta[3];
-    extern float endstop_adj[3]; // axis[n].endstop_adj
-    extern float delta_radius;
-    extern float delta_diagonal_rod;
-    extern float delta_segments_per_second;
-    void recalc_delta_settings(float radius, float diagonal_rod);
-    #if ENABLED(ENABLE_AUTO_BED_LEVELING)
-      extern int delta_grid_spacing[2];
-      void adjust_delta(float cartesian[3]);
-    #endif
-  #elif ENABLED(SCARA)
-    extern float axis_scaling[3];  // Build size scaling
-    void calculate_SCARA_forward_Transform(float f_scara[3]);
+#if ENABLED(DELTA)
+  extern float delta[3];
+  extern float endstop_adj[3]; // axis[n].endstop_adj
+  extern float delta_radius;
+  #ifndef DELTA_RADIUS_TRIM_TOWER_1
+    #define DELTA_RADIUS_TRIM_TOWER_1 0.0
   #endif
+  #ifndef DELTA_RADIUS_TRIM_TOWER_2
+    #define DELTA_RADIUS_TRIM_TOWER_2 0.0
+  #endif
+  #ifndef DELTA_RADIUS_TRIM_TOWER_3
+    #define DELTA_RADIUS_TRIM_TOWER_3 0.0
+  #endif
+  extern float delta_diagonal_rod;
+  #ifndef DELTA_DIAGONAL_ROD_TRIM_TOWER_1
+    #define DELTA_DIAGONAL_ROD_TRIM_TOWER_1 0.0
+  #endif
+  #ifndef DELTA_DIAGONAL_ROD_TRIM_TOWER_2
+    #define DELTA_DIAGONAL_ROD_TRIM_TOWER_2 0.0
+  #endif
+  #ifndef DELTA_DIAGONAL_ROD_TRIM_TOWER_3
+    #define DELTA_DIAGONAL_ROD_TRIM_TOWER_3 0.0
+  #endif
+  extern float delta_segments_per_second;
+  void calculate_delta(float cartesian[3]);
+  void recalc_delta_settings(float radius, float diagonal_rod);
+  #if ENABLED(AUTO_BED_LEVELING_FEATURE)
+    extern int delta_grid_spacing[2];
+    void adjust_delta(float cartesian[3]);
+  #endif
+#elif ENABLED(SCARA)
+  extern float axis_scaling[3];  // Build size scaling
+  void calculate_delta(float cartesian[3]);
+  void calculate_SCARA_forward_Transform(float f_scara[3]);
 #endif
 
 #if ENABLED(Z_DUAL_ENDSTOPS)
   extern float z_endstop_adj;
 #endif
 
-#if ENABLED(ENABLE_AUTO_BED_LEVELING)
+#if ENABLED(AUTO_BED_LEVELING_FEATURE)
   extern float zprobe_zoffset;
 #endif
 
@@ -307,6 +329,10 @@ extern int fanSpeed;
   extern int meas_delay_cm; //delay distance
 #endif
 
+#if ENABLED(PID_ADD_EXTRUSION_RATE)
+  extern int lpq_len;
+#endif
+
 #if ENABLED(FWRETRACT)
   extern bool autoretract_enabled;
   extern bool retracted[EXTRUDERS]; // extruder[n].retracted
@@ -321,7 +347,7 @@ extern millis_t print_job_stop_ms;
 extern uint8_t active_extruder;
 
 #if ENABLED(DIGIPOT_I2C)
-  extern void digipot_i2c_set_current( int channel, float current );
+  extern void digipot_i2c_set_current(int channel, float current);
   extern void digipot_i2c_init();
 #endif
 

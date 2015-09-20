@@ -10,18 +10,10 @@
   #error Mega Controller supports up to 2 extruders. Comment this line to keep going.
 #endif
 
-#ifdef NUM_SERVOS
-   #define SERVO0_PIN         30
-   #if NUM_SERVOS > 1
-     #define SERVO1_PIN       31
-     #if NUM_SERVOS > 2
-       #define SERVO2_PIN     32
-       #if NUM_SERVOS > 3
-         #define SERVO3_PIN   33
-       #endif
-     #endif
-   #endif
-#endif // NUM_SERVOS
+#define SERVO0_PIN 30
+#define SERVO1_PIN 31
+#define SERVO2_PIN 32
+#define SERVO3_PIN 33
 
 #define X_STEP_PIN 62//A8
 #define X_DIR_PIN 63//A9
@@ -33,7 +25,7 @@
 #define Y_DIR_PIN 66 // A12
 #define Y_ENABLE_PIN 64//A10
 #define Y_MIN_PIN 38
-#define Y_MAX_PIN 41 
+#define Y_MAX_PIN 41
 
 #define Z_STEP_PIN 68 // A14
 #define Z_DIR_PIN 69 // A15
@@ -88,25 +80,25 @@
   #define TEMP_BED_PIN 1 // ANALOG NUMBERING
 #endif
 
-#ifdef MINIPANEL
-    #define BEEPER_PIN 46
-    // Pins for DOGM SPI LCD Support
-    #define DOGLCD_A0  47
-    #define DOGLCD_CS  45
-    #define LCD_PIN_BL 44  // backlight LED on PA3
-    
-    #define KILL_PIN 12
-    // GLCD features
-    //#define LCD_CONTRAST 190
-    // Uncomment screen orientation
-      // #define LCD_SCREEN_ROT_90
-      // #define LCD_SCREEN_ROT_180
-      // #define LCD_SCREEN_ROT_270
-    //The encoder and click button
-    #define BTN_EN1 48
-    #define BTN_EN2 11
-    #define BTN_ENC 10  //the click switch
-    //not connected to a pin
-    #define SDCARDDETECT 49
+#if ENABLED(MINIPANEL)
+  #define BEEPER_PIN 46
+  // Pins for DOGM SPI LCD Support
+  #define DOGLCD_A0  47
+  #define DOGLCD_CS  45
+  #define LCD_PIN_BL 44  // backlight LED on PA3
+
+  #define KILL_PIN 12
+  // GLCD features
+  //#define LCD_CONTRAST 190
+  // Uncomment screen orientation
+  //#define LCD_SCREEN_ROT_90
+  //#define LCD_SCREEN_ROT_180
+  //#define LCD_SCREEN_ROT_270
+  //The encoder and click button
+  #define BTN_EN1 48
+  #define BTN_EN2 11
+  #define BTN_ENC 10  //the click switch
+  //not connected to a pin
+  #define SD_DETECT_PIN 49
 #endif //Minipanel
 

@@ -143,6 +143,9 @@
       #define _E3_PINS E3_STEP_PIN, E3_DIR_PIN, E3_ENABLE_PIN, HEATER_3_PIN, analogInputToDigitalPin(TEMP_3_PIN),
     #endif
   #endif
+#elif ENABLED(Y_DUAL_STEPPER_DRIVERS) || ENABLED(Z_DUAL_STEPPER_DRIVERS)
+  #undef _E1_PINS
+  #define _E1_PINS E1_STEP_PIN, E1_DIR_PIN, E1_ENABLE_PIN,
 #endif
 
 #ifdef X_STOP_PIN
@@ -193,9 +196,9 @@
   #define Z_MIN_PIN          -1
 #endif
 
-#if ENABLED(DISABLE_Z_PROBE_ENDSTOP) || DISABLED(Z_PROBE_ENDSTOP) // Allow code to compile regardless of Z_PROBE_ENDSTOP setting.
-  #undef Z_PROBE_PIN
-  #define Z_PROBE_PIN        -1
+#if ENABLED(DISABLE_Z_MIN_PROBE_ENDSTOP) || DISABLED(Z_MIN_PROBE_ENDSTOP) // Allow code to compile regardless of Z_MIN_PROBE_ENDSTOP setting.
+  #undef Z_MIN_PROBE_PIN
+  #define Z_MIN_PROBE_PIN    -1
 #endif
 
 #if ENABLED(DISABLE_XMAX_ENDSTOP)
@@ -204,7 +207,7 @@
 #endif
 
 #if ENABLED(DISABLE_XMIN_ENDSTOP)
-  #undef X_MIN_PIN 
+  #undef X_MIN_PIN
   #define X_MIN_PIN          -1
 #endif
 
@@ -223,18 +226,30 @@
 #endif
 
 #if ENABLED(DISABLE_ZMIN_ENDSTOP)
-  #undef Z_MIN_PIN 
+  #undef Z_MIN_PIN
   #define Z_MIN_PIN          -1
 #endif
 
+#ifndef Y2_STEP_PIN
+  #define Y2_STEP_PIN      E1_STEP_PIN
+  #define Y2_DIR_PIN       E1_DIR_PIN
+  #define Y2_ENABLE_PIN    E1_ENABLE_PIN
+#endif
+
+#ifndef Z2_STEP_PIN
+  #define Z2_STEP_PIN      E1_STEP_PIN
+  #define Z2_DIR_PIN       E1_DIR_PIN
+  #define Z2_ENABLE_PIN    E1_ENABLE_PIN
+#endif
+
 #define SENSITIVE_PINS { 0, 1, \
-                        X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, X_MIN_PIN, X_MAX_PIN, \
-                        Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, Y_MIN_PIN, Y_MAX_PIN, \
-                        Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_PROBE_PIN, \
-                        PS_ON_PIN, HEATER_BED_PIN, FAN_PIN, \
-                        _E0_PINS _E1_PINS _E2_PINS _E3_PINS \
-                        analogInputToDigitalPin(TEMP_BED_PIN) \
-                       }
+    X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, X_MIN_PIN, X_MAX_PIN, \
+    Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, Y_MIN_PIN, Y_MAX_PIN, \
+    Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, Z_MIN_PIN, Z_MAX_PIN, Z_MIN_PROBE_PIN, \
+    PS_ON_PIN, HEATER_BED_PIN, FAN_PIN, \
+    _E0_PINS _E1_PINS _E2_PINS _E3_PINS \
+    analogInputToDigitalPin(TEMP_BED_PIN) \
+  }
 
 #define HAS_DIGIPOTSS (DIGIPOTSS_PIN >= 0)
 

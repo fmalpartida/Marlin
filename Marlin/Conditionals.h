@@ -14,23 +14,24 @@
 
   #define CONFIGURATION_LCD
 
-  #if ENABLED(MAKRPANEL)
+  #if defined(MAKRPANEL)
     #define DOGLCD
+    #define SDSUPPORT
     #define DEFAULT_LCD_CONTRAST 17
     #define ULTIPANEL
     #define NEWPANEL
   #endif
 
-  #if ENABLED(miniVIKI) || ENABLED(VIKI2) || ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
+  #if defined(miniVIKI) || defined(VIKI2) || defined(ELB_FULL_GRAPHIC_CONTROLLER)
     #define ULTRA_LCD  //general LCD support, also 16x2
     #define DOGLCD  // Support for SPI LCD 128x64 (Controller ST7565R graphic Display Family)
     #define ULTIMAKERCONTROLLER //as available from the Ultimaker online store.
 
-    #if ENABLED(miniVIKI)
+    #ifdef miniVIKI
       #define DEFAULT_LCD_CONTRAST 95
-    #elif ENABLED(VIKI2)
+    #elif defined(VIKI2)
       #define DEFAULT_LCD_CONTRAST 40
-    #elif ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
+    #elif defined(ELB_FULL_GRAPHIC_CONTROLLER)
       #define DEFAULT_LCD_CONTRAST 110
       #define U8GLIB_LM6059_AF
     #endif
@@ -40,51 +41,45 @@
   #endif
 
   // Generic support for SSD1306 OLED based LCDs.
-  #if ENABLED(U8GLIB_SSD1306)
+  #if defined(U8GLIB_SSD1306)
     #define ULTRA_LCD  //general LCD support, also 16x2
     #define DOGLCD  // Support for I2C LCD 128x64 (Controller SSD1306 graphic Display Family)
   #endif
 
 
-  #if ENABLED(PANEL_ONE)
+  #ifdef PANEL_ONE
+    #define SDSUPPORT
     #define ULTIMAKERCONTROLLER
   #endif
 
-  #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
+  #ifdef REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
     #define DOGLCD
     #define U8GLIB_ST7920
     #define REPRAP_DISCOUNT_SMART_CONTROLLER
   #endif
 
-  #if ENABLED(ULTIMAKERCONTROLLER) || ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER) || ENABLED(G3D_PANEL) || ENABLED(RIGIDBOT_PANEL)
+  #if defined(ULTIMAKERCONTROLLER) || defined(REPRAP_DISCOUNT_SMART_CONTROLLER) || defined(G3D_PANEL) || defined(RIGIDBOT_PANEL)
     #define ULTIPANEL
     #define NEWPANEL
   #endif
 
-  #if ENABLED(REPRAPWORLD_KEYPAD)
+  #ifdef REPRAPWORLD_KEYPAD
     #define ULTIPANEL
     #define NEWPANEL
   #endif
 
-  #if ENABLED(RA_CONTROL_PANEL)
+  #ifdef RA_CONTROL_PANEL
     #define LCD_I2C_TYPE_PCA8574
     #define LCD_I2C_ADDRESS 0x27   // I2C Address of the port expander
     #define ULTIPANEL
     #define NEWPANEL
   #endif
 
-  #if ENABLED(MINIPANEL)
-    #define DOGLCD
-    #define ULTIPANEL
-    #define NEWPANEL
-    #define DEFAULT_LCD_CONTRAST 17
-  #endif
-
   /**
-  * I2C PANELS
-  */
+   * I2C PANELS
+   */
 
-  #if ENABLED(LCD_I2C_SAINSMART_YWROBOT)
+  #ifdef LCD_I2C_SAINSMART_YWROBOT
     // This uses the LiquidCrystal_I2C library ( https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home )
     // Make sure it is placed in the Arduino libraries directory.
     #define LCD_I2C_TYPE_PCF8575
@@ -94,7 +89,7 @@
   #endif
 
   // PANELOLU2 LCD with status LEDs, separate encoder and click inputs
-  #if ENABLED(LCD_I2C_PANELOLU2)
+  #ifdef LCD_I2C_PANELOLU2
     #define LCD_I2C_TYPE_MCP23017
     #define LCD_I2C_ADDRESS 0x20 // I2C Address of the port expander
     #define LCD_USE_I2C_BUZZER //comment out to disable buzzer on LCD
@@ -107,7 +102,7 @@
       #define ENCODER_STEPS_PER_MENU_ITEM 1
     #endif
 
-    #if ENABLED(LCD_USE_I2C_BUZZER)
+    #ifdef LCD_USE_I2C_BUZZER
       #define LCD_FEEDBACK_FREQUENCY_HZ 1000
       #define LCD_FEEDBACK_FREQUENCY_DURATION_MS 100
     #endif
@@ -117,7 +112,7 @@
   #endif
 
   // Panucatt VIKI LCD with status LEDs, integrated click & L/R/U/P buttons, separate encoder inputs
-  #if ENABLED(LCD_I2C_VIKI)
+  #ifdef LCD_I2C_VIKI
     // This uses the LiquidTWI2 library v1.2.3 or later ( https://github.com/lincomatic/LiquidTWI2 )
     // Make sure the LiquidTWI2 directory is placed in the Arduino or Sketchbook libraries subdirectory.
     // Note: The pause/stop/resume LCD button pin should be connected to the Arduino
@@ -134,16 +129,17 @@
   // 2 wire Non-latching LCD SR from:
   // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
 
-  #if ENABLED(SAV_3DLCD)
-    #define SR_LCD_2W_NL    // Non latching 2 wire shiftregister
-    #define ULTIPANEL
-    #define NEWPANEL
+  #ifdef SAV_3DLCD
+     #define SR_LCD_2W_NL    // Non latching 2 wire shiftregister
+     #define ULTIPANEL
+     #define NEWPANEL
   #endif
 
-  #if ENABLED(ULTIPANEL)
+  #ifdef ULTIPANEL
     #define NEWPANEL  //enable this if you have a click-encoder panel
+    #define SDSUPPORT
     #define ULTRA_LCD
-    #if ENABLED(DOGLCD) // Change number of lines to match the DOG graphic display
+    #ifdef DOGLCD // Change number of lines to match the DOG graphic display
       #define LCD_WIDTH 22
       #define LCD_HEIGHT 5
     #else
@@ -151,8 +147,8 @@
       #define LCD_HEIGHT 4
     #endif
   #else //no panel but just LCD
-    #if ENABLED(ULTRA_LCD)
-      #if ENABLED(DOGLCD) // Change number of lines to match the 128x64 graphics display
+    #ifdef ULTRA_LCD
+      #ifdef DOGLCD // Change number of lines to match the 128x64 graphics display
         #define LCD_WIDTH 22
         #define LCD_HEIGHT 5
       #else
@@ -162,7 +158,7 @@
     #endif
   #endif
 
-  #if ENABLED(DOGLCD)
+  #ifdef DOGLCD
     /* Custom characters defined in font font_6x10_marlin_symbols */
     // \x00 intentionally skipped to avoid problems in strings
     #define LCD_STR_REFRESH     "\x01"
@@ -192,20 +188,20 @@
   #endif
 
   /**
-  * Default LCD contrast for dogm-like LCD displays
-  */
-  #if ENABLED(DOGLCD) && DISABLED(DEFAULT_LCD_CONTRAST)
+   * Default LCD contrast for dogm-like LCD displays
+   */
+  #if defined(DOGLCD) && !defined(DEFAULT_LCD_CONTRAST)
     #define DEFAULT_LCD_CONTRAST 32
   #endif
 
-  #if ENABLED(DOGLCD)
+  #ifdef DOGLCD
     #define HAS_LCD_CONTRAST
-    #if ENABLED(U8GLIB_ST7920)
+    #ifdef U8GLIB_ST7920
       #undef HAS_LCD_CONTRAST
     #endif
-    #if ENABLED(U8GLIB_SSD1306)
+    #ifdef U8GLIB_SSD1306
       #undef HAS_LCD_CONTRAST
-    #endif
+    #endif  
   #endif
 
 #else // CONFIGURATION_LCD
@@ -221,48 +217,48 @@
   #include "Arduino.h"
 
   /**
-  * ENDSTOPPULLUPS
-  */
-  #if ENABLED(ENDSTOPPULLUPS)
-    #if DISABLED(DISABLE_MAX_ENDSTOPS)
+   * ENDSTOPPULLUPS
+   */
+  #ifdef ENDSTOPPULLUPS
+    #ifndef DISABLE_MAX_ENDSTOPS
       #define ENDSTOPPULLUP_XMAX
       #define ENDSTOPPULLUP_YMAX
       #define ENDSTOPPULLUP_ZMAX
     #endif
-    #if DISABLED(DISABLE_MIN_ENDSTOPS)
+    #ifndef DISABLE_MIN_ENDSTOPS
       #define ENDSTOPPULLUP_XMIN
       #define ENDSTOPPULLUP_YMIN
       #define ENDSTOPPULLUP_ZMIN
     #endif
-    #if DISABLED(DISABLE_Z_MIN_PROBE_ENDSTOP)
-      #define ENDSTOPPULLUP_ZMIN_PROBE
+    #ifndef DISABLE_Z_PROBE_ENDSTOP
+      #define ENDSTOPPULLUP_ZPROBE
     #endif
   #endif
 
   /**
-  * Axis lengths
-  */
+   * Axis lengths
+   */
   #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
   #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
   #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 
   /**
-  * SCARA
-  */
-  #if ENABLED(SCARA)
+   * SCARA
+   */
+  #ifdef SCARA
     #undef SLOWDOWN
     #define QUICK_HOME //SCARA needs Quickhome
   #endif
 
   /**
-  * AUTOSET LOCATIONS OF LIMIT SWITCHES
-  */
-  #if ENABLED(MANUAL_HOME_POSITIONS)  // Use manual limit switch locations
+   * AUTOSET LOCATIONS OF LIMIT SWITCHES
+   */
+  #ifdef MANUAL_HOME_POSITIONS  // Use manual limit switch locations
     #define X_HOME_POS MANUAL_X_HOME_POS
     #define Y_HOME_POS MANUAL_Y_HOME_POS
     #define Z_HOME_POS MANUAL_Z_HOME_POS
   #else //!MANUAL_HOME_POSITIONS – Use home switch positions based on homing direction and travel limits
-    #if ENABLED(BED_CENTER_AT_0_0)
+    #ifdef BED_CENTER_AT_0_0
       #define X_HOME_POS X_MAX_LENGTH * X_HOME_DIR * 0.5
       #define Y_HOME_POS Y_MAX_LENGTH * Y_HOME_DIR * 0.5
     #else
@@ -273,9 +269,9 @@
   #endif //!MANUAL_HOME_POSITIONS
 
   /**
-  * Auto Bed Leveling
-  */
-  #if ENABLED(AUTO_BED_LEVELING_FEATURE)
+   * Auto Bed Leveling
+   */
+  #ifdef ENABLE_AUTO_BED_LEVELING
     // Boundaries for probing based on set limits
     #define MIN_PROBE_X (max(X_MIN_POS, X_MIN_POS + X_PROBE_OFFSET_FROM_EXTRUDER))
     #define MAX_PROBE_X (min(X_MAX_POS, X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER))
@@ -283,19 +279,17 @@
     #define MAX_PROBE_Y (min(Y_MAX_POS, Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
   #endif
 
-  #define SERVO_LEVELING (defined(AUTO_BED_LEVELING_FEATURE) && defined(Z_ENDSTOP_SERVO_NR))
-
-  /**
-  * Sled Options
-  */
-  #if ENABLED(Z_PROBE_SLED)
+   /**
+    * Sled Options
+    */ 
+  #ifdef Z_PROBE_SLED
     #define Z_SAFE_HOMING
   #endif
-
+  
   /**
-  * MAX_STEP_FREQUENCY differs for TOSHIBA
-  */
-  #if ENABLED(CONFIG_STEPPERS_TOSHIBA)
+   * MAX_STEP_FREQUENCY differs for TOSHIBA
+   */
+  #ifdef CONFIG_STEPPERS_TOSHIBA
     #define MAX_STEP_FREQUENCY 10000 // Max step frequency for Toshiba Stepper Controllers
   #else
     #define MAX_STEP_FREQUENCY 40000 // Max step frequency for Ultimaker (5000 pps / half step)
@@ -309,15 +303,15 @@
   #define MICROSTEP16 HIGH,HIGH
 
   /**
-  * Advance calculated values
-  */
-  #if ENABLED(ADVANCE)
+   * Advance calculated values
+   */
+  #ifdef ADVANCE
     #define EXTRUSION_AREA (0.25 * D_FILAMENT * D_FILAMENT * M_PI)
     #define STEPS_PER_CUBIC_MM_E (axis_steps_per_unit[E_AXIS] / EXTRUSION_AREA)
   #endif
 
-  #if ENABLED(ULTIPANEL) && DISABLED(ELB_FULL_GRAPHIC_CONTROLLER)
-    #undef SD_DETECT_INVERTED
+  #if defined(ULTIPANEL) && !defined(ELB_FULL_GRAPHIC_CONTROLLER)
+    #undef SDCARDDETECTINVERTED
   #endif
 
   // Power Signal Control Definitions
@@ -335,8 +329,8 @@
   #define HAS_POWER_SWITCH (POWER_SUPPLY > 0 && PIN_EXISTS(PS_ON))
 
   /**
-  * Temp Sensor defines
-  */
+   * Temp Sensor defines
+   */
   #if TEMP_SENSOR_0 == -2
     #define HEATER_0_USES_MAX6675
   #elif TEMP_SENSOR_0 == -1
@@ -390,8 +384,8 @@
   #endif
 
   /**
-  * ARRAY_BY_EXTRUDERS based on EXTRUDERS
-  */
+   * ARRAY_BY_EXTRUDERS based on EXTRUDERS
+   */
   #if EXTRUDERS > 3
     #define ARRAY_BY_EXTRUDERS(v1, v2, v3, v4) { v1, v2, v3, v4 }
   #elif EXTRUDERS > 2
@@ -402,11 +396,9 @@
     #define ARRAY_BY_EXTRUDERS(v1, v2, v3, v4) { v1 }
   #endif
 
-  #define ARRAY_BY_EXTRUDERS1(v1) ARRAY_BY_EXTRUDERS(v1, v1, v1, v1)
-
   /**
-  * Shorthand for pin tests, used wherever needed
-  */
+   * Shorthand for pin tests, used wherever needed
+   */
   #define HAS_TEMP_0 (PIN_EXISTS(TEMP_0) && TEMP_SENSOR_0 != 0 && TEMP_SENSOR_0 != -2)
   #define HAS_TEMP_1 (PIN_EXISTS(TEMP_1) && TEMP_SENSOR_1 != 0)
   #define HAS_TEMP_2 (PIN_EXISTS(TEMP_2) && TEMP_SENSOR_2 != 0)
@@ -424,12 +416,11 @@
   #define HAS_AUTO_FAN (HAS_AUTO_FAN_0 || HAS_AUTO_FAN_1 || HAS_AUTO_FAN_2 || HAS_AUTO_FAN_3)
   #define HAS_FAN (PIN_EXISTS(FAN))
   #define HAS_CONTROLLERFAN (PIN_EXISTS(CONTROLLERFAN))
-  #define HAS_SERVOS (defined(NUM_SERVOS) && NUM_SERVOS > 0)
   #define HAS_SERVO_0 (PIN_EXISTS(SERVO0))
   #define HAS_SERVO_1 (PIN_EXISTS(SERVO1))
   #define HAS_SERVO_2 (PIN_EXISTS(SERVO2))
   #define HAS_SERVO_3 (PIN_EXISTS(SERVO3))
-  #define HAS_FILAMENT_SENSOR (ENABLED(FILAMENT_SENSOR) && PIN_EXISTS(FILWIDTH))
+  #define HAS_FILAMENT_SENSOR (defined(FILAMENT_SENSOR) && PIN_EXISTS(FILWIDTH))
   #define HAS_FILRUNOUT (PIN_EXISTS(FILRUNOUT))
   #define HAS_HOME (PIN_EXISTS(HOME))
   #define HAS_KILL (PIN_EXISTS(KILL))
@@ -443,7 +434,7 @@
   #define HAS_Z_MAX (PIN_EXISTS(Z_MAX))
   #define HAS_Z2_MIN (PIN_EXISTS(Z2_MIN))
   #define HAS_Z2_MAX (PIN_EXISTS(Z2_MAX))
-  #define HAS_Z_PROBE (PIN_EXISTS(Z_MIN_PROBE))
+  #define HAS_Z_PROBE (PIN_EXISTS(Z_PROBE))
   #define HAS_SOLENOID_1 (PIN_EXISTS(SOL1))
   #define HAS_SOLENOID_2 (PIN_EXISTS(SOL2))
   #define HAS_SOLENOID_3 (PIN_EXISTS(SOL3))
@@ -484,10 +475,10 @@
   #define HAS_E3_STEP (PIN_EXISTS(E3_STEP))
 
   /**
-  * Helper Macros for heaters and extruder fan
-  */
+   * Helper Macros for heaters and extruder fan
+   */
   #define WRITE_HEATER_0P(v) WRITE(HEATER_0_PIN, v)
-  #if EXTRUDERS > 1 || ENABLED(HEATERS_PARALLEL)
+  #if EXTRUDERS > 1 || defined(HEATERS_PARALLEL)
     #define WRITE_HEATER_1(v) WRITE(HEATER_1_PIN, v)
     #if EXTRUDERS > 2
       #define WRITE_HEATER_2(v) WRITE(HEATER_2_PIN, v)
@@ -496,7 +487,7 @@
       #endif
     #endif
   #endif
-  #if ENABLED(HEATERS_PARALLEL)
+  #ifdef HEATERS_PARALLEL
     #define WRITE_HEATER_0(v) { WRITE_HEATER_0P(v); WRITE_HEATER_1(v); }
   #else
     #define WRITE_HEATER_0(v) WRITE_HEATER_0P(v)
@@ -508,23 +499,7 @@
     #define WRITE_FAN(v) WRITE(FAN_PIN, v)
   #endif
 
-  #define HAS_BUZZER (PIN_EXISTS(BEEPER) || defined(LCD_USE_I2C_BUZZER))
-
-  #if defined(NUM_SERVOS) && NUM_SERVOS > 0
-    #ifndef X_ENDSTOP_SERVO_NR
-      #define X_ENDSTOP_SERVO_NR -1
-    #endif
-    #ifndef Y_ENDSTOP_SERVO_NR
-      #define Y_ENDSTOP_SERVO_NR -1
-    #endif
-    #ifndef Z_ENDSTOP_SERVO_NR
-      #define Z_ENDSTOP_SERVO_NR -1
-    #endif
-    #if X_ENDSTOP_SERVO_NR >= 0 || Y_ENDSTOP_SERVO_NR >= 0 || Z_ENDSTOP_SERVO_NR >= 0
-      #define HAS_SERVO_ENDSTOPS true
-      #define SERVO_ENDSTOP_IDS { X_ENDSTOP_SERVO_NR, Y_ENDSTOP_SERVO_NR, Z_ENDSTOP_SERVO_NR }
-    #endif
-  #endif
+  #define HAS_BUZZER ((defined(BEEPER) && BEEPER >= 0) || defined(LCD_USE_I2C_BUZZER))
 
 #endif //CONFIGURATION_LCD
 #endif //CONDITIONALS_H

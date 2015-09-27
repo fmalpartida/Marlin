@@ -26,30 +26,18 @@ install:
   - mv LiquidCrystal_I2C/LiquidCrystal_I2C /usr/local/share/arduino/libraries/LiquidCrystal_I2C
   - git clone https://github.com/lincomatic/LiquidTWI2.git
   - mv LiquidTWI2 /usr/local/share/arduino/libraries/LiquidTWI2
-  # Install astyle
-  - wget https://github.com/timonwong/astyle-mirror/archive/master.zip
-  - unzip master.zip
-  - cd astyle-mirror-master/build/gcc/
-  - make prefix=$HOME astyle install
 before_script:
   # arduino requires an X server even with command line
   # https://github.com/arduino/Arduino/issues/1981
   - Xvfb :1 -screen 0 1024x768x16 &> xvfb.log &
   # change back to home directory for compiling
   - cd $TRAVIS_BUILD_DIR
-  # Check style
-  - ~/bin/astyle --recursive --options=.astylerc "Marlin/*.h" "Marlin/*.cpp"
 script:
-  # Abort on style errors
-  # if [ "0" != `find . -name "*.orig" | wc -l` ] ; then echo "Improperly styled source -- run astyle" ; exit -999; fi
-  # Relaxed Travis check
-  - if [ "0" != `find . -name "*.orig" | wc -l` ] ; then echo "Improperly styled source -- run astyle" ; fi
   # build default config
   - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
   # backup configuration.h
   - cp Marlin/Configuration.h Marlin/Configuration.h.backup
   - cp Marlin/Configuration_adv.h Marlin/Configuration_adv.h.backup
-  - cp Marlin/pins_RAMPS_13.h Marlin/pins_RAMPS_13.h.backup
   # add sensor for bed
   - sed -i 's/#define TEMP_SENSOR_BED 0/#define TEMP_SENSOR_BED 1/g' Marlin/Configuration.h
   - rm -rf .build/
@@ -75,15 +63,6 @@ script:
   # enable AUTO_BED_LEVELING
   - cp Marlin/Configuration.h.backup Marlin/Configuration.h
   - sed -i 's/\/\/#define ENABLE_AUTO_BED_LEVELING/#define ENABLE_AUTO_BED_LEVELING/g' Marlin/Configuration.h
-  - rm -rf .build/
-  - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
-  # enable AUTO_BED_LEVELING with servos
-  - cp Marlin/Configuration.h.backup Marlin/Configuration.h
-  - sed -i 's/\/\/#define ENABLE_AUTO_BED_LEVELING/#define ENABLE_AUTO_BED_LEVELING/g' Marlin/Configuration.h
-  - sed -i 's/\/\/#define NUM_SERVOS/#define NUM_SERVOS/g' Marlin/Configuration.h
-  - sed -i 's/\/\/#define Z_ENDSTOP_SERVO_NR/#define Z_ENDSTOP_SERVO_NR/g' Marlin/Configuration.h
-  - sed -i 's/\/\/#define SERVO_ENDSTOP_ANGLES/#define SERVO_ENDSTOP_ANGLES/g' Marlin/Configuration.h
-  - sed -i 's/\/\/#define DEACTIVATE_SERVOS_AFTER_MOVE/#define DEACTIVATE_SERVOS_AFTER_MOVE/g' Marlin/Configuration.h
   - rm -rf .build/
   - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
   # enable EEPROM_SETTINGS & EEPROM_CHITCHAT
@@ -161,27 +140,6 @@ script:
   - sed -i 's/\/\/#define FILAMENT_LCD_DISPLAY/#define FILAMENT_LCD_DISPLAY/g' Marlin/Configuration.h
   - rm -rf .build/
   - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
-  # Enable COREXY
-  - cp Marlin/Configuration.h.backup Marlin/Configuration.h
-  - sed -i 's/\/\/#define COREXY/#define COREXY/g' Marlin/Configuration.h
-  - rm -rf .build/
-  - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
-  # Enable COREXZ
-  - cp Marlin/Configuration.h.backup Marlin/Configuration.h
-  - sed -i 's/\/\/#define COREXZ/#define COREXZ/g' Marlin/Configuration.h
-  - rm -rf .build/
-  - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
-  # Enable Z_DUAL_STEPPER_DRIVERS, Z_DUAL_ENDSTOPS
-  - cp Marlin/Configuration.h.backup Marlin/Configuration.h
-  - sed -i 's/\/\/#define Z_DUAL_STEPPER_DRIVERS/#define Z_DUAL_STEPPER_DRIVERS/g' Marlin/Configuration_adv.h
-  - sed -i 's/\ \ \/\/\ \#define Z_DUAL_ENDSTOPS/#define Z_DUAL_ENDSTOPS/g' Marlin/Configuration_adv.h
-  - sed -i 's/#define X_MAX_PIN           2/#define X_MAX_PIN          -1/g' Marlin/pins_RAMPS_13.h
-  - sed -i 's/\ \ \ \ \#define Z2_MAX_PIN 36/#define Z2_MAX_PIN  2/g' Marlin/Configuration_adv.h
-  - rm -rf .build/
-  - DISPLAY=:1.0 ~/bin/arduino --verify --board marlin:avr:mega  Marlin/Marlin.ino
-  - cp Marlin/Configuration.h.backup Marlin/Configuration.h
-  - cp Marlin/Configuration_adv.h.backup Marlin/Configuration_adv.h
-  - cp Marlin/pins_RAMPS_13.h.backup Marlin/pins_RAMPS_13.h
   ######## Example Configurations ##############
   # Delta Config (generic)
   - cp Marlin/example_configurations/delta/generic/Configuration* Marlin/

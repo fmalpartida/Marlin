@@ -447,23 +447,20 @@
 #ifndef MSG_BED_DONE
   #define MSG_BED_DONE                        "Bed done."
 #endif
-
-#if ENABLED(DELTA_CALIBRATION_MENU)
-  #ifndef MSG_DELTA_CALIBRATE
-    #define MSG_DELTA_CALIBRATE             "Delta Calibration"
-  #endif
-  #ifndef MSG_DELTA_CALIBRATE_X
-    #define MSG_DELTA_CALIBRATE_X           "Calibrate X"
-  #endif
-  #ifndef MSG_DELTA_CALIBRATE_Y
-    #define MSG_DELTA_CALIBRATE_Y           "Calibrate Y"
-  #endif
-  #ifndef MSG_DELTA_CALIBRATE_Z
-    #define MSG_DELTA_CALIBRATE_Z           "Calibrate Z"
-  #endif
-  #ifndef MSG_DELTA_CALIBRATE_CENTER
-    #define MSG_DELTA_CALIBRATE_CENTER      "Calibrate Center"
-  #endif
-#endif // DELTA_CALIBRATION_MENU
+#ifndef MSG_DELTA_CALIBRATE
+  #define MSG_DELTA_CALIBRATE                 "Delta Calibration"
+#endif
+#ifndef MSG_DELTA_CALIBRATE_X
+  #define MSG_DELTA_CALIBRATE_X               "Calibrate X"
+#endif
+#ifndef MSG_DELTA_CALIBRATE_Y
+  #define MSG_DELTA_CALIBRATE_Y               "Calibrate Y"
+#endif
+#ifndef MSG_DELTA_CALIBRATE_Z
+  #define MSG_DELTA_CALIBRATE_Z               "Calibrate Z"
+#endif
+#ifndef MSG_DELTA_CALIBRATE_CENTER
+  #define MSG_DELTA_CALIBRATE_CENTER          "Calibrate Center"
+#endif
 
 #endif // LANGUAGE_EN_H

@@ -163,18 +163,18 @@ Here are some standard links for getting your machine calibrated:
 // The minimal temperature defines the temperature below which the heater will not be enabled It is used
 // to check that the wiring to the thermistor is not broken.
 // Otherwise this would lead to the heater being powered on all the time.
-#define HEATER_0_MINTEMP 5
+#define HEATER_0_MINTEMP 0
 #define HEATER_1_MINTEMP 5
 #define HEATER_2_MINTEMP 5
 #define HEATER_3_MINTEMP 5
-#define BED_MINTEMP 5
+#define BED_MINTEMP 0
 
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define HEATER_0_MAXTEMP 275
-#define HEATER_1_MAXTEMP 275
-#define HEATER_2_MAXTEMP 275
+#define HEATER_0_MAXTEMP 250
+#define HEATER_1_MAXTEMP 250
+#define HEATER_2_MAXTEMP 250
 #define HEATER_3_MAXTEMP 275
 #define BED_MAXTEMP 150
 
@@ -212,6 +212,7 @@ Here are some standard links for getting your machine calibrated:
   #define  DEFAULT_Kp 22.2
   #define  DEFAULT_Ki 1.08
   #define  DEFAULT_Kd 114
+
 
   // MakerGear
   //#define  DEFAULT_Kp 7.0
@@ -467,10 +468,9 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 
     // The edges of the rectangle in which to probe
     #define LEFT_PROBE_BED_POSITION 55
-    #define RIGHT_PROBE_BED_POSITION 170
+    #define RIGHT_PROBE_BED_POSITION 160
     #define BACK_PROBE_BED_POSITION 170
     #define FRONT_PROBE_BED_POSITION 20
-
 
     #define MIN_PROBE_EDGE 10 // The Z probe minimum square sides can be no smaller than this.
 

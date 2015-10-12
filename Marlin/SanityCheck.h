@@ -130,8 +130,8 @@
 #if ENABLED(AUTO_BED_LEVELING_FEATURE)
 
   /**
-  * Require a Z min pin
-  */
+   * Require a Z min pin
+   */
   #if !PIN_EXISTS(Z_MIN)
     #if !PIN_EXISTS(Z_MIN_PROBE) || (DISABLED(Z_MIN_PROBE_ENDSTOP) || ENABLED(DISABLE_Z_MIN_PROBE_ENDSTOP)) // It's possible for someone to set a pin for the Z probe, but not enable it.
       #if ENABLED(Z_MIN_PROBE_REPEATABILITY_TEST)
@@ -143,29 +143,29 @@
   #endif
 
   /**
-  * Require a Z probe pin if Z_MIN_PROBE_ENDSTOP is enabled.
-  */
+   * Require a Z probe pin if Z_MIN_PROBE_ENDSTOP is enabled.
+   */
   #if ENABLED(Z_MIN_PROBE_ENDSTOP)
     #if !PIN_EXISTS(Z_MIN_PROBE)
       #error You must have a Z_MIN_PROBE_PIN defined in your pins_XXXX.h file if you enable Z_MIN_PROBE_ENDSTOP.
     #endif
     // Forcing Servo definitions can break some hall effect sensor setups. Leaving these here for further comment.
-    //      #ifndef NUM_SERVOS
-    //        #error You must have NUM_SERVOS defined and there must be at least 1 configured to use Z_MIN_PROBE_ENDSTOP.
-    //      #endif
-    //      #if defined(NUM_SERVOS) && NUM_SERVOS < 1
-    //        #error You must have at least 1 servo defined for NUM_SERVOS to use Z_MIN_PROBE_ENDSTOP.
-    //      #endif
-    //      #if Z_ENDSTOP_SERVO_NR < 0
-    //        #error You must have Z_ENDSTOP_SERVO_NR set to at least 0 or above to use Z_MIN_PROBE_ENDSTOP.
-    //      #endif
-    //      #ifndef SERVO_ENDSTOP_ANGLES
-    //        #error You must have SERVO_ENDSTOP_ANGLES defined for Z Extend and Retract to use Z_MIN_PROBE_ENDSTOP.
-    //      #endif
+    //#ifndef NUM_SERVOS
+    //  #error You must have NUM_SERVOS defined and there must be at least 1 configured to use Z_MIN_PROBE_ENDSTOP.
+    //#endif
+    //#if defined(NUM_SERVOS) && NUM_SERVOS < 1
+    //  #error You must have at least 1 servo defined for NUM_SERVOS to use Z_MIN_PROBE_ENDSTOP.
+    //#endif
+    //#if Z_ENDSTOP_SERVO_NR < 0
+    //  #error You must have Z_ENDSTOP_SERVO_NR set to at least 0 or above to use Z_MIN_PROBE_ENDSTOP.
+    //#endif
+    //#ifndef SERVO_ENDSTOP_ANGLES
+    //  #error You must have SERVO_ENDSTOP_ANGLES defined for Z Extend and Retract to use Z_MIN_PROBE_ENDSTOP.
+    //#endif
   #endif
   /**
-  * Check if Probe_Offset * Grid Points is greater than Probing Range
-  */
+   * Check if Probe_Offset * Grid Points is greater than Probing Range
+   */
   #if ENABLED(AUTO_BED_LEVELING_GRID)
     #ifndef DELTA_PROBABLE_RADIUS
       // Be sure points are in the right order
@@ -248,9 +248,9 @@
  */
 #if ENABLED(DUAL_X_CARRIAGE)
   #if EXTRUDERS == 1 || ENABLED(COREXY) \
-    || !HAS_X2_ENABLE || !HAS_X2_STEP || !HAS_X2_DIR \
-    || !defined(X2_HOME_POS) || !defined(X2_MIN_POS) || !defined(X2_MAX_POS) \
-    || !HAS_X_MAX
+      || !HAS_X2_ENABLE || !HAS_X2_STEP || !HAS_X2_DIR \
+      || !defined(X2_HOME_POS) || !defined(X2_MIN_POS) || !defined(X2_MAX_POS) \
+      || !HAS_X_MAX
     #error Missing or invalid definitions for DUAL_X_CARRIAGE mode.
   #endif
   #if X_HOME_DIR != -1 || X2_HOME_DIR != 1

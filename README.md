@@ -2,7 +2,7 @@
 <img align="top" width=175 src="Documentation/Logo/Marlin%20Logo%20GitHub.png" />
  Documentation has moved to [marlinfirmware.org](http://www.marlinfirmware.org).
 
-## Release Candidate -- Marlin 1.1 RC1 - 19 September 2015
+## Release Candidate -- Marlin 1.1.0-RC2 - 29 September 2015
 
 __Not for production use – use with caution!__
 
@@ -12,20 +12,18 @@ For the latest tagged version of Marlin (currently 1.0.2 – January 2015) you s
 
 Future development takes place in the [MarlinDev repository](https://github.com/MarlinFirmware/MarlinDev/).
 
-## Known Issues
-19 Sep 2015
-RC Branch published for testing
+## Recent Changes
+RC2 - 29 Sep 2015
+      File styling reverted
+      LCD update frequency reduced
 
-## Coding Style
-The formatting of the source code is now controlled by the [astyle](http://astyle.sourceforge.net/astyle.html) program.
-The options which specify the style in use are found in the .astylerc file which is located in the top level folder of this repository.
-To reformat a file, run ```astyle --options=.astylerc <file_name>```.
-You will need to do this before committing the file to the git repository.
+RC1 - 19 Sep 2015
+      Published for testing
 
 ## Submitting Patches
-Proposed patches should be submitted as a Pull Request against the [RCBugFix](https://github.com/MarlinFirmware/MarlinDev/tree/RCBugFix) branch
+Proposed patches should be submitted as a Pull Request against the [RCBugFix](https://github.com/MarlinFirmware/Marlin/tree/RCBugFix) branch
 Note: Do not propose added features. Patches to the Release Candidate are limited to corrections of coding errors for the functions that have been implemented.
-Be sure to check that all files are properly styled. Pull requests containing styling errors will fail the automated tests which are performed on all submissions.
+Please follow the proper style. Pull requests containing styling errors will have to be reworked.
 
 
 
@@ -54,7 +52,7 @@ The current Marlin dev team consists of:
  - [@maverikou]
  - Chris Palmer [@nophead]
  - [@paclema]
- - [@epatel]
+ - Edward Patel [@epatel] - Swedish, English
  - Erik van der Zalm [@ErikZalm]
  - David Braam [@daid]
  - Bernhard Kubicek [@bkubicek]

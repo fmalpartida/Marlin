@@ -61,46 +61,46 @@
 
 #if ENABLED(HAVE_TMCDRIVER)
 void tmc_init() {
-#if ENABLED(X_IS_TMC)
-  stepperX.setMicrosteps(X_MICROSTEPS);
-  stepperX.start();
-#endif
-#if ENABLED(X2_IS_TMC)
-  stepperX2.setMicrosteps(X2_MICROSTEPS);
-  stepperX2.start();
-#endif
-#if ENABLED(Y_IS_TMC)
-  stepperY.setMicrosteps(Y_MICROSTEPS);
-  stepperY.start();
-#endif
-#if ENABLED(Y2_IS_TMC)
-  stepperY2.setMicrosteps(Y2_MICROSTEPS);
-  stepperY2.start();
-#endif
-#if ENABLED(Z_IS_TMC)
-  stepperZ.setMicrosteps(Z_MICROSTEPS);
-  stepperZ.start();
-#endif
-#if ENABLED(Z2_IS_TMC)
-  stepperZ2.setMicrosteps(Z2_MICROSTEPS);
-  stepperZ2.start();
-#endif
-#if ENABLED(E0_IS_TMC)
-  stepperE0.setMicrosteps(E0_MICROSTEPS);
-  stepperE0.start();
-#endif
-#if ENABLED(E1_IS_TMC)
-  stepperE1.setMicrosteps(E1_MICROSTEPS);
-  stepperE1.start();
-#endif
-#if ENABLED(E2_IS_TMC)
-  stepperE2.setMicrosteps(E2_MICROSTEPS);
-  stepperE2.start();
-#endif
-#if ENABLED(E3_IS_TMC)
-  stepperE3.setMicrosteps(E3_MICROSTEPS);
-  stepperE3.start();
-#endif
+  #if ENABLED(X_IS_TMC)
+    stepperX.setMicrosteps(X_MICROSTEPS);
+    stepperX.start();
+  #endif
+  #if ENABLED(X2_IS_TMC)
+    stepperX2.setMicrosteps(X2_MICROSTEPS);
+    stepperX2.start();
+  #endif
+  #if ENABLED(Y_IS_TMC)
+    stepperY.setMicrosteps(Y_MICROSTEPS);
+    stepperY.start();
+  #endif
+  #if ENABLED(Y2_IS_TMC)
+    stepperY2.setMicrosteps(Y2_MICROSTEPS);
+    stepperY2.start();
+  #endif
+  #if ENABLED(Z_IS_TMC)
+    stepperZ.setMicrosteps(Z_MICROSTEPS);
+    stepperZ.start();
+  #endif
+  #if ENABLED(Z2_IS_TMC)
+    stepperZ2.setMicrosteps(Z2_MICROSTEPS);
+    stepperZ2.start();
+  #endif
+  #if ENABLED(E0_IS_TMC)
+    stepperE0.setMicrosteps(E0_MICROSTEPS);
+    stepperE0.start();
+  #endif
+  #if ENABLED(E1_IS_TMC)
+    stepperE1.setMicrosteps(E1_MICROSTEPS);
+    stepperE1.start();
+  #endif
+  #if ENABLED(E2_IS_TMC)
+    stepperE2.setMicrosteps(E2_MICROSTEPS);
+    stepperE2.start();
+  #endif
+  #if ENABLED(E3_IS_TMC)
+    stepperE3.setMicrosteps(E3_MICROSTEPS);
+    stepperE3.start();
+  #endif
 }
 #endif
 
@@ -147,76 +147,76 @@ void tmc_init() {
 // init routine
 #if ENABLED(HAVE_L6470DRIVER)
 void L6470_init() {
-#if ENABLED(X_IS_L6470)
-  stepperX.init(X_K_VAL);
-  stepperX.softFree();
-  stepperX.setMicroSteps(X_MICROSTEPS);
-  stepperX.setOverCurrent(X_OVERCURRENT); //set overcurrent protection
-  stepperX.setStallCurrent(X_STALLCURRENT);
-#endif
-#if ENABLED(X2_IS_L6470)
-  stepperX2.init(X2_K_VAL);
-  stepperX2.softFree();
-  stepperX2.setMicroSteps(X2_MICROSTEPS);
-  stepperX2.setOverCurrent(X2_OVERCURRENT); //set overcurrent protection
-  stepperX2.setStallCurrent(X2_STALLCURRENT);
-#endif
-#if ENABLED(Y_IS_L6470)
-  stepperY.init(Y_K_VAL);
-  stepperY.softFree();
-  stepperY.setMicroSteps(Y_MICROSTEPS);
-  stepperY.setOverCurrent(Y_OVERCURRENT); //set overcurrent protection
-  stepperY.setStallCurrent(Y_STALLCURRENT);
-#endif
-#if ENABLED(Y2_IS_L6470)
-  stepperY2.init(Y2_K_VAL);
-  stepperY2.softFree();
-  stepperY2.setMicroSteps(Y2_MICROSTEPS);
-  stepperY2.setOverCurrent(Y2_OVERCURRENT); //set overcurrent protection
-  stepperY2.setStallCurrent(Y2_STALLCURRENT);
-#endif
-#if ENABLED(Z_IS_L6470)
-  stepperZ.init(Z_K_VAL);
-  stepperZ.softFree();
-  stepperZ.setMicroSteps(Z_MICROSTEPS);
-  stepperZ.setOverCurrent(Z_OVERCURRENT); //set overcurrent protection
-  stepperZ.setStallCurrent(Z_STALLCURRENT);
-#endif
-#if ENABLED(Z2_IS_L6470)
-  stepperZ2.init(Z2_K_VAL);
-  stepperZ2.softFree();
-  stepperZ2.setMicroSteps(Z2_MICROSTEPS);
-  stepperZ2.setOverCurrent(Z2_OVERCURRENT); //set overcurrent protection
-  stepperZ2.setStallCurrent(Z2_STALLCURRENT);
-#endif
-#if ENABLED(E0_IS_L6470)
-  stepperE0.init(E0_K_VAL);
-  stepperE0.softFree();
-  stepperE0.setMicroSteps(E0_MICROSTEPS);
-  stepperE0.setOverCurrent(E0_OVERCURRENT); //set overcurrent protection
-  stepperE0.setStallCurrent(E0_STALLCURRENT);
-#endif
-#if ENABLED(E1_IS_L6470)
-  stepperE1.init(E1_K_VAL);
-  stepperE1.softFree();
-  stepperE1.setMicroSteps(E1_MICROSTEPS);
-  stepperE1.setOverCurrent(E1_OVERCURRENT); //set overcurrent protection
-  stepperE1.setStallCurrent(E1_STALLCURRENT);
-#endif
-#if ENABLED(E2_IS_L6470)
-  stepperE2.init(E2_K_VAL);
-  stepperE2.softFree();
-  stepperE2.setMicroSteps(E2_MICROSTEPS);
-  stepperE2.setOverCurrent(E2_OVERCURRENT); //set overcurrent protection
-  stepperE2.setStallCurrent(E2_STALLCURRENT);
-#endif
-#if ENABLED(E3_IS_L6470)
-  stepperE3.init(E3_K_VAL);
-  stepperE3.softFree();
-  stepperE3.setMicroSteps(E3_MICROSTEPS);
-  stepperE3.setOverCurrent(E3_OVERCURRENT); //set overcurrent protection
-  stepperE3.setStallCurrent(E3_STALLCURRENT);
-#endif
+  #if ENABLED(X_IS_L6470)
+    stepperX.init(X_K_VAL);
+    stepperX.softFree();
+    stepperX.setMicroSteps(X_MICROSTEPS);
+    stepperX.setOverCurrent(X_OVERCURRENT); //set overcurrent protection
+    stepperX.setStallCurrent(X_STALLCURRENT);
+  #endif
+  #if ENABLED(X2_IS_L6470)
+    stepperX2.init(X2_K_VAL);
+    stepperX2.softFree();
+    stepperX2.setMicroSteps(X2_MICROSTEPS);
+    stepperX2.setOverCurrent(X2_OVERCURRENT); //set overcurrent protection
+    stepperX2.setStallCurrent(X2_STALLCURRENT);
+  #endif
+  #if ENABLED(Y_IS_L6470)
+    stepperY.init(Y_K_VAL);
+    stepperY.softFree();
+    stepperY.setMicroSteps(Y_MICROSTEPS);
+    stepperY.setOverCurrent(Y_OVERCURRENT); //set overcurrent protection
+    stepperY.setStallCurrent(Y_STALLCURRENT);
+  #endif
+  #if ENABLED(Y2_IS_L6470)
+    stepperY2.init(Y2_K_VAL);
+    stepperY2.softFree();
+    stepperY2.setMicroSteps(Y2_MICROSTEPS);
+    stepperY2.setOverCurrent(Y2_OVERCURRENT); //set overcurrent protection
+    stepperY2.setStallCurrent(Y2_STALLCURRENT);
+  #endif
+  #if ENABLED(Z_IS_L6470)
+    stepperZ.init(Z_K_VAL);
+    stepperZ.softFree();
+    stepperZ.setMicroSteps(Z_MICROSTEPS);
+    stepperZ.setOverCurrent(Z_OVERCURRENT); //set overcurrent protection
+    stepperZ.setStallCurrent(Z_STALLCURRENT);
+  #endif
+  #if ENABLED(Z2_IS_L6470)
+    stepperZ2.init(Z2_K_VAL);
+    stepperZ2.softFree();
+    stepperZ2.setMicroSteps(Z2_MICROSTEPS);
+    stepperZ2.setOverCurrent(Z2_OVERCURRENT); //set overcurrent protection
+    stepperZ2.setStallCurrent(Z2_STALLCURRENT);
+  #endif
+  #if ENABLED(E0_IS_L6470)
+    stepperE0.init(E0_K_VAL);
+    stepperE0.softFree();
+    stepperE0.setMicroSteps(E0_MICROSTEPS);
+    stepperE0.setOverCurrent(E0_OVERCURRENT); //set overcurrent protection
+    stepperE0.setStallCurrent(E0_STALLCURRENT);
+  #endif
+  #if ENABLED(E1_IS_L6470)
+    stepperE1.init(E1_K_VAL);
+    stepperE1.softFree();
+    stepperE1.setMicroSteps(E1_MICROSTEPS);
+    stepperE1.setOverCurrent(E1_OVERCURRENT); //set overcurrent protection
+    stepperE1.setStallCurrent(E1_STALLCURRENT);
+  #endif
+  #if ENABLED(E2_IS_L6470)
+    stepperE2.init(E2_K_VAL);
+    stepperE2.softFree();
+    stepperE2.setMicroSteps(E2_MICROSTEPS);
+    stepperE2.setOverCurrent(E2_OVERCURRENT); //set overcurrent protection
+    stepperE2.setStallCurrent(E2_STALLCURRENT);
+  #endif
+  #if ENABLED(E3_IS_L6470)
+    stepperE3.init(E3_K_VAL);
+    stepperE3.softFree();
+    stepperE3.setMicroSteps(E3_MICROSTEPS);
+    stepperE3.setOverCurrent(E3_OVERCURRENT); //set overcurrent protection
+    stepperE3.setStallCurrent(E3_STALLCURRENT);
+  #endif
 }
 #endif
 

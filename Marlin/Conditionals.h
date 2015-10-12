@@ -295,8 +295,8 @@
   #define SERVO_LEVELING (defined(AUTO_BED_LEVELING_FEATURE) && defined(Z_ENDSTOP_SERVO_NR))
 
   /**
-  * Sled Options
-  */
+   * Sled Options
+   */
   #if ENABLED(Z_PROBE_SLED)
     #define Z_SAFE_HOMING
   #endif

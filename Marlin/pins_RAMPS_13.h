@@ -174,7 +174,7 @@
       // Pins for DOGM SPI LCD Support
       #define DOGLCD_A0  44
       #define DOGLCD_CS  66
-      #define LCD_PIN_BL	65	// backlight LED on A11/D65
+      #define LCD_PIN_BL 65 // backlight LED on A11/D65
       #define SDSS   53
 
       #define KILL_PIN 64

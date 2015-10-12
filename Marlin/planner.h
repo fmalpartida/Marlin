@@ -37,12 +37,12 @@ typedef struct {
   long acceleration_rate;                   // The acceleration rate used for acceleration calculation
   unsigned char direction_bits;             // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
   unsigned char active_extruder;            // Selects the active extruder
-#if ENABLED(ADVANCE)
-  long advance_rate;
-  volatile long initial_advance;
-  volatile long final_advance;
-  float advance;
-#endif
+  #if ENABLED(ADVANCE)
+    long advance_rate;
+    volatile long initial_advance;
+    volatile long final_advance;
+    float advance;
+  #endif
 
   // Fields used by the motion planner to manage acceleration
   // float speed_x, speed_y, speed_z, speed_e;          // Nominal mm/sec for each axis
@@ -60,10 +60,10 @@ typedef struct {
   unsigned long final_rate;                          // The minimal rate at exit
   unsigned long acceleration_st;                     // acceleration steps/sec^2
   unsigned long fan_speed;
-#if ENABLED(BARICUDA)
-  unsigned long valve_pressure;
-  unsigned long e_to_p_pressure;
-#endif
+  #if ENABLED(BARICUDA)
+    unsigned long valve_pressure;
+    unsigned long e_to_p_pressure;
+  #endif
   volatile char busy;
 } block_t;
 
@@ -88,22 +88,22 @@ FORCE_INLINE uint8_t movesplanned() { return BLOCK_MOD(block_buffer_head - block
     extern matrix_3x3 plan_bed_level_matrix;
 
     /**
-    * Get the position applying the bed level matrix
-    */
+     * Get the position applying the bed level matrix
+     */
     vector_3 plan_get_position();
   #endif  // AUTO_BED_LEVELING_FEATURE
 
   /**
-  * Add a new linear movement to the buffer. x, y, z are the signed, absolute target position in
-  * millimeters. Feed rate specifies the (target) speed of the motion.
-  */
+   * Add a new linear movement to the buffer. x, y, z are the signed, absolute target position in
+   * millimeters. Feed rate specifies the (target) speed of the motion.
+   */
   void plan_buffer_line(float x, float y, float z, const float& e, float feed_rate, const uint8_t extruder);
 
   /**
-  * Set the planner positions. Used for G92 instructions.
-  * Multiplies by axis_steps_per_unit[] to set stepper positions.
-  * Clears previous speed values.
-  */
+   * Set the planner positions. Used for G92 instructions.
+   * Multiplies by axis_steps_per_unit[] to set stepper positions.
+   * Clears previous speed values.
+   */
   void plan_set_position(float x, float y, float z, const float& e);
 
 #else
@@ -160,7 +160,8 @@ FORCE_INLINE block_t* plan_get_current_block() {
     block_t* block = &block_buffer[block_buffer_tail];
     block->busy = true;
     return block;
-  } else
+  }
+  else
     return NULL;
 }
 

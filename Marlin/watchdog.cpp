@@ -17,15 +17,15 @@
 
 /// intialise watch dog with a 4 sec interrupt time
 void watchdog_init() {
-#if ENABLED(WATCHDOG_RESET_MANUAL)
-  //We enable the watchdog timer, but only for the interrupt.
-  //Take care, as this requires the correct order of operation, with interrupts disabled. See the datasheet of any AVR chip for details.
-  wdt_reset();
-  _WD_CONTROL_REG = _BV(_WD_CHANGE_BIT) | _BV(WDE);
-  _WD_CONTROL_REG = _BV(WDIE) | WDTO_4S;
-#else
-  wdt_enable(WDTO_4S);
-#endif
+  #if ENABLED(WATCHDOG_RESET_MANUAL)
+    //We enable the watchdog timer, but only for the interrupt.
+    //Take care, as this requires the correct order of operation, with interrupts disabled. See the datasheet of any AVR chip for details.
+    wdt_reset();
+    _WD_CONTROL_REG = _BV(_WD_CHANGE_BIT) | _BV(WDE);
+    _WD_CONTROL_REG = _BV(WDIE) | WDTO_4S;
+  #else
+    wdt_enable(WDTO_4S);
+  #endif
 }
 
 /// reset watchdog. MUST be called every 1s after init or avr will reset.

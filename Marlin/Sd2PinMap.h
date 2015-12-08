@@ -390,37 +390,53 @@ static const pin_map_t digitalPinMap[] = {
 static const uint8_t digitalPinCount = COUNT(digitalPinMap);
 
 uint8_t badPinNumber(void)
-__attribute__((error("Pin number is too large or not a constant")));
+  __attribute__((error("Pin number is too large or not a constant")));
 
 static inline __attribute__((always_inline))
-bool getPinMode(uint8_t pin) {
-  if (__builtin_constant_p(pin) && pin < digitalPinCount)
-    return (*digitalPinMap[pin].ddr >> digitalPinMap[pin].bit) & 1; else
+  bool getPinMode(uint8_t pin) {
+  if (__builtin_constant_p(pin) && pin < digitalPinCount) {
+    return (*digitalPinMap[pin].ddr >> digitalPinMap[pin].bit) & 1;
+  }
+  else {
     return badPinNumber();
+  }
 }
 static inline __attribute__((always_inline))
-void setPinMode(uint8_t pin, uint8_t mode) {
+  void setPinMode(uint8_t pin, uint8_t mode) {
   if (__builtin_constant_p(pin) && pin < digitalPinCount) {
-    if (mode)
-      *digitalPinMap[pin].ddr |= BIT(digitalPinMap[pin].bit); else
+    if (mode) {
+      *digitalPinMap[pin].ddr |= BIT(digitalPinMap[pin].bit);
+    }
+    else {
       *digitalPinMap[pin].ddr &= ~BIT(digitalPinMap[pin].bit);
-  } else
+    }
+  }
+  else {
     badPinNumber();
+  }
 }
 static inline __attribute__((always_inline))
-bool fastDigitalRead(uint8_t pin) {
-  if (__builtin_constant_p(pin) && pin < digitalPinCount)
-    return (*digitalPinMap[pin].pin >> digitalPinMap[pin].bit) & 1; else
-    return badPinNumber();
-}
-static inline __attribute__((always_inline))
-void fastDigitalWrite(uint8_t pin, uint8_t value) {
+  bool fastDigitalRead(uint8_t pin) {
   if (__builtin_constant_p(pin) && pin < digitalPinCount) {
-    if (value)
-      *digitalPinMap[pin].port |= BIT(digitalPinMap[pin].bit); else
+    return (*digitalPinMap[pin].pin >> digitalPinMap[pin].bit) & 1;
+  }
+  else {
+    return badPinNumber();
+  }
+}
+static inline __attribute__((always_inline))
+  void fastDigitalWrite(uint8_t pin, uint8_t value) {
+  if (__builtin_constant_p(pin) && pin < digitalPinCount) {
+    if (value) {
+      *digitalPinMap[pin].port |= BIT(digitalPinMap[pin].bit);
+    }
+    else {
       *digitalPinMap[pin].port &= ~BIT(digitalPinMap[pin].bit);
-  } else
+    }
+  }
+  else {
     badPinNumber();
+  }
 }
 #endif  // Sd2PinMap_h
 

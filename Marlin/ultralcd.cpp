@@ -461,7 +461,7 @@ void lcd_set_home_offsets() {
 
   static void _lcd_babystep(int axis, const char* msg) {
     if (encoderPosition != 0) {
-      babystepsTodo[axis] += (int)encoderPosition;
+      babystepsTodo[axis] += BABYSTEP_MULTIPLICATOR * (int)encoderPosition;
       encoderPosition = 0;
       lcdDrawUpdate = 1;
     }
@@ -475,11 +475,85 @@ void lcd_set_home_offsets() {
 #endif //BABYSTEPPING
 
 /**
+ * Watch temperature callbacks
+ */
+#if ENABLED(THERMAL_PROTECTION_HOTENDS)
+  #if TEMP_SENSOR_0 != 0
+    void watch_temp_callback_E0() { start_watching_heater(0); }
+  #endif
+  #if EXTRUDERS > 1 && TEMP_SENSOR_1 != 0
+    void watch_temp_callback_E1() { start_watching_heater(1); }
+  #endif // EXTRUDERS > 1
+  #if EXTRUDERS > 2 && TEMP_SENSOR_2 != 0
+    void watch_temp_callback_E2() { start_watching_heater(2); }
+  #endif // EXTRUDERS > 2
+  #if EXTRUDERS > 3 && TEMP_SENSOR_3 != 0
+    void watch_temp_callback_E3() { start_watching_heater(3); }
+  #endif // EXTRUDERS > 3
+#else
+  #if TEMP_SENSOR_0 != 0
+    void watch_temp_callback_E0() {}
+  #endif
+  #if EXTRUDERS > 1 && TEMP_SENSOR_1 != 0
+    void watch_temp_callback_E1() {}
+  #endif // EXTRUDERS > 1
+  #if EXTRUDERS > 2 && TEMP_SENSOR_2 != 0
+    void watch_temp_callback_E2() {}
+  #endif // EXTRUDERS > 2
+  #if EXTRUDERS > 3 && TEMP_SENSOR_3 != 0
+    void watch_temp_callback_E3() {}
+  #endif // EXTRUDERS > 3
+#endif
+/**
+ * Items shared between Tune and Temperature menus
+ */
+static void nozzle_bed_fan_menu_items(uint8_t &encoderLine, uint8_t &_lineNr, uint8_t &_drawLineNr, uint8_t &_menuItemNr, bool &wasClicked, bool &itemSelected) {
+  //
+  // Nozzle:
+  // Nozzle [1-4]:
+  //
+  #if EXTRUDERS == 1
+    #if TEMP_SENSOR_0 != 0
+      MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15, watch_temp_callback_E0);
+    #endif
+  #else //EXTRUDERS > 1
+    #if TEMP_SENSOR_0 != 0
+      MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE MSG_N1, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15, watch_temp_callback_E0);
+    #endif
+    #if TEMP_SENSOR_1 != 0
+      MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE MSG_N2, &target_temperature[1], 0, HEATER_1_MAXTEMP - 15, watch_temp_callback_E1);
+    #endif
+    #if EXTRUDERS > 2
+      #if TEMP_SENSOR_2 != 0
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE MSG_N3, &target_temperature[2], 0, HEATER_2_MAXTEMP - 15, watch_temp_callback_E2);
+      #endif
+      #if EXTRUDERS > 3
+        #if TEMP_SENSOR_3 != 0
+          MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_NOZZLE MSG_N4, &target_temperature[3], 0, HEATER_3_MAXTEMP - 15, watch_temp_callback_E3);
+        #endif
+      #endif // EXTRUDERS > 3
+    #endif // EXTRUDERS > 2
+  #endif // EXTRUDERS > 1
+
+  //
+  // Bed:
+  //
+  #if TEMP_SENSOR_BED != 0
+    MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
+  #endif
+
+  //
+  // Fan Speed:
+  //
+  MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+}
+
+
+/**
  *
  * "Tune" submenu
  *
  */
-
 static void lcd_tune_menu() {
   START_MENU();
 
@@ -493,52 +567,8 @@ static void lcd_tune_menu() {
   //
   MENU_ITEM_EDIT(int3, MSG_SPEED, &feedrate_multiplier, 10, 999);
 
-  //
-  // Nozzle:
-  // Nozzle 1:
-  // Nozzle 2:
-  // Nozzle 3:
-  // Nozzle 4:
-  //
-  #if EXTRUDERS == 1
-    #if TEMP_SENSOR_0 != 0
-      MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
-    #endif
-  #else //EXTRUDERS > 1
-    #if TEMP_SENSOR_0 != 0
-      MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N1, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
-    #endif
-    #if TEMP_SENSOR_1 != 0
-      MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N2, &target_temperature[1], 0, HEATER_1_MAXTEMP - 15);
-    #endif
-    #if EXTRUDERS > 2
-      #if TEMP_SENSOR_2 != 0
-        MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N3, &target_temperature[2], 0, HEATER_2_MAXTEMP - 15);
-      #endif
-      #if EXTRUDERS > 3
-        #if TEMP_SENSOR_3 != 0
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N4, &target_temperature[3], 0, HEATER_3_MAXTEMP - 15);
-        #endif
-      #endif //EXTRUDERS > 3
-    #endif //EXTRUDERS > 2
-  #endif //EXTRUDERS > 1
-
-  //
-  // Bed:
-  //
-  #if TEMP_SENSOR_BED != 0
-    MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
-  #endif
-
-  //
-  // Fan Speed:
-  //
-  MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
-
-  //
-  // Flow:
-  //
-  MENU_ITEM_EDIT(int3, MSG_FLOW, &extruder_multiplier[active_extruder], 10, 999);
+  // Nozzle, Bed, and Fan Control
+  nozzle_bed_fan_menu_items(encoderLine, _lineNr, _drawLineNr, _menuItemNr, wasClicked, itemSelected);
 
   //
   // Flow:
@@ -550,6 +580,7 @@ static void lcd_tune_menu() {
   #if EXTRUDERS == 1
     MENU_ITEM_EDIT(int3, MSG_FLOW, &extruder_multiplier[0], 10, 999);
   #else // EXTRUDERS > 1
+    MENU_ITEM_EDIT(int3, MSG_FLOW, &extruder_multiplier[active_extruder], 10, 999);
     MENU_ITEM_EDIT(int3, MSG_FLOW MSG_N1, &extruder_multiplier[0], 10, 999);
     MENU_ITEM_EDIT(int3, MSG_FLOW MSG_N2, &extruder_multiplier[1], 10, 999);
     #if EXTRUDERS > 2
@@ -1002,44 +1033,8 @@ static void lcd_control_temperature_menu() {
   //
   MENU_ITEM(back, MSG_CONTROL, lcd_control_menu);
 
-  //
-  // Nozzle
-  // Nozzle 1, Nozzle 2, Nozzle 3, Nozzle 4
-  //
-  #if EXTRUDERS == 1
-    #if TEMP_SENSOR_0 != 0
-      MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
-    #endif
-  #else //EXTRUDERS > 1
-    #if TEMP_SENSOR_0 != 0
-      MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N1, &target_temperature[0], 0, HEATER_0_MAXTEMP - 15);
-    #endif
-    #if TEMP_SENSOR_1 != 0
-      MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N2, &target_temperature[1], 0, HEATER_1_MAXTEMP - 15);
-    #endif
-    #if EXTRUDERS > 2
-      #if TEMP_SENSOR_2 != 0
-        MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N3, &target_temperature[2], 0, HEATER_2_MAXTEMP - 15);
-      #endif
-      #if EXTRUDERS > 3
-        #if TEMP_SENSOR_3 != 0
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_NOZZLE MSG_N4, &target_temperature[3], 0, HEATER_3_MAXTEMP - 15);
-        #endif
-      #endif // EXTRUDERS > 3
-    #endif // EXTRUDERS > 2
-  #endif // EXTRUDERS > 1
-
-  //
-  // Bed
-  //
-  #if TEMP_SENSOR_BED != 0
-    MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_BED, &target_temperature_bed, 0, BED_MAXTEMP - 15);
-  #endif
-
-  //
-  // Fan Speed
-  //
-  MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_FAN_SPEED, &fanSpeed, 0, 255);
+  // Nozzle, Bed, and Fan Control
+  nozzle_bed_fan_menu_items(encoderLine, _lineNr, _drawLineNr, _menuItemNr, wasClicked, itemSelected);
 
   //
   // Autotemp, Min, Max, Fact
@@ -1590,10 +1585,6 @@ void lcd_update() {
     static millis_t return_to_status_ms = 0;
   #endif
 
-  #if ENABLED(LCD_HAS_SLOW_BUTTONS)
-    slow_buttons = lcd_implementation_read_slow_buttons(); // buttons which take too long to read in interrupt context
-  #endif
-
   lcd_buttons_update();
 
   #if ENABLED(SDSUPPORT) && PIN_EXISTS(SD_DETECT)
@@ -1623,6 +1614,10 @@ void lcd_update() {
 
   millis_t ms = millis();
   if (ms > next_lcd_update_ms) {
+
+    #if ENABLED(LCD_HAS_SLOW_BUTTONS)
+      slow_buttons = lcd_implementation_read_slow_buttons(); // buttons which take too long to read in interrupt context
+    #endif
 
     #if ENABLED(ULTIPANEL)
 
@@ -1901,10 +1896,11 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
 
 char conv[8];
 
-// Convert float to string with +123.4 format
-char* ftostr3(const float& x) {
-  return itostr3((int)x);
-}
+// Convert float to rj string with 123 or -12 format
+char *ftostr3(const float& x) { return itostr3((int)x); }
+
+// Convert float to rj string with _123, -123, _-12, or __-1 format
+char *ftostr4sign(const float& x) { return itostr4sign((int)x); }
 
 // Convert int to string with 12 format
 char* itostr2(const uint8_t& x) {
@@ -1941,8 +1937,8 @@ char* ftostr31ns(const float& x) {
   return conv;
 }
 
-// Convert float to string with 123.4 format
-char* ftostr32(const float& x) {
+// Convert float to string with 123.45 format
+char *ftostr32(const float& x) {
   long xx = abs(x * 100);
   conv[0] = x >= 0 ? (xx / 10000) % 10 + '0' : '-';
   conv[1] = (xx / 1000) % 10 + '0';
@@ -2081,6 +2077,30 @@ char* itostr4(const int& xx) {
   conv[0] = xx >= 1000 ? (xx / 1000) % 10 + '0' : ' ';
   conv[1] = xx >= 100 ? (xx / 100) % 10 + '0' : ' ';
   conv[2] = xx >= 10 ? (xx / 10) % 10 + '0' : ' ';
+  conv[3] = xx % 10 + '0';
+  conv[4] = 0;
+  return conv;
+}
+
+// Convert int to rj string with _123, -123, _-12, or __-1 format
+char *itostr4sign(const int& x) {
+  int xx = abs(x);
+  int sign = 0;
+  if (xx >= 100) {
+    conv[1] = (xx / 100) % 10 + '0';
+    conv[2] = (xx / 10) % 10 + '0';
+  }
+  else if (xx >= 10) {
+    conv[0] = ' ';
+    sign = 1;
+    conv[2] = (xx / 10) % 10 + '0';
+  }
+  else {
+    conv[0] = ' ';
+    conv[1] = ' ';
+    sign = 2;
+  }
+  conv[sign] = x < 0 ? '-' : ' ';
   conv[3] = xx % 10 + '0';
   conv[4] = 0;
   return conv;

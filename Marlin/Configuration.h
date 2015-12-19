@@ -759,8 +759,8 @@ const bool Z_MIN_PROBE_ENDSTOP_INVERTING = false; // set to true to invert the l
 
 //#define SAV_3DGLCD
 #ifdef SAV_3DGLCD
-  //#define U8GLIB_SSD1306
-  #define U8GLIB_SH1106
+  #define U8GLIB_SSD1306
+  //#define U8GLIB_SH1106
 #endif
   
 // Shift register panels

@@ -21,10 +21,12 @@
 #include "Marlin.h"
 #include "ultralcd.h"
 #include "temperature.h"
-#include "watchdog.h"
 #include "language.h"
-
 #include "Sd2PinMap.h"
+
+#if ENABLED(USE_WATCHDOG)
+  #include "watchdog.h"
+#endif
 
 //===========================================================================
 //================================== macros =================================
@@ -207,7 +209,7 @@ void PID_autotune(float temp, int extruder, int ncycles) {
 
   long bias, d;
   float Ku, Tu;
-  float Kp, Ki, Kd;
+  float Kp = 0, Ki = 0, Kd = 0;
   float max = 0, min = 10000;
 
   #if HAS_AUTO_FAN
@@ -326,19 +328,10 @@ void PID_autotune(float temp, int extruder, int ncycles) {
     }
     // Every 2 seconds...
     if (ms > temp_ms + 2000) {
-      int p;
-      if (extruder < 0) {
-        p = soft_pwm_bed;
-        SERIAL_PROTOCOLPGM(MSG_B);
-      }
-      else {
-        p = soft_pwm[extruder];
-        SERIAL_PROTOCOLPGM(MSG_T);
-      }
-
-      SERIAL_PROTOCOL(input);
-      SERIAL_PROTOCOLPGM(MSG_AT);
-      SERIAL_PROTOCOLLN(p);
+      #if HAS_TEMP_0 || HAS_TEMP_BED || ENABLED(HEATER_0_USES_MAX6675)
+        print_heaterstates();
+        SERIAL_EOL;
+      #endif
 
       temp_ms = ms;
     } // every 2 seconds
@@ -511,11 +504,12 @@ float get_pid_output(int e) {
             if (e_position > last_position[e]) {
               lpq[lpq_ptr++] = e_position - last_position[e];
               last_position[e] = e_position;
-            } else {
+            }
+            else {
               lpq[lpq_ptr++] = 0;
             }
             if (lpq_ptr >= lpq_len) lpq_ptr = 0;
-            cTerm[e] = (lpq[lpq_ptr] / axis_steps_per_unit[E_AXIS]) * Kc;
+            cTerm[e] = (lpq[lpq_ptr] / axis_steps_per_unit[E_AXIS]) * PID_PARAM(Kc, e);
             pid_output += cTerm[e];
           }
         #endif //PID_ADD_EXTRUSION_RATE
@@ -818,8 +812,11 @@ static void updateTemperaturesFromRawValues() {
   #if HAS_FILAMENT_SENSOR
     filament_width_meas = analog2widthFil();
   #endif
-  //Reset the watchdog after we know we have a temperature measurement.
-  watchdog_reset();
+
+  #if ENABLED(USE_WATCHDOG)
+    // Reset the watchdog after we know we have a temperature measurement.
+    watchdog_reset();
+  #endif
 
   CRITICAL_SECTION_START;
   temp_meas_ready = false;

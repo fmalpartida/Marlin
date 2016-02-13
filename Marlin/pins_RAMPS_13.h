@@ -1,5 +1,5 @@
 /**
- * Arduino Mega with RAMPS v1.3 pin assignments
+ * Arduino Mega with RAMPS v1.3 v1.4 pin assignments
  *
  * Applies to the following boards:
  *
@@ -8,8 +8,18 @@
  *  RAMPS_13_EFF (Extruder, Fan, Fan)
  *  RAMPS_13_EEF (Extruder, Extruder, Fan)
  *  RAMPS_13_SF  (Spindle, Controller Fan)
+ * 
+ *  RAMPS_14_EFB (Extruder, Fan, Bed)
+ *  RAMPS_14_EEB (Extruder, Extruder, Bed)
+ *  RAMPS_14_EFF (Extruder, Fan, Fan)
+ *  RAMPS_14_EEF (Extruder, Extruder, Fan)
+ *  RAMPS_14_SF  (Spindle, Controller Fan)
  *
  *  Other pins_MYBOARD.h files may override these defaults
+ *
+ *  Differences between
+ *  RAMPS_13 | RAMPS_14
+ *         7 | 11
  */
 
 #if !defined(__AVR_ATmega1280__) && !defined(__AVR_ATmega2560__)
@@ -18,7 +28,11 @@
 
 #define LARGE_FLASH true
 
-#define SERVO0_PIN         11
+#ifdef IS_RAMPS_14
+  #define SERVO0_PIN       11
+#else
+  #define SERVO0_PIN        7 // RAMPS_13 // Will conflict with BTN_EN2 on LCD_I2C_VIKI
+#endif
 #define SERVO1_PIN          6
 #define SERVO2_PIN          5
 #define SERVO3_PIN          4
@@ -27,7 +41,9 @@
 #define X_DIR_PIN          55
 #define X_ENABLE_PIN       38
 #define X_MIN_PIN           3
-#define X_MAX_PIN           2
+#ifndef X_MAX_PIN
+  #define X_MAX_PIN         2
+#endif
 
 #define Y_STEP_PIN         60
 #define Y_DIR_PIN          61
@@ -84,8 +100,6 @@
 
 #if ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER) || ENABLED(G3D_PANEL)
   #define KILL_PIN         41
-#else
-  #define KILL_PIN         -1
 #endif
 
 #if MB(RAMPS_13_EFF)
@@ -154,7 +168,9 @@
       #define KILL_PIN 41
     #elif ENABLED(LCD_I2C_VIKI)
       #define BTN_EN1 22  // reverse if the encoder turns the wrong way.
-      #define BTN_EN2 7
+      #define BTN_EN2 7   // http://files.panucatt.com/datasheets/viki_wiring_diagram.pdf
+                          // tells about 40/42.
+                          // 22/7 are unused on RAMPS_14. 22 is unused and 7 the SERVO0_PIN on RAMPS_13.
       #define BTN_ENC -1
       #define LCD_SDSS 53
       #define SD_DETECT_PIN 49
@@ -216,7 +232,7 @@
       #if ENABLED(G3D_PANEL)
         #define SD_DETECT_PIN 49
       #else
-        #define SD_DETECT_PIN -1  // Ramps doesn't use this
+        //        #define SD_DETECT_PIN -1  // Ramps doesn't use this
       #endif
 
     #endif
@@ -254,4 +270,8 @@
   #define SCK_PIN          52
   #define MISO_PIN         50
   #define MOSI_PIN         51
+#endif
+
+#ifndef KILL_PIN
+  //  #define KILL_PIN         -1
 #endif

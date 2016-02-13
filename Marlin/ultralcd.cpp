@@ -410,7 +410,10 @@ static void lcd_main_menu() {
       MENU_ITEM(submenu, MSG_DELTA_CALIBRATE, lcd_delta_calibrate_menu);
     #endif
   }
+  // Remove the control menu when autolevel is enabled
+#if !ENABLED(AUTO_BED_LEVELING_FEATURE)
   MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
+#endif
 
   #if ENABLED(SDSUPPORT)
     if (card.cardOK) {

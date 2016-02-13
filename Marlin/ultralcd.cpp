@@ -410,8 +410,11 @@ static void lcd_main_menu() {
       MENU_ITEM(submenu, MSG_DELTA_CALIBRATE, lcd_delta_calibrate_menu);
     #endif
   }
+  // Remove the control menu when autolevel is enabled
+#if !ENABLED(AUTO_BED_LEVELING_FEATURE)
   MENU_ITEM(submenu, MSG_CONTROL, lcd_control_menu);
-
+#endif
+  
   #if ENABLED(SDSUPPORT)
     if (card.cardOK) {
       if (card.isFileOpen()) {
@@ -933,20 +936,20 @@ static void lcd_move_menu() {
 static void lcd_control_menu() {
   START_MENU();
   MENU_ITEM(back, MSG_MAIN, lcd_main_menu);
-//  MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
-//  MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
-//  MENU_ITEM(submenu, MSG_VOLUMETRIC, lcd_control_volumetric_menu);
+  MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_control_temperature_menu);
+  MENU_ITEM(submenu, MSG_MOTION, lcd_control_motion_menu);
+  MENU_ITEM(submenu, MSG_VOLUMETRIC, lcd_control_volumetric_menu);
 
   #if ENABLED(HAS_LCD_CONTRAST)
-    //MENU_ITEM_EDIT(int3, MSG_CONTRAST, &lcd_contrast, 0, 63);
+    MENU_ITEM_EDIT(int3, MSG_CONTRAST, &lcd_contrast, 0, 63);
     MENU_ITEM(submenu, MSG_CONTRAST, lcd_set_contrast);
   #endif
   #if ENABLED(FWRETRACT)
     MENU_ITEM(submenu, MSG_RETRACT, lcd_control_retract_menu);
   #endif
   #if ENABLED(EEPROM_SETTINGS)
-//    MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
-//    MENU_ITEM(function, MSG_LOAD_EPROM, Config_RetrieveSettings);
+    MENU_ITEM(function, MSG_STORE_EPROM, Config_StoreSettings);
+    MENU_ITEM(function, MSG_LOAD_EPROM, Config_RetrieveSettings);
   #endif
   MENU_ITEM(function, MSG_RESTORE_FAILSAFE, Config_ResetDefault);
   END_MENU();

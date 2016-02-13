@@ -576,20 +576,17 @@ const unsigned int dropsegments = 5; //everything with less than this number of 
 
   //#define E1_IS_L6470
   #define E1_MICROSTEPS 16     //number of microsteps
-  #define E1_MICROSTEPS 16     //number of microsteps
   #define E1_K_VAL 50          // 0 - 255, Higher values, are higher power. Be carefull not to go too high
   #define E1_OVERCURRENT 2000  //maxc current in mA. If the current goes over this value, the driver will switch off
   #define E1_STALLCURRENT 1500 //current in mA where the driver will detect a stall
 
   //#define E2_IS_L6470
   #define E2_MICROSTEPS 16     //number of microsteps
-  #define E2_MICROSTEPS 16     //number of microsteps
   #define E2_K_VAL 50          // 0 - 255, Higher values, are higher power. Be carefull not to go too high
   #define E2_OVERCURRENT 2000  //maxc current in mA. If the current goes over this value, the driver will switch off
   #define E2_STALLCURRENT 1500 //current in mA where the driver will detect a stall
 
   //#define E3_IS_L6470
-  #define E3_MICROSTEPS 16     //number of microsteps
   #define E3_MICROSTEPS 16     //number of microsteps
   #define E3_K_VAL 50          // 0 - 255, Higher values, are higher power. Be carefull not to go too high
   #define E3_OVERCURRENT 2000  //maxc current in mA. If the current goes over this value, the driver will switch off

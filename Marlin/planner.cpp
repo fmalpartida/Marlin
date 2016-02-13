@@ -227,16 +227,17 @@ void planner_reverse_pass_kernel(block_t* previous, block_t* current, block_t* n
     // If entry speed is already at the maximum entry speed, no need to recheck. Block is cruising.
     // If not, block in state of acceleration or deceleration. Reset entry speed to maximum and
     // check for maximum allowable speed reductions to ensure maximum possible planned speed.
-    if (current->entry_speed != current->max_entry_speed) {
+    float max_entry_speed = current->max_entry_speed;
+    if (current->entry_speed != max_entry_speed) {
 
       // If nominal length true, max junction speed is guaranteed to be reached. Only compute
       // for max allowable speed if block is decelerating and nominal length is false.
-      if (!current->nominal_length_flag && current->max_entry_speed > next->entry_speed) {
-        current->entry_speed = min(current->max_entry_speed,
+      if (!current->nominal_length_flag && max_entry_speed > next->entry_speed) {
+        current->entry_speed = min(max_entry_speed,
                                    max_allowable_speed(-current->acceleration, next->entry_speed, current->millimeters));
       }
       else {
-        current->entry_speed = current->max_entry_speed;
+        current->entry_speed = max_entry_speed;
       }
       current->recalculate_flag = true;
 
@@ -507,15 +508,15 @@ float junction_deviation = 0.1;
   target[Z_AXIS] = lround(z * axis_steps_per_unit[Z_AXIS]);
   target[E_AXIS] = lround(e * axis_steps_per_unit[E_AXIS]);
 
-  float dx = target[X_AXIS] - position[X_AXIS],
-        dy = target[Y_AXIS] - position[Y_AXIS],
-        dz = target[Z_AXIS] - position[Z_AXIS];
+  long dx = target[X_AXIS] - position[X_AXIS],
+       dy = target[Y_AXIS] - position[Y_AXIS],
+       dz = target[Z_AXIS] - position[Z_AXIS];
 
   // DRYRUN ignores all temperature constraints and assures that the extruder is instantly satisfied
   if (marlin_debug_flags & DEBUG_DRYRUN)
     position[E_AXIS] = target[E_AXIS];
 
-  float de = target[E_AXIS] - position[E_AXIS];
+  long de = target[E_AXIS] - position[E_AXIS];
 
   #if ENABLED(PREVENT_DANGEROUS_EXTRUDE)
     if (de) {
@@ -1029,10 +1030,10 @@ float junction_deviation = 0.1;
       apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
     #endif
 
-    float nx = position[X_AXIS] = lround(x * axis_steps_per_unit[X_AXIS]),
-          ny = position[Y_AXIS] = lround(y * axis_steps_per_unit[Y_AXIS]),
-          nz = position[Z_AXIS] = lround(z * axis_steps_per_unit[Z_AXIS]),
-          ne = position[E_AXIS] = lround(e * axis_steps_per_unit[E_AXIS]);
+    long nx = position[X_AXIS] = lround(x * axis_steps_per_unit[X_AXIS]),
+         ny = position[Y_AXIS] = lround(y * axis_steps_per_unit[Y_AXIS]),
+         nz = position[Z_AXIS] = lround(z * axis_steps_per_unit[Z_AXIS]),
+         ne = position[E_AXIS] = lround(e * axis_steps_per_unit[E_AXIS]);
     st_set_position(nx, ny, nz, ne);
     previous_nominal_speed = 0.0; // Resets planner junction speeds. Assumes start from rest.
 

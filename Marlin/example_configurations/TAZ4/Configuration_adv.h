@@ -22,11 +22,11 @@
   #define THERMAL_PROTECTION_HYSTERESIS 4     // Degrees Celsius
 
   /**
-  * Whenever an M104 or M109 increases the target temperature the firmware will wait for the
-  * WATCH_TEMP_PERIOD to expire, and if the temperature hasn't increased by WATCH_TEMP_INCREASE
-  * degrees, the machine is halted, requiring a hard reset. This test restarts with any M104/M109,
-  * but only if the current temperature is far enough below the target for a reliable test.
-  */
+   * Whenever an M104 or M109 increases the target temperature the firmware will wait for the
+   * WATCH_TEMP_PERIOD to expire, and if the temperature hasn't increased by WATCH_TEMP_INCREASE
+   * degrees, the machine is halted, requiring a hard reset. This test restarts with any M104/M109,
+   * but only if the current temperature is far enough below the target for a reliable test.
+   */
   #define WATCH_TEMP_PERIOD 16                // Seconds
   #define WATCH_TEMP_INCREASE 4               // Degrees Celsius
 #endif
@@ -184,10 +184,10 @@
   #define X2_MAX_POS 353    // set maximum to the distance between toolheads when both heads are homed
   #define X2_HOME_DIR 1     // the second X-carriage always homes to the maximum endstop position
   #define X2_HOME_POS X2_MAX_POS // default home position is the maximum carriage position
-  // However: In this mode the EXTRUDER_OFFSET_X value for the second extruder provides a software
-  // override for X2_HOME_POS. This also allow recalibration of the distance between the two endstops
-  // without modifying the firmware (through the "M218 T1 X???" command).
-  // Remember: you should set the second extruder x-offset to 0 in your slicer.
+      // However: In this mode the EXTRUDER_OFFSET_X value for the second extruder provides a software
+      // override for X2_HOME_POS. This also allow recalibration of the distance between the two endstops
+      // without modifying the firmware (through the "M218 T1 X???" command).
+      // Remember: you should set the second extruder x-offset to 0 in your slicer.
 
   // Pins for second x-carriage stepper driver (defined here to avoid further complicating pins.h)
   #define X2_ENABLE_PIN 29
@@ -369,9 +369,9 @@
 //#define BABYSTEPPING
 #if ENABLED(BABYSTEPPING)
   #define BABYSTEP_XY  //not only z, but also XY in the menu. more clutter, more functions
-  //not implemented for CoreXY and deltabots!
+                       //not implemented for CoreXY and deltabots!
   #define BABYSTEP_INVERT_Z false  //true for inverse movements in Z
-  #define BABYSTEP_Z_MULTIPLICATOR 2 //faster z movements
+  #define BABYSTEP_MULTIPLICATOR 1 //faster movements
 #endif
 
 // @section extruder
@@ -584,20 +584,17 @@ const unsigned int dropsegments = 5; //everything with less than this number of 
 
   //#define E1_IS_L6470
   #define E1_MICROSTEPS 16     //number of microsteps
-  #define E1_MICROSTEPS 16     //number of microsteps
   #define E1_K_VAL 50          // 0 - 255, Higher values, are higher power. Be carefull not to go too high
   #define E1_OVERCURRENT 2000  //maxc current in mA. If the current goes over this value, the driver will switch off
   #define E1_STALLCURRENT 1500 //current in mA where the driver will detect a stall
 
   //#define E2_IS_L6470
   #define E2_MICROSTEPS 16     //number of microsteps
-  #define E2_MICROSTEPS 16     //number of microsteps
   #define E2_K_VAL 50          // 0 - 255, Higher values, are higher power. Be carefull not to go too high
   #define E2_OVERCURRENT 2000  //maxc current in mA. If the current goes over this value, the driver will switch off
   #define E2_STALLCURRENT 1500 //current in mA where the driver will detect a stall
 
   //#define E3_IS_L6470
-  #define E3_MICROSTEPS 16     //number of microsteps
   #define E3_MICROSTEPS 16     //number of microsteps
   #define E3_K_VAL 50          // 0 - 255, Higher values, are higher power. Be carefull not to go too high
   #define E3_OVERCURRENT 2000  //maxc current in mA. If the current goes over this value, the driver will switch off

@@ -6,8 +6,8 @@
 // #error "You must specify the following parameters related to your distribution"
 
 #if true
-#define SHORT_BUILD_VERSION "1.1.0-RC3"
-#define DETAILED_BUILD_VERSION "1.1.0-RC3 From Archive"
+#define SHORT_BUILD_VERSION "1.1.0-RC3 SAV"
+#define DETAILED_BUILD_VERSION "1.1.0-RC3 SAV"
 #define STRING_DISTRIBUTION_DATE "2015-12-01 12:00"
 // It might also be appropriate to define a location where additional information can be found
 #define SOURCE_CODE_URL  "https://github.com/fmalpartida/Marlin/tree/SAV-MkI-config"

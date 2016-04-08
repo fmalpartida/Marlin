@@ -53,7 +53,7 @@
 void tp_init();  //initialize the heating
 void manage_heater(); //it is critical that this is called periodically.
 
-#if ENABLED(FILAMENT_SENSOR)
+#if ENABLED(FILAMENT_WIDTH_SENSOR)
   // For converting raw Filament Width to milimeters
   float analog2widthFil();
 
@@ -83,7 +83,7 @@ extern float current_temperature_bed;
 
   #if ENABLED(PID_PARAMS_PER_EXTRUDER)
     extern float Kp[EXTRUDERS], Ki[EXTRUDERS], Kd[EXTRUDERS], Kc[EXTRUDERS]; // one param per extruder
-    #define PID_PARAM(param,e) param[e] // use macro to point to array value
+    #define PID_PARAM(param, e) param[e] // use macro to point to array value
   #else
     extern float Kp, Ki, Kd, Kc; // one param per extruder - saves 20 or 36 bytes of ram (inc array pointer)
     #define PID_PARAM(param, e) param // use macro to point directly to value

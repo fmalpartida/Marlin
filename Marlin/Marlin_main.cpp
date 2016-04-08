@@ -250,7 +250,7 @@
 
 bool Running = true;
 
-uint8_t marlin_debug_flags = DEBUG_INFO | DEBUG_ERRORS;
+uint8_t marlin_debug_flags = DEBUG_NONE;
 
 static float feedrate = 1500.0, saved_feedrate;
 float current_position[NUM_AXIS] = { 0.0 };
@@ -298,8 +298,7 @@ const int sensitive_pins[] = SENSITIVE_PINS; ///< Sensitive pin list for M42
 millis_t previous_cmd_ms = 0;
 static millis_t max_inactive_time = 0;
 static millis_t stepper_inactive_time = (DEFAULT_STEPPER_DEACTIVE_TIME) * 1000L;
-millis_t print_job_start_ms = 0; ///< Print job start time
-millis_t print_job_stop_ms = 0;  ///< Print job stop time
+Stopwatch print_job_timer = Stopwatch();
 static uint8_t target_extruder;
 
 #if ENABLED(AUTO_BED_LEVELING_FEATURE)
@@ -405,15 +404,14 @@ static uint8_t target_extruder;
   float axis_scaling[3] = { 1, 1, 1 };    // Build size scaling, default to 1
 #endif
 
-#if ENABLED(FILAMENT_SENSOR)
+#if ENABLED(FILAMENT_WIDTH_SENSOR)
   //Variables for Filament Sensor input
   float filament_width_nominal = DEFAULT_NOMINAL_FILAMENT_DIA;  //Set nominal filament width, can be changed with M404
   bool filament_sensor = false;  //M405 turns on filament_sensor control, M406 turns it off
   float filament_width_meas = DEFAULT_MEASURED_FILAMENT_DIA; //Stores the measured filament diameter
-  signed char measurement_delay[MAX_MEASUREMENT_DELAY + 1]; //ring buffer to delay measurement  store extruder factor after subtracting 100
-  int delay_index1 = 0;  //index into ring buffer
-  int delay_index2 = -1;  //index into ring buffer - set to -1 on startup to indicate ring buffer needs to be initialized
-  float delay_dist = 0; //delay distance counter
+  int8_t measurement_delay[MAX_MEASUREMENT_DELAY + 1]; //ring buffer to delay measurement  store extruder factor after subtracting 100
+  int filwidth_delay_index1 = 0;  //index into ring buffer
+  int filwidth_delay_index2 = -1;  //index into ring buffer - set to -1 on startup to indicate ring buffer needs to be initialized
   int meas_delay_cm = MEASUREMENT_DELAY_CM;  //distance delay setting
 #endif
 
@@ -462,6 +460,7 @@ static bool send_ok[BUFSIZE];
  * ***************************************************************************
  */
 
+void get_available_commands();
 void process_next_command();
 
 void plan_arc(float target[NUM_AXIS], float* offset, uint8_t clockwise);
@@ -804,7 +803,7 @@ void setup() {
  *  - Call LCD update
  */
 void loop() {
-  if (commands_in_queue < BUFSIZE) get_command();
+  if (commands_in_queue < BUFSIZE) get_available_commands();
 
   #if ENABLED(SDSUPPORT)
     card.checkautostart(false);
@@ -856,24 +855,16 @@ void gcode_line_error(const char* err, bool doFlush = true) {
   serial_count = 0;
 }
 
-/**
- * Add to the circular command queue the next command from:
- *  - The command-injection queue (queued_commands_P)
- *  - The active serial input (usually USB)
- *  - The SD card file being actively printed
- */
-void get_command() {
-
+inline void get_serial_commands() {
   static char serial_line_buffer[MAX_CMD_SIZE];
   static boolean serial_comment_mode = false;
 
-  if (drain_queued_commands_P()) return; // priority is given to non-serial commands
-
+  // If the command buffer is empty for too long,
+  // send "wait" to indicate Marlin is still waiting.
   #if defined(NO_TIMEOUTS) && NO_TIMEOUTS > 0
     static millis_t last_command_time = 0;
     millis_t ms = millis();
-
-    if (!MYSERIAL.available() && commands_in_queue == 0 && ms - last_command_time > NO_TIMEOUTS) {
+    if (commands_in_queue == 0 && !MYSERIAL.available() && ms > last_command_time + NO_TIMEOUTS) {
       SERIAL_ECHOLNPGM(MSG_WAIT);
       last_command_time = ms;
     }
@@ -893,7 +884,7 @@ void get_command() {
 
       serial_comment_mode = false; // end of line == end of comment
 
-      if (!serial_count) return; // empty lines just exit
+      if (!serial_count) continue; // skip empty lines
 
       serial_line_buffer[serial_count] = 0; // terminate string
       serial_count = 0; //reset buffer
@@ -978,7 +969,7 @@ void get_command() {
       if (MYSERIAL.available() > 0) {
         // if we have one more character, copy it over
         serial_char = MYSERIAL.read();
-        serial_line_buffer[serial_count++] = serial_char;
+        if (!serial_comment_mode) serial_line_buffer[serial_count++] = serial_char;
       }
       // otherwise do nothing
     }
@@ -988,9 +979,11 @@ void get_command() {
     }
 
   } // queue has space, serial has data
+}
 
-  #if ENABLED(SDSUPPORT)
+#if ENABLED(SDSUPPORT)
 
+  inline void get_sdcard_commands() {
     static bool stop_buffering = false,
                 sd_comment_mode = false;
 
@@ -1017,9 +1010,9 @@ void get_command() {
       ) {
         if (card_eof) {
           SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
-          print_job_stop(true);
+          print_job_timer.stop();
           char time[30];
-          millis_t t = print_job_timer();
+          millis_t t = print_job_timer.duration();
           int hours = t / 60 / 60, minutes = (t / 60) % 60;
           sprintf_P(time, PSTR("%i " MSG_END_HOUR " %i " MSG_END_MINUTE), hours, minutes);
           SERIAL_ECHO_START;
@@ -1050,8 +1043,26 @@ void get_command() {
         if (!sd_comment_mode) command_queue[cmd_queue_index_w][sd_count++] = sd_char;
       }
     }
+  }
 
-  #endif // SDSUPPORT
+#endif // SDSUPPORT
+
+/**
+ * Add to the circular command queue the next command from:
+ *  - The command-injection queue (queued_commands_P)
+ *  - The active serial input (usually USB)
+ *  - The SD card file being actively printed
+ */
+void get_available_commands() {
+
+  // if any immediate commands remain, don't get other commands yet
+  if (drain_queued_commands_P()) return;
+
+  get_serial_commands();
+
+  #if ENABLED(SDSUPPORT)
+    get_sdcard_commands();
+  #endif
 }
 
 bool code_has_value() {
@@ -1060,7 +1071,7 @@ bool code_has_value() {
   while (c == ' ') c = seen_pointer[++i];
   if (c == '-' || c == '+') c = seen_pointer[++i];
   if (c == '.') c = seen_pointer[++i];
-  return (c >= '0' && c <= '9');
+  return NUMERIC(c);
 }
 
 float code_value() {
@@ -1151,9 +1162,16 @@ XYZ_CONSTS_FROM_CONFIG(signed char, home_dir, HOME_DIR);
   void print_xyz(const char* prefix, const float xyz[]) {
     print_xyz(prefix, xyz[X_AXIS], xyz[Y_AXIS], xyz[Z_AXIS]);
   }
+  #define DEBUG_POS(PREFIX,VAR) do{ SERIAL_ECHOPGM(PREFIX); print_xyz(" > " STRINGIFY(VAR), VAR); }while(0)
 #endif
 
 static void set_axis_is_at_home(AxisEnum axis) {
+  #if ENABLED(DEBUG_LEVELING_FEATURE)
+    if (DEBUGGING(LEVELING)) {
+      SERIAL_ECHOPAIR("set_axis_is_at_home(", axis);
+      SERIAL_ECHOLNPGM(") >>>");
+    }
+  #endif
 
   #if ENABLED(DUAL_X_CARRIAGE)
     if (axis == X_AXIS) {
@@ -1221,17 +1239,27 @@ static void set_axis_is_at_home(AxisEnum axis) {
     max_pos[axis] = base_max_pos(axis) + home_offset[axis];
 
     #if ENABLED(AUTO_BED_LEVELING_FEATURE) && Z_HOME_DIR < 0
-      if (axis == Z_AXIS) current_position[Z_AXIS] -= zprobe_zoffset;
+      if (axis == Z_AXIS) {
+        current_position[Z_AXIS] -= zprobe_zoffset;
+        #if ENABLED(DEBUG_LEVELING_FEATURE)
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOPAIR("> zprobe_zoffset==", zprobe_zoffset);
+        #endif
+      }
     #endif
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        SERIAL_ECHOPAIR("set_axis_is_at_home ", (unsigned long)axis);
-        SERIAL_ECHOPAIR(" > (home_offset[axis]==", home_offset[axis]);
-        print_xyz(") > current_position", current_position);
+      if (DEBUGGING(LEVELING)) {
+        SERIAL_ECHOPAIR("> home_offset[axis]==", home_offset[axis]);
+        DEBUG_POS("", current_position);
       }
     #endif
   }
+  #if ENABLED(DEBUG_LEVELING_FEATURE)
+    if (DEBUGGING(LEVELING)) {
+      SERIAL_ECHOPAIR("<<< set_axis_is_at_home(", axis);
+      SERIAL_ECHOLNPGM(")");
+    }
+  #endif
 }
 
 /**
@@ -1277,9 +1305,7 @@ static void setup_for_endstop_move() {
   feedrate_multiplier = 100;
   refresh_cmd_timeout();
   #if ENABLED(DEBUG_LEVELING_FEATURE)
-    if (marlin_debug_flags & DEBUG_LEVELING) {
-      SERIAL_ECHOLNPGM("setup_for_endstop_move > enable_endstops(true)");
-    }
+    if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("setup_for_endstop_move > enable_endstops(true)");
   #endif
   enable_endstops(true);
 }
@@ -1292,9 +1318,7 @@ static void setup_for_endstop_move() {
      */
     void prepare_move_raw() {
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("prepare_move_raw > destination", destination);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("prepare_move_raw", destination);
       #endif
       refresh_cmd_timeout();
       calculate_delta(destination);
@@ -1324,9 +1348,7 @@ static void setup_for_endstop_move() {
         current_position[Z_AXIS] = corrected_position.z;
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("set_bed_level_equation_lsq > current_position", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("set_bed_level_equation_lsq", current_position);
         #endif
 
         sync_plan_position();
@@ -1359,9 +1381,7 @@ static void setup_for_endstop_move() {
       current_position[Z_AXIS] = corrected_position.z;
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("set_bed_level_equation_3pts > current_position", current_position);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("set_bed_level_equation_3pts", current_position);
       #endif
 
       sync_plan_position();
@@ -1383,9 +1403,7 @@ static void setup_for_endstop_move() {
       long start_steps = st_get_position(Z_AXIS);
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          SERIAL_ECHOLNPGM("run_z_probe (DELTA) 1");
-        }
+        if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("run_z_probe (DELTA) 1");
       #endif
 
       // move down slowly until you find the bed
@@ -1404,9 +1422,7 @@ static void setup_for_endstop_move() {
       current_position[Z_AXIS] = mm;
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("run_z_probe (DELTA) 2 > current_position", current_position);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("run_z_probe (DELTA) 2", current_position);
       #endif
 
       sync_plan_position_delta();
@@ -1447,9 +1463,7 @@ static void setup_for_endstop_move() {
       sync_plan_position();
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("run_z_probe > current_position", current_position);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("run_z_probe", current_position);
       #endif
 
     #endif // !DELTA
@@ -1463,9 +1477,7 @@ static void setup_for_endstop_move() {
     float oldFeedRate = feedrate;
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        print_xyz("do_blocking_move_to", x, y, z);
-      }
+      if (DEBUGGING(LEVELING)) print_xyz("do_blocking_move_to", x, y, z);
     #endif
 
     #if ENABLED(DELTA)
@@ -1516,9 +1528,7 @@ static void setup_for_endstop_move() {
 
   static void clean_up_after_endstop_move() {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        SERIAL_ECHOLNPGM("clean_up_after_endstop_move > ENDSTOPS_ONLY_FOR_HOMING > endstops_not_homing()");
-      }
+      if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("clean_up_after_endstop_move > ENDSTOPS_ONLY_FOR_HOMING > endstops_not_homing()");
     #endif
     endstops_not_homing();
     feedrate = saved_feedrate;
@@ -1531,9 +1541,7 @@ static void setup_for_endstop_move() {
   static void deploy_z_probe() {
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        print_xyz("deploy_z_probe > current_position", current_position);
-      }
+      if (DEBUGGING(LEVELING)) DEBUG_POS("deploy_z_probe", current_position);
     #endif
 
     if (z_probe_is_active) return;
@@ -1625,10 +1633,11 @@ static void setup_for_endstop_move() {
   }
 
   static void stow_z_probe(bool doRaise = true) {
+    #if !(HAS_SERVO_ENDSTOPS && (Z_RAISE_AFTER_PROBING > 0))
+      UNUSED(doRaise);
+    #endif
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        print_xyz("stow_z_probe > current_position", current_position);
-      }
+      if (DEBUGGING(LEVELING)) DEBUG_POS("stow_z_probe", current_position);
     #endif
 
     if (!z_probe_is_active) return;
@@ -1641,8 +1650,8 @@ static void setup_for_endstop_move() {
         #if Z_RAISE_AFTER_PROBING > 0
           if (doRaise) {
             #if ENABLED(DEBUG_LEVELING_FEATURE)
-              if (marlin_debug_flags & DEBUG_LEVELING) {
-                SERIAL_ECHOPAIR("Raise Z (after) by ", (float)Z_RAISE_AFTER_PROBING);
+              if (DEBUGGING(LEVELING)) {
+                SERIAL_ECHOPAIR("Raise Z (after) by ", Z_RAISE_AFTER_PROBING);
                 SERIAL_EOL;
                 SERIAL_ECHO("> SERVO_ENDSTOPS > raise_z_after_probing()");
                 SERIAL_EOL;
@@ -1736,16 +1745,16 @@ static void setup_for_endstop_move() {
   // Probe bed height at position (x,y), returns the measured z value
   static float probe_pt(float x, float y, float z_before, ProbeAction probe_action = ProbeDeployAndStow, int verbose_level = 1) {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOLNPGM("probe_pt >>>");
-        SERIAL_ECHOPAIR("> ProbeAction:", (unsigned long)probe_action);
+        SERIAL_ECHOPAIR("> ProbeAction:", probe_action);
         SERIAL_EOL;
-        print_xyz("> current_position", current_position);
+        DEBUG_POS("", current_position);
       }
     #endif
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOPAIR("Z Raise to z_before ", z_before);
         SERIAL_EOL;
         SERIAL_ECHOPAIR("> do_blocking_move_to_z ", z_before);
@@ -1757,7 +1766,7 @@ static void setup_for_endstop_move() {
     do_blocking_move_to_z(z_before); // this also updates current_position
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOPAIR("> do_blocking_move_to_xy ", x - (X_PROBE_OFFSET_FROM_EXTRUDER));
         SERIAL_ECHOPAIR(", ", y - (Y_PROBE_OFFSET_FROM_EXTRUDER));
         SERIAL_EOL;
@@ -1770,9 +1779,7 @@ static void setup_for_endstop_move() {
     #if DISABLED(Z_PROBE_SLED) && DISABLED(Z_PROBE_ALLEN_KEY)
       if (probe_action & ProbeDeploy) {
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            SERIAL_ECHOLNPGM("> ProbeDeploy");
-          }
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> ProbeDeploy");
         #endif
         deploy_z_probe();
       }
@@ -1784,9 +1791,7 @@ static void setup_for_endstop_move() {
     #if DISABLED(Z_PROBE_SLED) && DISABLED(Z_PROBE_ALLEN_KEY)
       if (probe_action & ProbeStow) {
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            SERIAL_ECHOLNPGM("> ProbeStow (stow_z_probe will do Z Raise)");
-          }
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> ProbeStow (stow_z_probe will do Z Raise)");
         #endif
         stow_z_probe();
       }
@@ -1803,9 +1808,7 @@ static void setup_for_endstop_move() {
     }
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        SERIAL_ECHOLNPGM("<<< probe_pt");
-      }
+      if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("<<< probe_pt");
     #endif
 
     return measured_z;
@@ -1870,9 +1873,7 @@ static void setup_for_endstop_move() {
      */
     void reset_bed_level() {
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          SERIAL_ECHOLNPGM("reset_bed_level");
-        }
+        if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("reset_bed_level");
       #endif
       for (int y = 0; y < AUTO_BED_LEVELING_GRID_POINTS; y++) {
         for (int x = 0; x < AUTO_BED_LEVELING_GRID_POINTS; x++) {
@@ -1899,11 +1900,13 @@ static void setup_for_endstop_move() {
 
 #endif // AUTO_BED_LEVELING_FEATURE
 
-static void axis_unhomed_error() {
-  LCD_MESSAGEPGM(MSG_YX_UNHOMED);
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM(MSG_YX_UNHOMED);
-}
+#if ENABLED(Z_PROBE_SLED) || ENABLED(Z_SAFE_HOMING) || ENABLED(AUTO_BED_LEVELING_FEATURE)
+  static void axis_unhomed_error() {
+    LCD_MESSAGEPGM(MSG_YX_UNHOMED);
+    SERIAL_ECHO_START;
+    SERIAL_ECHOLNPGM(MSG_YX_UNHOMED);
+  }
+#endif
 
 #if ENABLED(Z_PROBE_SLED)
 
@@ -1919,9 +1922,9 @@ static void axis_unhomed_error() {
    */
   static void dock_sled(bool dock, int offset = 0) {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        SERIAL_ECHOPAIR("dock_sled", dock);
-        SERIAL_EOL;
+      if (DEBUGGING(LEVELING)) {
+        SERIAL_ECHOPAIR("dock_sled(", dock);
+        SERIAL_ECHOLNPGM(")");
       }
     #endif
 
@@ -1964,10 +1967,9 @@ static void axis_unhomed_error() {
 
 static void homeaxis(AxisEnum axis) {
   #if ENABLED(DEBUG_LEVELING_FEATURE)
-    if (marlin_debug_flags & DEBUG_LEVELING) {
-      SERIAL_ECHOPAIR(">>> homeaxis(", (unsigned long)axis);
-      SERIAL_CHAR(')');
-      SERIAL_EOL;
+    if (DEBUGGING(LEVELING)) {
+      SERIAL_ECHOPAIR(">>> homeaxis(", axis);
+      SERIAL_ECHOLNPGM(")");
     }
   #endif
   #define HOMEAXIS_DO(LETTER) \
@@ -1986,24 +1988,33 @@ static void homeaxis(AxisEnum axis) {
     sync_plan_position();
 
     #if ENABLED(Z_PROBE_SLED)
-      // Get Probe
-      if (axis == Z_AXIS) {
-        if (axis_home_dir < 0) dock_sled(false);
-      }
+      #define _Z_SERVO_TEST       (axis != Z_AXIS)      // deploy Z, servo.move XY
+      #define _Z_PROBE_SUBTEST    false                 // Z will never be invoked
+      #define _Z_DEPLOY           (dock_sled(false))
+      #define _Z_STOW             (dock_sled(true))
     #elif SERVO_LEVELING || ENABLED(FIX_MOUNTED_PROBE)
-
-      // Deploy a Z probe if there is one, and homing towards the bed
-      if (axis == Z_AXIS) {
-        if (axis_home_dir < 0) deploy_z_probe();
-      }
-
+      #define _Z_SERVO_TEST       (axis != Z_AXIS)      // servo.move XY
+      #define _Z_PROBE_SUBTEST    false                 // Z will never be invoked
+      #define _Z_DEPLOY           (deploy_z_probe())
+      #define _Z_STOW             (stow_z_probe())
+    #elif HAS_SERVO_ENDSTOPS
+      #define _Z_SERVO_TEST       true                  // servo.move X, Y, Z
+      #define _Z_PROBE_SUBTEST    (axis == Z_AXIS)      // Z is a probe
     #endif
 
+    if (axis == Z_AXIS) {
+      // If there's a Z probe that needs deployment...
+      #if ENABLED(Z_PROBE_SLED) || SERVO_LEVELING || ENABLED(FIX_MOUNTED_PROBE)
+        // ...and homing Z towards the bed? Deploy it.
+        if (axis_home_dir < 0) _Z_DEPLOY;
+      #endif
+    }
+
     #if HAS_SERVO_ENDSTOPS
-      // Engage Servo endstop if enabled
-      if (axis != Z_AXIS && servo_endstop_id[axis] >= 0) {
+      // Engage an X or Y Servo endstop if enabled
+      if (_Z_SERVO_TEST && servo_endstop_id[axis] >= 0) {
         servo[servo_endstop_id[axis]].move(servo_endstop_angle[axis][0]);
-        z_probe_is_active = true;
+        if (_Z_PROBE_SUBTEST) z_probe_is_active = true;
       }
     #endif
 
@@ -2023,9 +2034,7 @@ static void homeaxis(AxisEnum axis) {
     sync_plan_position();
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        SERIAL_ECHOLNPGM("> enable_endstops(false)");
-      }
+      if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> enable_endstops(false)");
     #endif
     enable_endstops(false); // Disable endstops while moving away
 
@@ -2035,9 +2044,7 @@ static void homeaxis(AxisEnum axis) {
     st_synchronize();
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        SERIAL_ECHOLNPGM("> enable_endstops(true)");
-      }
+      if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> enable_endstops(true)");
     #endif
     enable_endstops(true); // Enable endstops for next homing move
 
@@ -2050,9 +2057,7 @@ static void homeaxis(AxisEnum axis) {
     st_synchronize();
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        print_xyz("> TRIGGER ENDSTOP > current_position", current_position);
-      }
+      if (DEBUGGING(LEVELING)) DEBUG_POS("> TRIGGER ENDSTOP", current_position);
     #endif
 
     #if ENABLED(Z_DUAL_ENDSTOPS)
@@ -2084,31 +2089,27 @@ static void homeaxis(AxisEnum axis) {
       // retrace by the amount specified in endstop_adj
       if (endstop_adj[axis] * axis_home_dir < 0) {
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            SERIAL_ECHOLNPGM("> enable_endstops(false)");
-          }
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> enable_endstops(false)");
         #endif
         enable_endstops(false); // Disable endstops while moving away
         sync_plan_position();
         destination[axis] = endstop_adj[axis];
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
+          if (DEBUGGING(LEVELING)) {
             SERIAL_ECHOPAIR("> endstop_adj = ", endstop_adj[axis]);
-            print_xyz(" > destination", destination);
+            DEBUG_POS("", destination);
           }
         #endif
         line_to_destination();
         st_synchronize();
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            SERIAL_ECHOLNPGM("> enable_endstops(true)");
-          }
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> enable_endstops(true)");
         #endif
         enable_endstops(true); // Enable endstops for next homing move
       }
       #if ENABLED(DEBUG_LEVELING_FEATURE)
         else {
-          if (marlin_debug_flags & DEBUG_LEVELING) {
+          if (DEBUGGING(LEVELING)) {
             SERIAL_ECHOPAIR("> endstop_adj * axis_home_dir = ", endstop_adj[axis] * axis_home_dir);
             SERIAL_EOL;
           }
@@ -2121,9 +2122,7 @@ static void homeaxis(AxisEnum axis) {
     sync_plan_position();
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        print_xyz("> AFTER set_axis_is_at_home > current_position", current_position);
-      }
+      if (DEBUGGING(LEVELING)) DEBUG_POS("> AFTER set_axis_is_at_home", current_position);
     #endif
 
     destination[axis] = current_position[axis];
@@ -2132,50 +2131,33 @@ static void homeaxis(AxisEnum axis) {
     axis_known_position[axis] = true;
     axis_homed[axis] = true;
 
-    #if ENABLED(Z_PROBE_SLED)
-      // bring Z probe back
-      if (axis == Z_AXIS) {
-        if (axis_home_dir < 0) dock_sled(true);
+    // Put away the Z probe
+    #if ENABLED(Z_PROBE_SLED) || SERVO_LEVELING || ENABLED(FIX_MOUNTED_PROBE)
+      if (axis == Z_AXIS && axis_home_dir < 0) {
+        #if ENABLED(DEBUG_LEVELING_FEATURE)
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> SERVO_LEVELING > " STRINGIFY(_Z_STOW));
+        #endif
+        _Z_STOW;
       }
-    #elif SERVO_LEVELING || ENABLED(FIX_MOUNTED_PROBE)
-
-      // Deploy a Z probe if there is one, and homing towards the bed
-      if (axis == Z_AXIS) {
-        if (axis_home_dir < 0) {
-          #if ENABLED(DEBUG_LEVELING_FEATURE)
-            if (marlin_debug_flags & DEBUG_LEVELING) {
-              SERIAL_ECHOLNPGM("> SERVO_LEVELING > stow_z_probe");
-            }
-          #endif
-          stow_z_probe();
-        }
-      }
-      else
-
     #endif
 
-    {
-      #if HAS_SERVO_ENDSTOPS
-        // Retract Servo endstop if enabled
-        if (servo_endstop_id[axis] >= 0) {
-          #if ENABLED(DEBUG_LEVELING_FEATURE)
-            if (marlin_debug_flags & DEBUG_LEVELING) {
-              SERIAL_ECHOLNPGM("> SERVO_ENDSTOPS > Stow with servo.move()");
-            }
-          #endif
-          servo[servo_endstop_id[axis]].move(servo_endstop_angle[axis][1]);
-          z_probe_is_active = false;
-        }
-      #endif
-    }
+    // Retract Servo endstop if enabled
+    #if HAS_SERVO_ENDSTOPS
+      if (_Z_SERVO_TEST && servo_endstop_id[axis] >= 0) {
+        #if ENABLED(DEBUG_LEVELING_FEATURE)
+          if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("> SERVO_ENDSTOPS > Stow with servo.move()");
+        #endif
+        servo[servo_endstop_id[axis]].move(servo_endstop_angle[axis][1]);
+        if (_Z_PROBE_SUBTEST) z_probe_is_active = false;
+      }
+    #endif
 
   }
 
   #if ENABLED(DEBUG_LEVELING_FEATURE)
-    if (marlin_debug_flags & DEBUG_LEVELING) {
-      SERIAL_ECHOPAIR("<<< homeaxis(", (unsigned long)axis);
-      SERIAL_CHAR(')');
-      SERIAL_EOL;
+    if (DEBUGGING(LEVELING)) {
+      SERIAL_ECHOPAIR("<<< homeaxis(", axis);
+      SERIAL_ECHOLNPGM(")");
     }
   #endif
 }
@@ -2289,6 +2271,8 @@ void unknown_command_error() {
         case PAUSED_FOR_INPUT:
           SERIAL_ECHO_START;
           SERIAL_ECHOLNPGM(MSG_BUSY_PAUSED_FOR_INPUT);
+          break;
+        default:
           break;
       }
     }
@@ -2411,9 +2395,7 @@ inline void gcode_G4() {
 inline void gcode_G28() {
 
   #if ENABLED(DEBUG_LEVELING_FEATURE)
-    if (marlin_debug_flags & DEBUG_LEVELING) {
-      SERIAL_ECHOLNPGM("gcode_G28 >>>");
-    }
+    if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("gcode_G28 >>>");
   #endif
 
   // Wait for planner moves to finish!
@@ -2474,9 +2456,7 @@ inline void gcode_G28() {
     sync_plan_position_delta();
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
-        print_xyz("(DELTA) > current_position", current_position);
-      }
+      if (DEBUGGING(LEVELING)) DEBUG_POS("(DELTA)", current_position);
     #endif
 
   #else // NOT DELTA
@@ -2492,9 +2472,7 @@ inline void gcode_G28() {
       if (home_all_axis || homeZ) {
         HOMEAXIS(Z);
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("> HOMEAXIS(Z) > current_position", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("> HOMEAXIS(Z)", current_position);
         #endif
       }
 
@@ -2505,11 +2483,11 @@ inline void gcode_G28() {
         destination[Z_AXIS] = MIN_Z_HEIGHT_FOR_HOMING;
         feedrate = max_feedrate[Z_AXIS] * 60;  // feedrate (mm/m) = max_feedrate (mm/s)
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            SERIAL_ECHOPAIR("Raise Z (before homing) to ", (float)(MIN_Z_HEIGHT_FOR_HOMING));
+          if (DEBUGGING(LEVELING)) {
+            SERIAL_ECHOPAIR("Raise Z (before homing) to ", (MIN_Z_HEIGHT_FOR_HOMING));
             SERIAL_EOL;
-            print_xyz("> (home_all_axis || homeZ) > current_position", current_position);
-            print_xyz("> (home_all_axis || homeZ) > destination", destination);
+            DEBUG_POS("> (home_all_axis || homeZ)", current_position);
+            DEBUG_POS("> (home_all_axis || homeZ)", destination);
           }
         #endif
         line_to_destination();
@@ -2553,9 +2531,7 @@ inline void gcode_G28() {
         sync_plan_position();
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("> QUICK_HOME > current_position 1", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("> QUICK_HOME 1", current_position);
         #endif
 
         destination[X_AXIS] = current_position[X_AXIS];
@@ -2572,9 +2548,7 @@ inline void gcode_G28() {
         #endif
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("> QUICK_HOME > current_position 2", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("> QUICK_HOME 2", current_position);
         #endif
       }
 
@@ -2603,9 +2577,7 @@ inline void gcode_G28() {
         HOMEAXIS(X);
       #endif
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("> homeX", current_position);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("> homeX", current_position);
       #endif
     }
 
@@ -2614,9 +2586,7 @@ inline void gcode_G28() {
       if (home_all_axis || homeY) {
         HOMEAXIS(Y);
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("> homeY", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("> homeY", current_position);
         #endif
       }
     #endif
@@ -2629,7 +2599,7 @@ inline void gcode_G28() {
         #if ENABLED(Z_SAFE_HOMING)
 
           #if ENABLED(DEBUG_LEVELING_FEATURE)
-            if (marlin_debug_flags & DEBUG_LEVELING) {
+            if (DEBUGGING(LEVELING)) {
               SERIAL_ECHOLNPGM("> Z_SAFE_HOMING >>>");
             }
           #endif
@@ -2654,9 +2624,9 @@ inline void gcode_G28() {
             feedrate = XY_TRAVEL_SPEED;
 
             #if ENABLED(DEBUG_LEVELING_FEATURE)
-              if (marlin_debug_flags & DEBUG_LEVELING) {
-                print_xyz("> Z_SAFE_HOMING > home_all_axis > current_position", current_position);
-                print_xyz("> Z_SAFE_HOMING > home_all_axis > destination", destination);
+              if (DEBUGGING(LEVELING)) {
+                DEBUG_POS("> Z_SAFE_HOMING > home_all_axis", current_position);
+                DEBUG_POS("> Z_SAFE_HOMING > home_all_axis", destination);
               }
             #endif
 
@@ -2707,7 +2677,7 @@ inline void gcode_G28() {
           } // !home_all_axes && homeZ
 
           #if ENABLED(DEBUG_LEVELING_FEATURE)
-            if (marlin_debug_flags & DEBUG_LEVELING) {
+            if (DEBUGGING(LEVELING)) {
               SERIAL_ECHOLNPGM("<<< Z_SAFE_HOMING");
             }
           #endif
@@ -2719,9 +2689,7 @@ inline void gcode_G28() {
         #endif // !Z_SAFE_HOMING
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("> (home_all_axis || homeZ) > final", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("> (home_all_axis || homeZ) > final", current_position);
         #endif
 
       } // home_all_axis || homeZ
@@ -2737,12 +2705,12 @@ inline void gcode_G28() {
   #endif
 
   #if ENABLED(ENDSTOPS_ONLY_FOR_HOMING)
+    enable_endstops(false);
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOLNPGM("ENDSTOPS_ONLY_FOR_HOMING enable_endstops(false)");
       }
     #endif
-    enable_endstops(false);
   #endif
 
   // For mesh leveling move back to Z=0
@@ -2757,9 +2725,7 @@ inline void gcode_G28() {
       line_to_destination();
       st_synchronize();
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("mbl_was_active > current_position", current_position);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("mbl_was_active", current_position);
       #endif
     }
   #endif
@@ -2770,7 +2736,7 @@ inline void gcode_G28() {
   endstops_hit_on_purpose(); // clear endstop hit flags
 
   #if ENABLED(DEBUG_LEVELING_FEATURE)
-    if (marlin_debug_flags & DEBUG_LEVELING) {
+    if (DEBUGGING(LEVELING)) {
       SERIAL_ECHOLNPGM("<<< gcode_G28");
     }
   #endif
@@ -2980,8 +2946,9 @@ inline void gcode_G28() {
   inline void gcode_G29() {
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOLNPGM("gcode_G29 >>>");
+        DEBUG_POS("", current_position);
       }
     #endif
 
@@ -3061,7 +3028,7 @@ inline void gcode_G28() {
 
     #if ENABLED(Z_PROBE_SLED)
       dock_sled(false); // engage (un-dock) the Z probe
-    #elif ENABLED(Z_PROBE_ALLEN_KEY) //|| SERVO_LEVELING
+    #elif ENABLED(Z_PROBE_ALLEN_KEY) || (ENABLED(DELTA) && SERVO_LEVELING)
       deploy_z_probe();
     #endif
 
@@ -3147,16 +3114,16 @@ inline void gcode_G28() {
 
           if (probePointCounter) {
             #if ENABLED(DEBUG_LEVELING_FEATURE)
-              if (marlin_debug_flags & DEBUG_LEVELING) {
-                SERIAL_ECHOPAIR("z_before = (between) ", (float)(Z_RAISE_BETWEEN_PROBINGS + current_position[Z_AXIS]));
+              if (DEBUGGING(LEVELING)) {
+                SERIAL_ECHOPAIR("z_before = (between) ", (Z_RAISE_BETWEEN_PROBINGS + current_position[Z_AXIS]));
                 SERIAL_EOL;
               }
             #endif
           }
           else {
             #if ENABLED(DEBUG_LEVELING_FEATURE)
-              if (marlin_debug_flags & DEBUG_LEVELING) {
-                SERIAL_ECHOPAIR("z_before = (before) ", (float)Z_RAISE_BEFORE_PROBING);
+              if (DEBUGGING(LEVELING)) {
+                SERIAL_ECHOPAIR("z_before = (before) ", Z_RAISE_BEFORE_PROBING);
                 SERIAL_EOL;
               }
             #endif
@@ -3200,9 +3167,7 @@ inline void gcode_G28() {
       } //yProbe
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
-          print_xyz("> probing complete > current_position", current_position);
-        }
+        if (DEBUGGING(LEVELING)) DEBUG_POS("> probing complete", current_position);
       #endif
 
       clean_up_after_endstop_move();
@@ -3306,7 +3271,7 @@ inline void gcode_G28() {
     #else // !AUTO_BED_LEVELING_GRID
 
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
+        if (DEBUGGING(LEVELING)) {
           SERIAL_ECHOLNPGM("> 3-point Leveling");
         }
       #endif
@@ -3329,7 +3294,7 @@ inline void gcode_G28() {
 
     #if ENABLED(DELTA)
       // Allen Key Probe for Delta
-      #if ENABLED(Z_PROBE_ALLEN_KEY)
+      #if ENABLED(Z_PROBE_ALLEN_KEY) || SERVO_LEVELING
         stow_z_probe();
       #elif Z_RAISE_AFTER_PROBING > 0
         raise_z_after_probing(); // ???
@@ -3350,7 +3315,7 @@ inline void gcode_G28() {
               real_z = st_get_axis_position_mm(Z_AXIS);  //get the real Z (since plan_get_position is now correcting the plane)
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
+          if (DEBUGGING(LEVELING)) {
             SERIAL_ECHOPAIR("> BEFORE apply_rotation_xyz > z_tmp  = ", z_tmp);
             SERIAL_EOL;
             SERIAL_ECHOPAIR("> BEFORE apply_rotation_xyz > real_z = ", real_z);
@@ -3384,7 +3349,7 @@ inline void gcode_G28() {
          *   here, it could be seen as a compensating factor for the Z probe.
          */
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
+          if (DEBUGGING(LEVELING)) {
             SERIAL_ECHOPAIR("> AFTER apply_rotation_xyz > z_tmp  = ", z_tmp);
             SERIAL_EOL;
           }
@@ -3399,9 +3364,7 @@ inline void gcode_G28() {
         sync_plan_position();
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
-            print_xyz("> corrected Z in G29", current_position);
-          }
+          if (DEBUGGING(LEVELING)) DEBUG_POS("> corrected Z in G29", current_position);
         #endif
       }
 
@@ -3419,7 +3382,7 @@ inline void gcode_G28() {
 
     #ifdef Z_PROBE_END_SCRIPT
       #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (marlin_debug_flags & DEBUG_LEVELING) {
+        if (DEBUGGING(LEVELING)) {
           SERIAL_ECHO("Z Probe End Script: ");
           SERIAL_ECHOLNPGM(Z_PROBE_END_SCRIPT);
         }
@@ -3434,7 +3397,7 @@ inline void gcode_G28() {
     KEEPALIVE_STATE(IN_HANDLER);
 
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOLNPGM("<<< gcode_G29");
       }
     #endif
@@ -3462,9 +3425,9 @@ inline void gcode_G28() {
 
       run_z_probe();
       SERIAL_PROTOCOLPGM("Bed X: ");
-      SERIAL_PROTOCOL(current_position[X_AXIS] + 0.0001);
+      SERIAL_PROTOCOL(current_position[X_AXIS] + X_PROBE_OFFSET_FROM_EXTRUDER + 0.0001);
       SERIAL_PROTOCOLPGM(" Y: ");
-      SERIAL_PROTOCOL(current_position[Y_AXIS] + 0.0001);
+      SERIAL_PROTOCOL(current_position[Y_AXIS] + Y_PROBE_OFFSET_FROM_EXTRUDER + 0.0001);
       SERIAL_PROTOCOLPGM(" Z: ");
       SERIAL_PROTOCOL(current_position[Z_AXIS] + 0.0001);
       SERIAL_EOL;
@@ -3517,6 +3480,9 @@ inline void gcode_G92() {
    */
   inline void gcode_M0_M1() {
     char* args = current_command_args;
+
+    uint8_t test_value = 12;
+    SERIAL_ECHOPAIR("TEST", test_value);
 
     millis_t codenum = 0;
     bool hasP = false, hasS = false;
@@ -3607,7 +3573,7 @@ inline void gcode_M17() {
    */
   inline void gcode_M24() {
     card.startFileprint();
-    print_job_start();
+    print_job_timer.start();
   }
 
   /**
@@ -3663,7 +3629,7 @@ inline void gcode_M17() {
  * M31: Get the time since the start of SD Print (or last M109)
  */
 inline void gcode_M31() {
-  millis_t t = print_job_timer();
+  millis_t t = print_job_timer.duration();
   int min = t / 60, sec = t % 60;
   char time[30];
   sprintf_P(time, PSTR("%i min, %i sec"), min, sec);
@@ -3691,7 +3657,7 @@ inline void gcode_M31() {
     bool call_procedure = code_seen('P') && (seen_pointer < namestartpos);
 
     if (card.cardOK) {
-      card.openFile(namestartpos, true, !call_procedure);
+      card.openFile(namestartpos, true, call_procedure);
 
       if (code_seen('S') && seen_pointer < namestartpos) // "S" (must occur _before_ the filename!)
         card.setIndex(code_value_short());
@@ -3699,7 +3665,7 @@ inline void gcode_M31() {
       card.startFileprint();
 
       // Procedure calls count as normal print time.
-      if (!call_procedure) print_job_start();
+      if (!call_procedure) print_job_timer.start();
     }
   }
 
@@ -3810,7 +3776,7 @@ inline void gcode_M42() {
     }
 
     double sum = 0.0, mean = 0.0, sigma = 0.0, sample_set[50];
-    uint8_t verbose_level = 1, n_samples = 10, n_legs = 0, schizoid_flag = 0;
+    int8_t verbose_level = 1, n_samples = 10, n_legs = 0, schizoid_flag = 0;
 
     if (code_seen('V')) {
       verbose_level = code_value_short();
@@ -4067,11 +4033,32 @@ inline void gcode_M42() {
 #endif // AUTO_BED_LEVELING_FEATURE && Z_MIN_PROBE_REPEATABILITY_TEST
 
 /**
+ * M75: Start print timer
+ */
+inline void gcode_M75() {
+  print_job_timer.start();
+}
+
+/**
+ * M76: Pause print timer
+ */
+inline void gcode_M76() {
+  print_job_timer.pause();
+}
+
+/**
+ * M77: Stop print timer
+ */
+inline void gcode_M77() {
+  print_job_timer.stop();
+}
+
+/**
  * M104: Set hot end temperature
  */
 inline void gcode_M104() {
   if (setTargetedHotend(104)) return;
-  if (marlin_debug_flags & DEBUG_DRYRUN) return;
+  if (DEBUGGING(DRYRUN)) return;
 
   if (code_seen('S')) {
     float temp = code_value();
@@ -4080,15 +4067,31 @@ inline void gcode_M104() {
       if (dual_x_carriage_mode == DXC_DUPLICATION_MODE && target_extruder == 0)
         setTargetHotend1(temp == 0.0 ? 0.0 : temp + duplicate_extruder_temp_offset);
     #endif
-  }
 
-  print_job_stop();
+    /**
+     * We use half EXTRUDE_MINTEMP here to allow nozzles to be put into hot
+     * stand by mode, for instance in a dual extruder setup, without affecting
+     * the running print timer.
+     */
+    if (temp <= (EXTRUDE_MINTEMP)/2) {
+      print_job_timer.stop();
+      LCD_MESSAGEPGM(WELCOME_MSG);
+    }
+    /**
+     * We do not check if the timer is already running because this check will
+     * be done for us inside the Stopwatch::start() method thus a running timer
+     * will not restart.
+     */
+    else print_job_timer.start();
+
+    if (temp > degHotend(target_extruder)) LCD_MESSAGEPGM(MSG_HEATING);
+  }
 }
 
-#if HAS_TEMP_0 || HAS_TEMP_BED || ENABLED(HEATER_0_USES_MAX6675)
+#if HAS_TEMP_HOTEND || HAS_TEMP_BED
 
   void print_heaterstates() {
-    #if HAS_TEMP_0 || ENABLED(HEATER_0_USES_MAX6675)
+    #if HAS_TEMP_HOTEND
       SERIAL_PROTOCOLPGM(" T:");
       SERIAL_PROTOCOL_F(degHotend(target_extruder), 1);
       SERIAL_PROTOCOLPGM(" /");
@@ -4164,10 +4167,10 @@ inline void gcode_M104() {
 inline void gcode_M105() {
   if (setTargetedHotend(105)) return;
 
-  #if HAS_TEMP_0 || HAS_TEMP_BED || ENABLED(HEATER_0_USES_MAX6675)
+  #if HAS_TEMP_HOTEND || HAS_TEMP_BED
     SERIAL_PROTOCOLPGM(MSG_OK);
     print_heaterstates();
-  #else // !HAS_TEMP_0 && !HAS_TEMP_BED
+  #else // !HAS_TEMP_HOTEND && !HAS_TEMP_BED
     SERIAL_ERROR_START;
     SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
   #endif
@@ -4207,11 +4210,8 @@ inline void gcode_M105() {
 inline void gcode_M109() {
   bool no_wait_for_cooling = true;
 
-  // Start hook must happen before setTargetHotend()
-  print_job_start();
-
   if (setTargetedHotend(109)) return;
-  if (marlin_debug_flags & DEBUG_DRYRUN) return;
+  if (DEBUGGING(DRYRUN)) return;
 
   no_wait_for_cooling = code_seen('S');
   if (no_wait_for_cooling || code_seen('R')) {
@@ -4222,10 +4222,24 @@ inline void gcode_M109() {
         setTargetHotend1(temp == 0.0 ? 0.0 : temp + duplicate_extruder_temp_offset);
     #endif
 
+    /**
+     * We use half EXTRUDE_MINTEMP here to allow nozzles to be put into hot
+     * stand by mode, for instance in a dual extruder setup, without affecting
+     * the running print timer.
+     */
+    if (temp <= (EXTRUDE_MINTEMP)/2) {
+      print_job_timer.stop();
+      LCD_MESSAGEPGM(WELCOME_MSG);
+    }
+    /**
+     * We do not check if the timer is already running because this check will
+     * be done for us inside the Stopwatch::start() method thus a running timer
+     * will not restart.
+     */
+    else print_job_timer.start();
+
     if (temp > degHotend(target_extruder)) LCD_MESSAGEPGM(MSG_HEATING);
   }
-
-  if (print_job_stop()) LCD_MESSAGEPGM(WELCOME_MSG);
 
   #if ENABLED(AUTOTEMP)
     autotemp_enabled = code_seen('F');
@@ -4239,7 +4253,7 @@ inline void gcode_M109() {
 
   // Prevents a wait-forever situation if R is misused i.e. M109 R0
   // Try to calculate a ballpark safe margin by halving EXTRUDE_MINTEMP
-  if (degTargetHotend(target_extruder) < (EXTRUDE_MINTEMP/2)) return;
+  if (degTargetHotend(target_extruder) < (EXTRUDE_MINTEMP)/2) return;
 
   #ifdef TEMP_RESIDENCY_TIME
     long residency_start_ms = -1;
@@ -4247,7 +4261,7 @@ inline void gcode_M109() {
     #define TEMP_CONDITIONS (residency_start_ms < 0 || now < residency_start_ms + (TEMP_RESIDENCY_TIME) * 1000UL)
   #else
     // Loop until the temperature is very close target
-    #define TEMP_CONDITIONS (fabs(degHotend(target_extruder) - degTargetHotend(target_extruder)) < 0.75f)
+    #define TEMP_CONDITIONS (isHeatingHotend(target_extruder))
   #endif //TEMP_RESIDENCY_TIME
 
   cancel_heatup = false;
@@ -4256,7 +4270,7 @@ inline void gcode_M109() {
     now = millis();
     if (now > next_temp_ms) { //Print temp & remaining time every 1s while waiting
       next_temp_ms = now + 1000UL;
-      #if HAS_TEMP_0 || HAS_TEMP_BED || ENABLED(HEATER_0_USES_MAX6675)
+      #if HAS_TEMP_HOTEND || HAS_TEMP_BED
         print_heaterstates();
       #endif
       #ifdef TEMP_RESIDENCY_TIME
@@ -4295,7 +4309,7 @@ inline void gcode_M109() {
    *       Rxxx Wait for bed current temp to reach target temp. Waits when heating and cooling
    */
   inline void gcode_M190() {
-    if (marlin_debug_flags & DEBUG_DRYRUN) return;
+    if (DEBUGGING(DRYRUN)) return;
 
     LCD_MESSAGEPGM(MSG_BED_HEATING);
     bool no_wait_for_cooling = code_seen('S');
@@ -4307,7 +4321,7 @@ inline void gcode_M109() {
 
     cancel_heatup = false;
     millis_t now = millis(), next_temp_ms = now + 1000UL;
-    while (!cancel_heatup && degTargetBed() != degBed()) {
+    while (!cancel_heatup && isHeatingBed()) {
       millis_t now = millis();
       if (now > next_temp_ms) { //Print Temp Reading every 1 second while heating up.
         next_temp_ms = now + 1000UL;
@@ -4333,27 +4347,39 @@ inline void gcode_M110() {
  * M111: Set the debug level
  */
 inline void gcode_M111() {
-  marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_INFO | DEBUG_COMMUNICATION;
+  marlin_debug_flags = code_seen('S') ? code_value_short() : DEBUG_NONE;
 
-  if (marlin_debug_flags & DEBUG_ECHO) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM(MSG_DEBUG_ECHO);
-  }
-  // FOR MOMENT NOT ACTIVE
-  //if (marlin_debug_flags & DEBUG_INFO) SERIAL_ECHOLNPGM(MSG_DEBUG_INFO);
-  //if (marlin_debug_flags & DEBUG_ERRORS) SERIAL_ECHOLNPGM(MSG_DEBUG_ERRORS);
-  if (marlin_debug_flags & DEBUG_DRYRUN) {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM(MSG_DEBUG_DRYRUN);
-    disable_all_heaters();
-  }
-
+  const static char str_debug_1[] PROGMEM = MSG_DEBUG_ECHO;
+  const static char str_debug_2[] PROGMEM = MSG_DEBUG_INFO;
+  const static char str_debug_4[] PROGMEM = MSG_DEBUG_ERRORS;
+  const static char str_debug_8[] PROGMEM = MSG_DEBUG_DRYRUN;
+  const static char str_debug_16[] PROGMEM = MSG_DEBUG_COMMUNICATION;
   #if ENABLED(DEBUG_LEVELING_FEATURE)
-    if (marlin_debug_flags & DEBUG_LEVELING) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM(MSG_DEBUG_LEVELING);
-    }
+    const static char str_debug_32[] PROGMEM = MSG_DEBUG_LEVELING;
   #endif
+
+  const static char* const debug_strings[] PROGMEM = {
+    str_debug_1, str_debug_2, str_debug_4, str_debug_8, str_debug_16,
+    #if ENABLED(DEBUG_LEVELING_FEATURE)
+      str_debug_32
+    #endif
+  };
+
+  SERIAL_ECHO_START;
+  SERIAL_ECHOPGM(MSG_DEBUG_PREFIX);
+  if (marlin_debug_flags) {
+    uint8_t comma = 0;
+    for (uint8_t i = 0; i < COUNT(debug_strings); i++) {
+      if (TEST(marlin_debug_flags, i)) {
+        if (comma++) SERIAL_CHAR(',');
+        serialprintPGM((char*)pgm_read_word(&(debug_strings[i])));
+      }
+    }
+  }
+  else {
+    SERIAL_ECHOPGM(MSG_DEBUG_OFF);
+  }
+  SERIAL_EOL;
 }
 
 /**
@@ -4391,7 +4417,7 @@ inline void gcode_M112() { kill(PSTR(MSG_KILLED)); }
  * M140: Set bed temperature
  */
 inline void gcode_M140() {
-  if (marlin_debug_flags & DEBUG_DRYRUN) return;
+  if (DEBUGGING(DRYRUN)) return;
   if (code_seen('S')) setTargetBed(code_value());
 }
 
@@ -4875,7 +4901,7 @@ inline void gcode_M206() {
    */
   inline void gcode_M666() {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOLNPGM(">>> gcode_M666");
       }
     #endif
@@ -4883,7 +4909,7 @@ inline void gcode_M206() {
       if (code_seen(axis_codes[i])) {
         endstop_adj[i] = code_value();
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
+          if (DEBUGGING(LEVELING)) {
             SERIAL_ECHOPGM("endstop_adj[");
             SERIAL_ECHO(axis_codes[i]);
             SERIAL_ECHOPAIR("] = ", endstop_adj[i]);
@@ -4893,7 +4919,7 @@ inline void gcode_M206() {
       }
     }
     #if ENABLED(DEBUG_LEVELING_FEATURE)
-      if (marlin_debug_flags & DEBUG_LEVELING) {
+      if (DEBUGGING(LEVELING)) {
         SERIAL_ECHOLNPGM("<<< gcode_M666");
       }
     #endif
@@ -5424,21 +5450,19 @@ inline void gcode_M400() { st_synchronize(); }
 
 #endif // AUTO_BED_LEVELING_FEATURE && (HAS_SERVO_ENDSTOPS || Z_PROBE_ALLEN_KEY) && !Z_PROBE_SLED
 
-#if ENABLED(FILAMENT_SENSOR)
+#if ENABLED(FILAMENT_WIDTH_SENSOR)
 
   /**
    * M404: Display or set the nominal filament width (3mm, 1.75mm ) W<3.0>
    */
   inline void gcode_M404() {
-    #if HAS_FILWIDTH
-      if (code_seen('W')) {
-        filament_width_nominal = code_value();
-      }
-      else {
-        SERIAL_PROTOCOLPGM("Filament dia (nominal mm):");
-        SERIAL_PROTOCOLLN(filament_width_nominal);
-      }
-    #endif
+    if (code_seen('W')) {
+      filament_width_nominal = code_value();
+    }
+    else {
+      SERIAL_PROTOCOLPGM("Filament dia (nominal mm):");
+      SERIAL_PROTOCOLLN(filament_width_nominal);
+    }
   }
 
   /**
@@ -5448,13 +5472,13 @@ inline void gcode_M400() { st_synchronize(); }
     if (code_seen('D')) meas_delay_cm = code_value();
     NOMORE(meas_delay_cm, MAX_MEASUREMENT_DELAY);
 
-    if (delay_index2 == -1) { //initialize the ring buffer if it has not been done since startup
+    if (filwidth_delay_index2 == -1) { // Initialize the ring buffer if not done since startup
       int temp_ratio = widthFil_to_size_ratio();
 
-      for (delay_index1 = 0; delay_index1 < MAX_MEASUREMENT_DELAY + 1; ++delay_index1)
-        measurement_delay[delay_index1] = temp_ratio - 100;  //subtract 100 to scale within a signed byte
+      for (uint8_t i = 0; i < COUNT(measurement_delay); ++i)
+        measurement_delay[i] = temp_ratio - 100;  // Subtract 100 to scale within a signed byte
 
-      delay_index1 = delay_index2 = 0;
+      filwidth_delay_index1 = filwidth_delay_index2 = 0;
     }
 
     filament_sensor = true;
@@ -5478,7 +5502,7 @@ inline void gcode_M400() { st_synchronize(); }
     SERIAL_PROTOCOLLN(filament_width_meas);
   }
 
-#endif // FILAMENT_SENSOR
+#endif // FILAMENT_WIDTH_SENSOR
 
 /**
  * M410: Quickstop - Abort all planned moves
@@ -5500,7 +5524,7 @@ inline void gcode_M410() { quickStop(); }
    * M421: Set a single Mesh Bed Leveling Z coordinate
    */
   inline void gcode_M421() {
-    float x, y, z;
+    float x = 0, y = 0, z = 0;
     bool err = false, hasX, hasY, hasZ;
     if ((hasX = code_seen('X'))) x = code_value();
     if ((hasY = code_seen('Y'))) y = code_value();
@@ -5564,7 +5588,7 @@ inline void gcode_M428() {
     memcpy(current_position, new_pos, sizeof(new_pos));
     memcpy(home_offset, new_offs, sizeof(new_offs));
     sync_plan_position();
-    LCD_ALERTMESSAGEPGM("Offset applied.");
+    LCD_ALERTMESSAGEPGM(MSG_HOME_OFFSETS_APPLIED);
     #if HAS_BUZZER
       buzz(200, 659);
       buzz(200, 698);
@@ -5663,7 +5687,10 @@ inline void gcode_M503() {
       return;
     }
 
-    float lastpos[NUM_AXIS], fr60 = feedrate / 60;
+    float lastpos[NUM_AXIS];
+    #if ENABLED(DELTA)
+      float fr60 = feedrate / 60;
+    #endif
 
     for (int i = 0; i < NUM_AXIS; i++)
       lastpos[i] = destination[i] = current_position[i];
@@ -5720,7 +5747,9 @@ inline void gcode_M503() {
     disable_e3();
     delay(100);
     LCD_ALERTMESSAGEPGM(MSG_FILAMENTCHANGE);
-    millis_t next_tick = 0;
+    #if DISABLED(AUTO_FILAMENT_CHANGE)
+      millis_t next_tick = 0;
+    #endif
     KEEPALIVE_STATE(PAUSED_FOR_USER);
     while (!lcd_clicked()) {
       #if DISABLED(AUTO_FILAMENT_CHANGE)
@@ -6056,7 +6085,7 @@ inline void gcode_T(uint8_t tmp_extruder) {
 void process_next_command() {
   current_command = command_queue[cmd_queue_index_r];
 
-  if ((marlin_debug_flags & DEBUG_ECHO)) {
+  if (DEBUGGING(ECHO)) {
     SERIAL_ECHO_START;
     SERIAL_ECHOLN(current_command);
   }
@@ -6066,9 +6095,9 @@ void process_next_command() {
   //  - Bypass N[-0-9][0-9]*[ ]*
   //  - Overwrite * with nul to mark the end
   while (*current_command == ' ') ++current_command;
-  if (*current_command == 'N' && ((current_command[1] >= '0' && current_command[1] <= '9') || current_command[1] == '-')) {
+  if (*current_command == 'N' && NUMERIC_SIGNED(current_command[1])) {
     current_command += 2; // skip N[-0-9]
-    while (*current_command >= '0' && *current_command <= '9') ++current_command; // skip [0-9]*
+    while (NUMERIC(*current_command)) ++current_command; // skip [0-9]*
     while (*current_command == ' ') ++current_command; // skip [ ]*
   }
   char* starpos = strchr(current_command, '*');  // * should always be the last parameter
@@ -6082,25 +6111,22 @@ void process_next_command() {
   // Skip spaces to get the numeric part
   while (*cmd_ptr == ' ') cmd_ptr++;
 
-  // The code must have a numeric value
-  bool code_is_good = false;
-
-  int codenum = 0; // define ahead of goto
-
-  // Get and skip the code number
-  while (*cmd_ptr >= '0' && *cmd_ptr <= '9') {
-    code_is_good = true;
-    codenum = codenum * 10 + *cmd_ptr - '0';
-    cmd_ptr++;
-  }
+  uint16_t codenum = 0; // define ahead of goto
 
   // Bail early if there's no code
+  bool code_is_good = NUMERIC(*cmd_ptr);
   if (!code_is_good) goto ExitUnknownCommand;
 
-  // Skip all spaces to get to the first argument
+  // Get and skip the code number
+  do {
+    codenum = (codenum * 10) + (*cmd_ptr - '0');
+    cmd_ptr++;
+  } while (NUMERIC(*cmd_ptr));
+
+  // Skip all spaces to get to the first argument, or nul
   while (*cmd_ptr == ' ') cmd_ptr++;
 
-  // The command's arguments start here, for sure!
+  // The command's arguments (if any) start here, for sure!
   current_command_args = cmd_ptr;
 
   KEEPALIVE_STATE(IN_HANDLER);
@@ -6241,6 +6267,18 @@ void process_next_command() {
           gcode_M48();
           break;
       #endif // AUTO_BED_LEVELING_FEATURE && Z_MIN_PROBE_REPEATABILITY_TEST
+
+      case 75: // Start print timer
+        gcode_M75();
+        break;
+
+      case 76: // Pause print timer
+        gcode_M76();
+        break;
+
+      case 77: // Stop print timer
+        gcode_M77();
+        break;
 
       #if ENABLED(M100_FREE_MEMORY_WATCHER)
         case 100:
@@ -6523,7 +6561,7 @@ void process_next_command() {
           break;
       #endif // AUTO_BED_LEVELING_FEATURE && (HAS_SERVO_ENDSTOPS || Z_PROBE_ALLEN_KEY) && !Z_PROBE_SLED
 
-      #if ENABLED(FILAMENT_SENSOR)
+      #if ENABLED(FILAMENT_WIDTH_SENSOR)
         case 404:  //M404 Enter the nominal filament width (3mm, 1.75mm ) N<3.0> or display nominal filament width
           gcode_M404();
           break;
@@ -6536,7 +6574,7 @@ void process_next_command() {
         case 407:   //M407 Display measured filament diameter
           gcode_M407();
           break;
-      #endif // FILAMENT_SENSOR
+      #endif // ENABLED(FILAMENT_WIDTH_SENSOR)
 
       case 410: // M410 quickstop - Abort all the planned moves.
         gcode_M410();
@@ -6668,7 +6706,7 @@ void ok_to_send() {
     if (*p == 'N') {
       SERIAL_PROTOCOL(' ');
       SERIAL_ECHO(*p++);
-      while ((*p >= '0' && *p <= '9') || *p == '-')
+      while (NUMERIC_SIGNED(*p))
         SERIAL_ECHO(*p++);
     }
     SERIAL_PROTOCOLPGM(" P"); SERIAL_PROTOCOL(int(BLOCK_BUFFER_SIZE - movesplanned() - 1));
@@ -6687,7 +6725,7 @@ void clamp_to_software_endstops(float target[3]) {
       if (zprobe_zoffset < 0) negative_z_offset += zprobe_zoffset;
       if (home_offset[Z_AXIS] < 0) {
         #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (marlin_debug_flags & DEBUG_LEVELING) {
+          if (DEBUGGING(LEVELING)) {
             SERIAL_ECHOPAIR("> clamp_to_software_endstops > Add home_offset[Z_AXIS]:", home_offset[Z_AXIS]);
             SERIAL_EOL;
           }
@@ -6867,7 +6905,7 @@ void mesh_plan_buffer_line(float x, float y, float z, const float e, float feed_
 #if ENABLED(PREVENT_DANGEROUS_EXTRUDE)
 
   inline void prevent_dangerous_extrude(float& curr_e, float& dest_e) {
-    if (marlin_debug_flags & DEBUG_DRYRUN) return;
+    if (DEBUGGING(DRYRUN)) return;
     float de = dest_e - curr_e;
     if (de) {
       if (degHotend(active_extruder) < extrude_min_temp) {
@@ -7365,7 +7403,7 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) {
       filrunout();
   #endif
 
-  if (commands_in_queue < BUFSIZE) get_command();
+  if (commands_in_queue < BUFSIZE) get_available_commands();
 
   millis_t ms = millis();
 
@@ -7657,51 +7695,4 @@ float calculate_volumetric_multiplier(float diameter) {
 void calculate_volumetric_multipliers() {
   for (int i = 0; i < EXTRUDERS; i++)
     volumetric_multiplier[i] = calculate_volumetric_multiplier(filament_size[i]);
-}
-
-/**
- * Start the print job timer
- *
- * The print job is only started if all extruders have their target temp at zero
- * otherwise the print job timew would be reset everytime a M109 is received.
- *
- * @param t start timer timestamp
- *
- * @return true if the timer was started at function call
- */
-bool print_job_start(millis_t t /* = 0 */) {
-  for (int i = 0; i < EXTRUDERS; i++) if (degTargetHotend(i) > 0) return false;
-  print_job_start_ms = (t) ? t : millis();
-  print_job_stop_ms = 0;
-  return true;
-}
-
-/**
- * Output the print job timer in seconds
- *
- * @return the number of seconds
- */
-millis_t print_job_timer() {
-  if (!print_job_start_ms) return 0;
-  return (((print_job_stop_ms > print_job_start_ms)
-    ? print_job_stop_ms : millis()) - print_job_start_ms) / 1000;
-}
-
-/**
- * Check if the running print job has finished and stop the timer
- *
- * When the target temperature for all extruders is zero then we assume that the
- * print job has finished printing. There are some special conditions under which
- * this assumption may not be valid: If during a print job for some reason the
- * user decides to bring a nozzle temp down and only then heat the other afterwards.
- *
- * @param force stops the timer ignoring all pre-checks
- *
- * @return boolean true if the print job has finished printing
- */
-bool print_job_stop(bool force /* = false */) {
-  if (!print_job_start_ms) return false;
-  if (!force) for (int i = 0; i < EXTRUDERS; i++) if (degTargetHotend(i) > 0) return false;
-  print_job_stop_ms = millis();
-  return true;
 }

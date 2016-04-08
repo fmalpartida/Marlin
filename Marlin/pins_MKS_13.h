@@ -21,24 +21,15 @@
  */
 
 /**
- * FELIXprinters v2.0/3.0 (RAMPS v1.4) pin assignments
+ * Arduino Mega with RAMPS v1.4 adjusted pin assignments
+ *
+ *  MKS v1.3  (Extruder, Fan, Bed)
+ *  MKS v1.3  (Extruder, Extruder, Fan, Bed)
+ *  MKS v1.4  (Extruder, Fan, Bed)
+ *  MKS v1.4  (Extruder, Extruder, Fan, Bed)
  */
 
 #include "pins_RAMPS_14_EFB.h"
 
 #undef HEATER_1_PIN
-#define HEATER_1_PIN        7 // EXTRUDER 2
-
-#undef SDPOWER
-#define SDPOWER             1
-
-#define PS_ON_PIN          12
-
-#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL)
-
-#define BLEN_C 2
-#define BLEN_B 1
-#define BLEN_A 0
-#define SD_DETECT_PIN 6
-
-#endif // NEWPANEL && ULTRA_LCD
+#define HEATER_1_PIN        7 // EXTRUDER 2 (-1 on RAMPS 1.4)

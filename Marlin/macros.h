@@ -24,8 +24,8 @@
 #define MACROS_H
 
 // Macros to make a string from a macro
-#define STRINGIFY_(n) #n
-#define STRINGIFY(n) STRINGIFY_(n)
+#define STRINGIFY_(M) #M
+#define STRINGIFY(M) STRINGIFY_(M)
 
 // Macros for bit masks
 #define TEST(n,b) (((n)&_BV(b))!=0)
@@ -51,6 +51,10 @@
 #define ENABLED(b) _CAT(SWITCH_ENABLED_, b)
 #define DISABLED(b) (!_CAT(SWITCH_ENABLED_, b))
 
+#define NUMERIC(a) ((a) >= '0' && '9' >= (a))
+#define NUMERIC_SIGNED(a) (NUMERIC(a) || (a) == '-')
 #define COUNT(a) (sizeof(a)/sizeof(*a))
+
+#define PIN_EXISTS(PN) (defined(PN ##_PIN) && PN ##_PIN >= 0)
 
 #endif //__MACROS_H

@@ -21,24 +21,16 @@
  */
 
 /**
- * FELIXprinters v2.0/3.0 (RAMPS v1.4) pin assignments
+ *  Sainsmart 2-in-1 pin assignments
  */
 
 #include "pins_RAMPS_14_EFB.h"
 
+#undef FAN_PIN
+#define FAN_PIN             7 // PART FAN in front of board next to Extruder heat
+
+#undef HEATER_0_PIN
+#define HEATER_0_PIN        9   // EXTRUDER 1
+
 #undef HEATER_1_PIN
-#define HEATER_1_PIN        7 // EXTRUDER 2
-
-#undef SDPOWER
-#define SDPOWER             1
-
-#define PS_ON_PIN          12
-
-#if ENABLED(ULTRA_LCD) && ENABLED(NEWPANEL)
-
-#define BLEN_C 2
-#define BLEN_B 1
-#define BLEN_A 0
-#define SD_DETECT_PIN 6
-
-#endif // NEWPANEL && ULTRA_LCD
+#define HEATER_1_PIN       10   // EXTRUDER 2

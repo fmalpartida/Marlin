@@ -29,6 +29,16 @@
 #define SANITYCHECK_H
 
 /**
+ * Due to the high number of issues related with old versions of Arduino IDE
+ * we are now warning our users to update their toolkits. In a future Marlin
+ * release we will stop supporting old IDE versions and will require user
+ * action to proceed with compilation in such environments.
+ */
+#if !defined(ARDUINO) || ARDUINO < 10500
+  #warning Versions of Arduino IDE prior to 1.5 are no longer supported, please update your toolkit.
+#endif
+
+/**
  * Dual Stepper Drivers
  */
 #if ENABLED(Z_DUAL_STEPPER_DRIVERS) && ENABLED(Y_DUAL_STEPPER_DRIVERS)
@@ -159,9 +169,9 @@
  * Probes
  */
 
-  /**
-   * A probe needs a pin
-   */
+/**
+ * A probe needs a pin
+ */
 #if (!((HAS_Z_MIN && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)) || HAS_Z_PROBE )) && ( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED))
   #error A probe needs a pin! [Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN || HAS_Z_PROBE]
 #endif
@@ -170,9 +180,9 @@
   #error A probe should not be connected to more then one pin! [Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN || HAS_Z_PROBE]
 #endif
 
-  /**
-    * Require one kind of probe
-    */
+/**
+  * Require one kind of probe
+  */
 #if ENABLED(AUTO_BED_LEVELING_FEATURE) && !( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED))
   #error For AUTO_BED_LEVELING_FEATURE define one kind of probe! {Servo | Z_PROBE_ALLEN_KEY | Z_PROBE_SLED | FIX_MOUNTED_PROBE]
 #endif
@@ -266,6 +276,14 @@
 #endif // AUTO_BED_LEVELING_FEATURE
 
 /**
+ * Filament Width Sensor
+ */
+#if ENABLED(FILAMENT_WIDTH_SENSOR) && !HAS_FILAMENT_WIDTH_SENSOR
+  #error FILAMENT_WIDTH_SENSOR requires a FILWIDTH_PIN to be defined.
+#endif
+
+
+/**
  * ULTIPANEL encoder
  */
 #if ENABLED(ULTIPANEL) && DISABLED(NEWPANEL) && DISABLED(SR_LCD_2W_NL) && !defined(SHIFT_CLK)
@@ -350,27 +368,29 @@
  * Test Heater, Temp Sensor, and Extruder Pins; Sensor Type must also be set.
  */
 #if EXTRUDERS > 3
-  #if !HAS_HEATER_3
+  #if TEMP_SENSOR_3 == 0
+    #error TEMP_SENSOR_3 is required with 4 EXTRUDERS.
+  #elif !HAS_HEATER_3
     #error HEATER_3_PIN not defined for this board.
   #elif !PIN_EXISTS(TEMP_3)
     #error TEMP_3_PIN not defined for this board.
   #elif !PIN_EXISTS(E3_STEP) || !PIN_EXISTS(E3_DIR) || !PIN_EXISTS(E3_ENABLE)
     #error E3_STEP_PIN, E3_DIR_PIN, or E3_ENABLE_PIN not defined for this board.
-  #elif TEMP_SENSOR_3 == 0
-    #error TEMP_SENSOR_3 is required with 4 EXTRUDERS.
   #endif
 #elif EXTRUDERS > 2
-  #if !HAS_HEATER_2
+  #if TEMP_SENSOR_2 == 0
+    #error TEMP_SENSOR_2 is required with 3 or more EXTRUDERS.
+  #elif !HAS_HEATER_2
     #error HEATER_2_PIN not defined for this board.
   #elif !PIN_EXISTS(TEMP_2)
     #error TEMP_2_PIN not defined for this board.
   #elif !PIN_EXISTS(E2_STEP) || !PIN_EXISTS(E2_DIR) || !PIN_EXISTS(E2_ENABLE)
     #error E2_STEP_PIN, E2_DIR_PIN, or E2_ENABLE_PIN not defined for this board.
-  #elif TEMP_SENSOR_2 == 0
-    #error TEMP_SENSOR_2 is required with 3 or more EXTRUDERS.
   #endif
 #elif EXTRUDERS > 1
-  #if !PIN_EXISTS(TEMP_1)
+  #if TEMP_SENSOR_1 == 0
+    #error TEMP_SENSOR_1 is required with 2 or more EXTRUDERS.
+  #elif !PIN_EXISTS(TEMP_1)
     #error TEMP_1_PIN not defined for this board.
   #elif !PIN_EXISTS(E1_STEP) || !PIN_EXISTS(E1_DIR) || !PIN_EXISTS(E1_ENABLE)
     #error E1_STEP_PIN, E1_DIR_PIN, or E1_ENABLE_PIN not defined for this board.
@@ -383,12 +403,8 @@
   #endif
 #endif
 
-#if TEMP_SENSOR_1 == 0
-  #if EXTRUDERS > 1
-    #error TEMP_SENSOR_1 is required with 2 or more EXTRUDERS.
-  #elif ENABLED(TEMP_SENSOR_1_AS_REDUNDANT)
-    #error TEMP_SENSOR_1 is required with TEMP_SENSOR_1_AS_REDUNDANT.
-  #endif
+#if ENABLED(TEMP_SENSOR_1_AS_REDUNDANT) && TEMP_SENSOR_1 == 0
+  #error TEMP_SENSOR_1 is required with TEMP_SENSOR_1_AS_REDUNDANT.
 #endif
 
 #if !HAS_HEATER_0
@@ -399,6 +415,19 @@
   #error E0_STEP_PIN, E0_DIR_PIN, or E0_ENABLE_PIN not defined for this board.
 #elif TEMP_SENSOR_0 == 0
   #error TEMP_SENSOR_0 is required.
+#endif
+
+/**
+ * Endstops
+ */
+#if DISABLED(USE_XMIN_PLUG) && DISABLED(USE_XMAX_PLUG) && !(ENABLED(Z_DUAL_ENDSTOPS) && Z2_USE_ENDSTOP >= _XMAX_ && Z2_USE_ENDSTOP <= _XMIN_)
+ #error You must enable USE_XMIN_PLUG or USE_XMAX_PLUG
+#elif DISABLED(USE_YMIN_PLUG) && DISABLED(USE_YMAX_PLUG) && !(ENABLED(Z_DUAL_ENDSTOPS) && Z2_USE_ENDSTOP >= _YMAX_ && Z2_USE_ENDSTOP <= _YMIN_)
+ #error You must enable USE_YMIN_PLUG or USE_YMAX_PLUG
+#elif DISABLED(USE_ZMIN_PLUG) && DISABLED(USE_ZMAX_PLUG) && !(ENABLED(Z_DUAL_ENDSTOPS) && Z2_USE_ENDSTOP >= _ZMAX_ && Z2_USE_ENDSTOP <= _ZMIN_)
+ #error You must enable USE_ZMIN_PLUG or USE_ZMAX_PLUG
+#elif ENABLED(Z_DUAL_ENDSTOPS) && !Z2_USE_ENDSTOP
+ #error You must set Z2_USE_ENDSTOP with Z_DUAL_ENDSTOPS
 #endif
 
 /**
@@ -427,15 +456,21 @@
 #elif defined(CUSTOM_MENDEL_NAME)
   #error CUSTOM_MENDEL_NAME is now CUSTOM_MACHINE_NAME. Please update your configuration.
 #elif defined(HAS_AUTOMATIC_VERSIONING)
-  #error HAS_AUTOMATIC_VERSIONING deprecated - use USE_AUTOMATIC_VERSIONING instead
+  #error HAS_AUTOMATIC_VERSIONING is now USE_AUTOMATIC_VERSIONING. Please update your configuration.
 #elif defined(ENABLE_AUTO_BED_LEVELING)
-  #error ENABLE_AUTO_BED_LEVELING deprecated - use AUTO_BED_LEVELING_FEATURE instead
+  #error ENABLE_AUTO_BED_LEVELING is now AUTO_BED_LEVELING_FEATURE. Please update your configuration.
 #elif defined(SDSLOW)
-  #error SDSLOW deprecated - set SPI_SPEED to SPI_HALF_SPEED instead
+  #error SDSLOW deprecated. Set SPI_SPEED to SPI_HALF_SPEED instead.
 #elif defined(SDEXTRASLOW)
-  #error SDEXTRASLOW deprecated - set SPI_SPEED to SPI_QUARTER_SPEED instead
+  #error SDEXTRASLOW deprecated. Set SPI_SPEED to SPI_QUARTER_SPEED instead.
 #elif defined(Z_RAISE_BEFORE_HOMING)
   #error Z_RAISE_BEFORE_HOMING is deprecated. Use MIN_Z_HEIGHT_FOR_HOMING instead.
+#elif defined(FILAMENT_SENSOR)
+  #error FILAMENT_SENSOR is deprecated. Use FILAMENT_WIDTH_SENSOR instead.
+#elif defined(DISABLE_MAX_ENDSTOPS) || defined(DISABLE_MIN_ENDSTOPS)
+  #error DISABLE_MAX_ENDSTOPS and DISABLE_MIN_ENDSTOPS deprecated. Use individual USE_*_PLUG options instead.
+#elif ENABLED(Z_DUAL_ENDSTOPS) && !defined(Z2_USE_ENDSTOP)
+  #error Z_DUAL_ENDSTOPS settings are simplified. Just set Z2_USE_ENDSTOP to the endstop you want to repurpose for Z2
 #endif
 
 #endif //SANITYCHECK_H

@@ -71,31 +71,24 @@
 
 #define PROTOCOL_VERSION "1.0"
 
-#if MB(ULTIMAKER)|| MB(ULTIMAKER_OLD)|| MB(ULTIMAIN_2)
-  #define DEFAULT_MACHINE_NAME "Ultimaker"
-  #define DEFAULT_SOURCE_URL "https://github.com/Ultimaker/Marlin"
-#elif MB(RUMBA)
-  #define DEFAULT_MACHINE_NAME "Rumba"
-#elif MB(3DRAG)
-  #define DEFAULT_MACHINE_NAME "3Drag"
-  #define DEFAULT_SOURCE_URL "http://3dprint.elettronicain.it/"
-#elif MB(K8200)
-  #define DEFAULT_MACHINE_NAME "K8200"
-  #define DEFAULT_SOURCE_URL "https://github.com/CONSULitAS/Marlin-K8200"
-#elif MB(5DPRINT)
-  #define DEFAULT_MACHINE_NAME "Makibox"
-#elif MB(SAV_MKI)
-  #define DEFAULT_MACHINE_NAME "SAV MkI"
-  #define DEFAULT_SOURCE_URL "https://github.com/fmalpartida/Marlin/tree/SAV-MkI-config"
-#else
+#ifndef DEFAULT_MACHINE_NAME
   #define DEFAULT_MACHINE_NAME "3D Printer"
-  #define DEFAULT_SOURCE_URL "https://github.com/MarlinFirmware/Marlin"
 #endif
 
 #ifdef CUSTOM_MACHINE_NAME
   #define MACHINE_NAME CUSTOM_MACHINE_NAME
 #else
   #define MACHINE_NAME DEFAULT_MACHINE_NAME
+#endif
+
+#ifndef DEFAULT_SOURCE_URL
+  /**
+   * The SOURCE_CODE_URL is the location where users will find the Marlin Source
+   * Code which is installed on the device. In most cases —unless the manufacturer
+   * has a distinct Github fork— the Source Code URL should just be the main
+   * Marlin repository.
+   */
+  #define DEFAULT_SOURCE_URL "https://github.com/MarlinFirmware/Marlin"
 #endif
 
 #ifndef SOURCE_CODE_URL
@@ -238,11 +231,14 @@
 #define MSG_T_MINTEMP                       "MINTEMP triggered"
 
 // Debug
-#define MSG_DEBUG_ECHO                      "DEBUG ECHO ENABLED"
-#define MSG_DEBUG_INFO                      "DEBUG INFO ENABLED"
-#define MSG_DEBUG_ERRORS                    "DEBUG ERRORS ENABLED"
-#define MSG_DEBUG_DRYRUN                    "DEBUG DRYRUN ENABLED"
-#define MSG_DEBUG_LEVELING                  "DEBUG LEVELING ENABLED"
+#define MSG_DEBUG_PREFIX                    "DEBUG:"
+#define MSG_DEBUG_OFF                       "off"
+#define MSG_DEBUG_ECHO                      "ECHO"
+#define MSG_DEBUG_INFO                      "INFO"
+#define MSG_DEBUG_ERRORS                    "ERRORS"
+#define MSG_DEBUG_DRYRUN                    "DRYRUN"
+#define MSG_DEBUG_COMMUNICATION             "COMMUNICATION"
+#define MSG_DEBUG_LEVELING                  "LEVELING"
 
 // LCD Menu Messages
 

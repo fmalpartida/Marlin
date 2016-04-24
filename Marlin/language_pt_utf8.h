@@ -155,7 +155,7 @@
 #define MSG_BABYSTEP_Z                      "Babystep Z"
 #define MSG_ENDSTOP_ABORT                   "Fim de curso"
 #define MSG_HEATING_FAILED_LCD              "Aquecimento falhou"
-#define MSG_ERR_REDUNDANT_TEMP              "Err: REDUNDANT TEMP ERROR"
+#define MSG_ERR_REDUNDANT_TEMP              "Err: REDUNDANT TEMP"
 #define MSG_THERMAL_RUNAWAY                 "THERMAL RUNAWAY"
 #define MSG_ERR_MAXTEMP                     "Err: T Máxima"
 #define MSG_ERR_MINTEMP                     "Err: T Mínima"
@@ -168,12 +168,10 @@
 #define MSG_BED_HEATING                     "Aquecendo base.."
 #define MSG_BED_DONE                        "Base aquecida."
 
-#if ENABLED(DELTA_CALIBRATION_MENU)
-  #define MSG_DELTA_CALIBRATE             "Calibração Delta"
-  #define MSG_DELTA_CALIBRATE_X           "Calibrar X"
-  #define MSG_DELTA_CALIBRATE_Y           "Calibrar Y"
-  #define MSG_DELTA_CALIBRATE_Z           "Calibrar Z"
-  #define MSG_DELTA_CALIBRATE_CENTER      "Calibrar Centro"
-#endif // DELTA_CALIBRATION_MENU
+#define MSG_DELTA_CALIBRATE                 "Calibração Delta"
+#define MSG_DELTA_CALIBRATE_X               "Calibrar X"
+#define MSG_DELTA_CALIBRATE_Y               "Calibrar Y"
+#define MSG_DELTA_CALIBRATE_Z               "Calibrar Z"
+#define MSG_DELTA_CALIBRATE_CENTER          "Calibrar Centro"
 
 #endif // LANGUAGE_PT_UTF_H

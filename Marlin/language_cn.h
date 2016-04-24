@@ -149,7 +149,7 @@
 #define MSG_BABYSTEP_Z                      "Babystep Z"
 #define MSG_ENDSTOP_ABORT                   "Endstop abort"
 #define MSG_HEATING_FAILED_LCD              "Heating failed"
-#define MSG_ERR_REDUNDANT_TEMP              "Err: REDUNDANT TEMP ERROR"
+#define MSG_ERR_REDUNDANT_TEMP              "Err: REDUNDANT TEMP"
 #define MSG_THERMAL_RUNAWAY                 "THERMAL RUNAWAY"
 #define MSG_ERR_MAXTEMP                     "Err: MAXTEMP"
 #define MSG_ERR_MINTEMP                     "Err: MINTEMP"
@@ -157,13 +157,10 @@
 #define MSG_END_HOUR                        "hours"
 #define MSG_END_MINUTE                      "minutes"
 
-#if ENABLED(DELTA_CALIBRATION_MENU)
-  #define MSG_DELTA_CALIBRATE               "Delta Calibration"
-  #define MSG_DELTA_CALIBRATE_X             "Calibrate X"
-  #define MSG_DELTA_CALIBRATE_Y             "Calibrate Y"
-  #define MSG_DELTA_CALIBRATE_Z             "Calibrate Z"
-  #define MSG_DELTA_CALIBRATE_CENTER        "Calibrate Center"
-#endif // DELTA_CALIBRATION_MENU
+#define MSG_DELTA_CALIBRATE                 "Delta Calibration"
+#define MSG_DELTA_CALIBRATE_X               "Calibrate X"
+#define MSG_DELTA_CALIBRATE_Y               "Calibrate Y"
+#define MSG_DELTA_CALIBRATE_Z               "Calibrate Z"
+#define MSG_DELTA_CALIBRATE_CENTER          "Calibrate Center"
 
 #endif // LANGUAGE_CN_H
-

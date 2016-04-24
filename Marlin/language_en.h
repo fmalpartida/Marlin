@@ -49,6 +49,9 @@
 #ifndef MSG_SD_REMOVED
   #define MSG_SD_REMOVED                      "Card removed"
 #endif
+#ifndef MSG_LCD_ENDSTOPS
+  #define MSG_LCD_ENDSTOPS                    "Endstops" // Max length 8 characters
+#endif
 #ifndef MSG_MAIN
   #define MSG_MAIN                            "Main"
 #endif
@@ -452,7 +455,7 @@
   #define MSG_HEATING_FAILED_LCD              "Heating failed"
 #endif
 #ifndef MSG_ERR_REDUNDANT_TEMP
-  #define MSG_ERR_REDUNDANT_TEMP              "Err: REDUNDANT TEMP ERROR"
+  #define MSG_ERR_REDUNDANT_TEMP              "Err: REDUNDANT TEMP"
 #endif
 #ifndef MSG_THERMAL_RUNAWAY
   #define MSG_THERMAL_RUNAWAY                 "THERMAL RUNAWAY"

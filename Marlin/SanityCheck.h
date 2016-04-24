@@ -34,8 +34,8 @@
  * release we will stop supporting old IDE versions and will require user
  * action to proceed with compilation in such environments.
  */
-#if !defined(ARDUINO) || ARDUINO < 10500
-  #warning Versions of Arduino IDE prior to 1.5 are no longer supported, please update your toolkit.
+#if !defined(ARDUINO) || ARDUINO < 10600
+  //#error Versions of Arduino IDE prior to 1.6.0 are no longer supported, please update your toolkit.
 #endif
 
 /**
@@ -172,26 +172,26 @@
 /**
  * A probe needs a pin
  */
-#if (!((HAS_Z_MIN && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)) || HAS_Z_PROBE )) && ( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED))
+#if (!((HAS_Z_MIN && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)) || HAS_Z_PROBE )) && ( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(MECHANICAL_PROBE) || ENABLED(Z_PROBE_SLED))
   #error A probe needs a pin! [Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN || HAS_Z_PROBE]
 #endif
 
-#if ((HAS_Z_MIN && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)) && HAS_Z_PROBE) && ( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED))
-  #error A probe should not be connected to more then one pin! [Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN || HAS_Z_PROBE]
+#if ((HAS_Z_MIN && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)) && HAS_Z_PROBE) && ( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(MECHANICAL_PROBE) || ENABLED(Z_PROBE_SLED))
+  #error A probe should not be connected to more than one pin! [Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN || HAS_Z_PROBE]
 #endif
 
 /**
   * Require one kind of probe
   */
-#if ENABLED(AUTO_BED_LEVELING_FEATURE) && !( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED))
-  #error For AUTO_BED_LEVELING_FEATURE define one kind of probe! {Servo | Z_PROBE_ALLEN_KEY | Z_PROBE_SLED | FIX_MOUNTED_PROBE]
+#if ENABLED(AUTO_BED_LEVELING_FEATURE) && !( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(MECHANICAL_PROBE) || ENABLED(Z_PROBE_SLED))
+  #error For AUTO_BED_LEVELING_FEATURE define one kind of probe! [Servo | MECHANICAL_PROBE | Z_PROBE_SLED | FIX_MOUNTED_PROBE]
 #endif
 
-#if ENABLED(Z_SAFE_HOMING)&& !( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED))
-  #error For Z_SAFE_HOMING define one kind of probe! {Servo | Z_PROBE_ALLEN_KEY | Z_PROBE_SLED | FIX_MOUNTED_PROBE]
+#if ENABLED(Z_SAFE_HOMING)&& !( ENABLED(FIX_MOUNTED_PROBE) || defined(Z_ENDSTOP_SERVO_NR) || ENABLED(MECHANICAL_PROBE) || ENABLED(Z_PROBE_SLED))
+  #error For Z_SAFE_HOMING define one kind of probe! [Servo | MECHANICAL_PROBE | Z_PROBE_SLED | FIX_MOUNTED_PROBE]
 #endif
 
-// To do: Fail with more then one probe defined
+// To do: Fail with more than one probe defined
 
 /**
  * Auto Bed Leveling
@@ -288,6 +288,10 @@
  */
 #if ENABLED(ULTIPANEL) && DISABLED(NEWPANEL) && DISABLED(SR_LCD_2W_NL) && !defined(SHIFT_CLK)
   #error ULTIPANEL requires some kind of encoder.
+#endif
+
+#if ENCODER_PULSES_PER_STEP < 0
+  #error ENCODER_PULSES_PER_STEP should not be negative, use REVERSE_MENU_DIRECTION instead
 #endif
 
 /**

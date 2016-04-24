@@ -445,6 +445,13 @@ unsigned lcd_print(char c) { return charset_mapper(c); }
     }
   }
 
+  inline void logo_lines(const char *extra) {
+    int indent = (LCD_WIDTH - 8 - lcd_strlen_P(extra)) / 2;
+    lcd.setCursor(indent, 0); lcd.print('\x00'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x01');
+    lcd.setCursor(indent, 1);                    lcd_printPGM(PSTR("|Marlin|"));  lcd_printPGM(extra);
+    lcd.setCursor(indent, 2); lcd.print('\x02'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x03');
+  }
+
   static void bootscreen() {
     show_bootscreen = false;
     byte top_left[8] = {
@@ -494,22 +501,44 @@ unsigned lcd_print(char c) { return charset_mapper(c); }
 
     lcd.clear();
 
-    #define TEXT_SCREEN_LOGO_SHIFT ((LCD_WIDTH/2) - 4)
-    lcd.setCursor(TEXT_SCREEN_LOGO_SHIFT, 0); lcd.print('\x00'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x01');
-    lcd.setCursor(TEXT_SCREEN_LOGO_SHIFT, 1);                    lcd_printPGM(PSTR("|Marlin|"));
-    lcd.setCursor(TEXT_SCREEN_LOGO_SHIFT, 2); lcd.print('\x02'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x03');
-
-    delay(2000);
+    #define LCD_EXTRA_SPACE (LCD_WIDTH-8)
 
     #ifdef STRING_SPLASH_LINE1
-      lcd_erase_line(3);
-      lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE1), LCD_WIDTH, 1000);
+      // Combine into a single splash screen if possible
+      if (LCD_EXTRA_SPACE >= strlen(STRING_SPLASH_LINE1) + 1) {
+        logo_lines(PSTR(" " STRING_SPLASH_LINE1));
+        #ifdef STRING_SPLASH_LINE2
+          lcd_erase_line(3);
+          lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 2000);
+        #else
+          delay(2000);
+        #endif
+      }
+      else {
+        logo_lines(PSTR(""));
+        lcd_erase_line(3);
+        lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE1), LCD_WIDTH, 1500);
+        #ifdef STRING_SPLASH_LINE2
+          lcd_erase_line(3);
+          lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 1500);
+        #endif
+      }
+    #elif defined(STRING_SPLASH_LINE2)
+      // Combine into a single splash screen if possible
+      if (LCD_EXTRA_SPACE >= strlen(STRING_SPLASH_LINE2) + 1) {
+        logo_lines(PSTR(" " STRING_SPLASH_LINE2));
+        delay(2000);
+      }
+      else {
+        logo_lines(PSTR(""));
+        lcd_erase_line(3);
+        lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 2000);
+      }
+    #else
+      logo_lines(PSTR(""));
+      delay(2000);
     #endif
 
-    #ifdef STRING_SPLASH_LINE2
-      lcd_erase_line(3);
-      lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 1000);
-    #endif
   }
 
 #endif // SHOW_BOOTSCREEN
@@ -741,7 +770,7 @@ static void lcd_implementation_status_screen() {
     if (card.isFileOpen()) {
       // Draw the progress bar if the message has shown long enough
       // or if there is no message set.
-      if (millis() >= progress_bar_ms + PROGRESS_BAR_MSG_TIME || !lcd_status_message[0]) {
+      if (ELAPSED(millis(), progress_bar_ms + PROGRESS_BAR_MSG_TIME) || !lcd_status_message[0]) {
         int tix = (int)(card.percentDone() * (LCD_WIDTH) * 3) / 100,
           cel = tix / 3, rem = tix % 3, i = LCD_WIDTH;
         char msg[LCD_WIDTH + 1], b = ' ';
@@ -762,7 +791,7 @@ static void lcd_implementation_status_screen() {
 
     // Show Filament Diameter and Volumetric Multiplier %
     // After allowing lcd_status_message to show for 5 seconds
-    if (millis() >= previous_lcd_status_ms + 5000) {
+    if (ELAPSED(millis(), previous_lcd_status_ms + 5000UL)) {
       lcd_printPGM(PSTR("Dia "));
       lcd.print(ftostr12ns(filament_width_meas));
       lcd_printPGM(PSTR(" V"));
@@ -930,7 +959,7 @@ void lcd_implementation_drawedit(const char* pstr, const char* value) {
       // so they are called during normal lcd_update
       uint8_t slow_bits = lcd.readButtons() << B_I2C_BTN_OFFSET;
       #if ENABLED(LCD_I2C_VIKI)
-        if ((slow_bits & (B_MI | B_RI)) && millis() < next_button_update_ms) // LCD clicked
+        if ((slow_bits & (B_MI | B_RI)) && PENDING(millis(), next_button_update_ms)) // LCD clicked
           slow_bits &= ~(B_MI | B_RI); // Disable LCD clicked buttons if screen is updated
       #endif // LCD_I2C_VIKI
       return slow_bits;

@@ -158,7 +158,7 @@
 #define MSG_BABYSTEP_Z                      "Zジク ビドウ"                  // "Babystep Z"
 #define MSG_ENDSTOP_ABORT                   "エンドストップ サドウ"            // "Endstop abort"
 #define MSG_HEATING_FAILED_LCD              "カネツシッパイ"                 // "Heating failed"
-#define MSG_ERR_REDUNDANT_TEMP              "エラー:ジョウチョウサーミスターキノウ"  // "Err: REDUNDANT TEMP ERROR"
+#define MSG_ERR_REDUNDANT_TEMP              "エラー:ジョウチョウサーミスターキノウ"  // "Err: REDUNDANT TEMP"
 #define MSG_THERMAL_RUNAWAY                 "ネツボウソウ"                   // "THERMAL RUNAWAY"
 #define MSG_ERR_MAXTEMP                     "エラー:サイコウオンチョウカ"         // "Err: MAXTEMP"
 #define MSG_ERR_MINTEMP                     "エラー:サイテイオンミマン"          // "Err: MINTEMP"
@@ -171,12 +171,10 @@
 #define MSG_BED_HEATING                     "ベッド カネツチュウ"              // "Bed Heating."
 #define MSG_BED_DONE                        "ベッド カネツカンリョウ"            // "Bed done."
 
-#if ENABLED(DELTA_CALIBRATION_MENU)
-  #define MSG_DELTA_CALIBRATE               "デルタ コウセイ"                // "Delta Calibration"
-  #define MSG_DELTA_CALIBRATE_X             "Xジク コウセイ"                 // "Calibrate X"
-  #define MSG_DELTA_CALIBRATE_Y             "Yジク コウセイ"                 // "Calibrate Y"
-  #define MSG_DELTA_CALIBRATE_Z             "Zジク コウセイ"                 // "Calibrate Z"
-  #define MSG_DELTA_CALIBRATE_CENTER        "チュウシン コウセイ"              // "Calibrate Center"
-#endif // DELTA_CALIBRATION_MENU
+#define MSG_DELTA_CALIBRATE                 "デルタ コウセイ"                // "Delta Calibration"
+#define MSG_DELTA_CALIBRATE_X               "Xジク コウセイ"                 // "Calibrate X"
+#define MSG_DELTA_CALIBRATE_Y               "Yジク コウセイ"                 // "Calibrate Y"
+#define MSG_DELTA_CALIBRATE_Z               "Zジク コウセイ"                 // "Calibrate Z"
+#define MSG_DELTA_CALIBRATE_CENTER          "チュウシン コウセイ"              // "Calibrate Center"
 
 #endif // LANGUAGE_KANA_UTF_H

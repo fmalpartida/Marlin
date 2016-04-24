@@ -491,7 +491,7 @@ void check_axes_activity() {
             fan_kick_end[f] = ms + FAN_KICKSTART_TIME; \
             tail_fan_speed[f] = 255; \
           } else { \
-            if (fan_kick_end[f] > ms) { \
+            if (PENDING(ms, fan_kick_end[f])) { \
               tail_fan_speed[f] = 255; \
             } \
           } \
@@ -568,7 +568,7 @@ float junction_deviation = 0.1;
   while (block_buffer_tail == next_buffer_head) idle();
 
   #if ENABLED(MESH_BED_LEVELING)
-    if (mbl.active) z += mbl.get_z(x, y);
+    if (mbl.active) z += mbl.get_z(x - home_offset[X_AXIS], y - home_offset[Y_AXIS]);
   #elif ENABLED(AUTO_BED_LEVELING_FEATURE)
     apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
   #endif
@@ -1090,6 +1090,12 @@ float junction_deviation = 0.1;
 } // plan_buffer_line()
 
 #if ENABLED(AUTO_BED_LEVELING_FEATURE) && DISABLED(DELTA)
+
+  /**
+   * Get the XYZ position of the steppers as a vector_3.
+   *
+   * On CORE machines XYZ is derived from ABC.
+   */
   vector_3 plan_get_position() {
     vector_3 position = vector_3(st_get_axis_position_mm(X_AXIS), st_get_axis_position_mm(Y_AXIS), st_get_axis_position_mm(Z_AXIS));
 
@@ -1102,8 +1108,14 @@ float junction_deviation = 0.1;
 
     return position;
   }
+
 #endif // AUTO_BED_LEVELING_FEATURE && !DELTA
 
+/**
+ * Directly set the planner XYZ position (hence the stepper positions).
+ *
+ * On CORE machines stepper ABC will be translated from the given XYZ.
+ */
 #if ENABLED(AUTO_BED_LEVELING_FEATURE) || ENABLED(MESH_BED_LEVELING)
   void plan_set_position(float x, float y, float z, const float& e)
 #else
@@ -1111,7 +1123,7 @@ float junction_deviation = 0.1;
 #endif // AUTO_BED_LEVELING_FEATURE || MESH_BED_LEVELING
   {
     #if ENABLED(MESH_BED_LEVELING)
-      if (mbl.active) z += mbl.get_z(x, y);
+      if (mbl.active) z += mbl.get_z(x - home_offset[X_AXIS], y - home_offset[Y_AXIS]);
     #elif ENABLED(AUTO_BED_LEVELING_FEATURE)
       apply_rotation_xyz(plan_bed_level_matrix, x, y, z);
     #endif

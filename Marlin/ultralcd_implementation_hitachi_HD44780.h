@@ -1,33 +1,16 @@
-/**
- * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- *
- * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 #ifndef ULTRALCD_IMPLEMENTATION_HITACHI_HD44780_H
 #define ULTRALCD_IMPLEMENTATION_HITACHI_HD44780_H
 
 /**
 * Implementation of the LCD display routines for a Hitachi HD44780 display. These are common LCD character displays.
+* When selecting the Russian language, a slightly different LCD implementation is used to handle UTF8 characters.
 **/
 
-extern volatile uint8_t buttons;  //an extended version of the last checked buttons in a bit array.
+//#if DISABLED(REPRAPWORLD_KEYPAD)
+//  extern volatile uint8_t buttons;  //the last checked buttons in a bit array.
+//#else
+  extern volatile uint8_t buttons;  //an extended version of the last checked buttons in a bit array.
+//#endif
 
 ////////////////////////////////////
 // Setup button and encode mappings for each panel (into 'buttons' variable
@@ -41,13 +24,13 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
   #define BLEN_B 1
   #define BLEN_A 0
 
-  #define EN_B (_BV(BLEN_B)) // The two encoder pins are connected through BTN_EN1 and BTN_EN2
-  #define EN_A (_BV(BLEN_A))
+  #define EN_B BIT(BLEN_B) // The two encoder pins are connected through BTN_EN1 and BTN_EN2
+  #define EN_A BIT(BLEN_A)
 
-  #if BUTTON_EXISTS(ENC)
+  #if defined(BTN_ENC) && BTN_ENC > -1
     // encoder click is directly connected
     #define BLEN_C 2
-    #define EN_C (_BV(BLEN_C))
+    #define EN_C BIT(BLEN_C)
   #endif
 
   //
@@ -63,13 +46,11 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
     #define B_DW (BUTTON_DOWN<<B_I2C_BTN_OFFSET)
     #define B_RI (BUTTON_RIGHT<<B_I2C_BTN_OFFSET)
 
-    #if BUTTON_EXISTS(ENC)
+    #if defined(BTN_ENC) && BTN_ENC > -1
       // the pause/stop/restart button is connected to BTN_ENC when used
       #define B_ST (EN_C)                            // Map the pause/stop/resume button into its normalized functional name
-      #undef LCD_CLICKED
       #define LCD_CLICKED (buttons&(B_MI|B_RI|B_ST)) // pause/stop button also acts as click until we implement proper pause/stop.
     #else
-      #undef LCD_CLICKED
       #define LCD_CLICKED (buttons&(B_MI|B_RI))
     #endif
 
@@ -77,29 +58,46 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
     #define LCD_HAS_SLOW_BUTTONS
 
   #elif ENABLED(LCD_I2C_PANELOLU2)
-
-    #if BUTTON_EXISTS(ENC)
-
-      #undef LCD_CLICKED
-      #define LCD_CLICKED (buttons&EN_C)
-
-    #else // Read through I2C if not directly connected to a pin
-
+    // encoder click can be read through I2C if not directly connected
+    #if BTN_ENC <= 0
       #define B_I2C_BTN_OFFSET 3 // (the first three bit positions reserved for EN_A, EN_B, EN_C)
 
       #define B_MI (PANELOLU2_ENCODER_C<<B_I2C_BTN_OFFSET) // requires LiquidTWI2 library v1.2.3 or later
 
-      #undef LCD_CLICKED
       #define LCD_CLICKED (buttons&B_MI)
 
       // I2C buttons take too long to read inside an interrupt context and so we read them during lcd_update
       #define LCD_HAS_SLOW_BUTTONS
-
+    #else
+      #define LCD_CLICKED (buttons&EN_C)
     #endif
 
   #elif ENABLED(REPRAPWORLD_KEYPAD)
+    // define register bit values, don't change it
+    #define BLEN_REPRAPWORLD_KEYPAD_F3 0
+    #define BLEN_REPRAPWORLD_KEYPAD_F2 1
+    #define BLEN_REPRAPWORLD_KEYPAD_F1 2
+    #define BLEN_REPRAPWORLD_KEYPAD_UP 6
+    #define BLEN_REPRAPWORLD_KEYPAD_RIGHT 4
+    #define BLEN_REPRAPWORLD_KEYPAD_MIDDLE 5
+    #define BLEN_REPRAPWORLD_KEYPAD_DOWN 3
+    #define BLEN_REPRAPWORLD_KEYPAD_LEFT 7
 
-    // REPRAPWORLD_KEYPAD defined in ultralcd.h
+    #define REPRAPWORLD_BTN_OFFSET 0 // bit offset into buttons for shift register values
+
+    #define EN_REPRAPWORLD_KEYPAD_F3 BIT((BLEN_REPRAPWORLD_KEYPAD_F3+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_F2 BIT((BLEN_REPRAPWORLD_KEYPAD_F2+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_F1 BIT((BLEN_REPRAPWORLD_KEYPAD_F1+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_UP BIT((BLEN_REPRAPWORLD_KEYPAD_UP+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_RIGHT BIT((BLEN_REPRAPWORLD_KEYPAD_RIGHT+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_MIDDLE BIT((BLEN_REPRAPWORLD_KEYPAD_MIDDLE+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_DOWN BIT((BLEN_REPRAPWORLD_KEYPAD_DOWN+REPRAPWORLD_BTN_OFFSET))
+    #define EN_REPRAPWORLD_KEYPAD_LEFT BIT((BLEN_REPRAPWORLD_KEYPAD_LEFT+REPRAPWORLD_BTN_OFFSET))
+
+    //#define LCD_CLICKED ((buttons&EN_C) || (buttons&EN_REPRAPWORLD_KEYPAD_F1))
+    //#define REPRAPWORLD_KEYPAD_MOVE_Y_DOWN (buttons&EN_REPRAPWORLD_KEYPAD_DOWN)
+    //#define REPRAPWORLD_KEYPAD_MOVE_Y_UP (buttons&EN_REPRAPWORLD_KEYPAD_UP)
+    //#define REPRAPWORLD_KEYPAD_MOVE_HOME (buttons&EN_REPRAPWORLD_KEYPAD_MIDDLE)
 
   #elif ENABLED(NEWPANEL)
     #define LCD_CLICKED (buttons&EN_C)
@@ -115,12 +113,12 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
     #define BL_ST 2
 
     //automatic, do not change
-    #define B_LE (_BV(BL_LE))
-    #define B_UP (_BV(BL_UP))
-    #define B_MI (_BV(BL_MI))
-    #define B_DW (_BV(BL_DW))
-    #define B_RI (_BV(BL_RI))
-    #define B_ST (_BV(BL_ST))
+    #define B_LE BIT(BL_LE)
+    #define B_UP BIT(BL_UP)
+    #define B_MI BIT(BL_MI)
+    #define B_DW BIT(BL_DW)
+    #define B_RI BIT(BL_RI)
+    #define B_ST BIT(BL_ST)
 
     #define LCD_CLICKED (buttons&(B_MI|B_ST))
   #endif
@@ -139,7 +137,7 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
   #define LCD_I2C_PIN_D5  5
   #define LCD_I2C_PIN_D6  6
   #define LCD_I2C_PIN_D7  7
-
+  
   #include <Wire.h>
   #include <LCD.h>
   #include <LiquidCrystal_I2C.h>
@@ -186,12 +184,6 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
   #include <LiquidCrystal_SR.h>
   #define LCD_CLASS LiquidCrystal_SR
   LCD_CLASS lcd(SR_DATA_PIN, SR_CLK_PIN);
-#elif ENABLED(LCM1602)
-  #include <Wire.h>
-  #include <LCD.h>
-  #include <LiquidCrystal_I2C.h>
-  #define LCD_CLASS LiquidCrystal_I2C
-  LCD_CLASS lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 #else
   // Standard directly connected LCD implementations
   #include <LiquidCrystal.h>
@@ -212,10 +204,6 @@ extern volatile uint8_t buttons;  //an extended version of the last checked butt
     static millis_t expire_status_ms = 0;
   #endif
   #define LCD_STR_PROGRESS  "\x03\x04\x05"
-#endif
-
-#if ENABLED(LCD_HAS_STATUS_INDICATORS)
-  static void lcd_implementation_update_indicators();
 #endif
 
 static void lcd_set_custom_characters(
@@ -380,7 +368,7 @@ static void lcd_implementation_init(
   #elif ENABLED(LCD_I2C_TYPE_MCP23017)
     lcd.setMCPType(LTI_TYPE_MCP23017);
     lcd.begin(LCD_WIDTH, LCD_HEIGHT);
-    lcd_implementation_update_indicators();
+    lcd.setBacklight(0); //set all the LEDs off to begin with
 
   #elif ENABLED(LCD_I2C_TYPE_MCP23008)
     lcd.setMCPType(LTI_TYPE_MCP23008);
@@ -416,7 +404,7 @@ char lcd_printPGM(const char* str) {
   return n;
 }
 
-char lcd_print(const char* str) {
+char lcd_print(char* str) {
   char c, n = 0;
   unsigned char i = 0;
   while ((c = str[i++])) n += charset_mapper(c);
@@ -428,7 +416,7 @@ unsigned lcd_print(char c) { return charset_mapper(c); }
 #if ENABLED(SHOW_BOOTSCREEN)
 
   void lcd_erase_line(int line) {
-    lcd.setCursor(0, line);
+    lcd.setCursor(0, 3);
     for (int i = 0; i < LCD_WIDTH; i++)
       lcd_print(' ');
   }
@@ -443,13 +431,6 @@ unsigned lcd_print(char c) { return charset_mapper(c); }
       lcd_print(tmp);
       delay(time / max(n, 1));
     }
-  }
-
-  inline void logo_lines(const char *extra) {
-    int indent = (LCD_WIDTH - 8 - lcd_strlen_P(extra)) / 2;
-    lcd.setCursor(indent, 0); lcd.print('\x00'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x01');
-    lcd.setCursor(indent, 1);                    lcd_printPGM(PSTR("|Marlin|"));  lcd_printPGM(extra);
-    lcd.setCursor(indent, 2); lcd.print('\x02'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x03');
   }
 
   static void bootscreen() {
@@ -501,49 +482,27 @@ unsigned lcd_print(char c) { return charset_mapper(c); }
 
     lcd.clear();
 
-    #define LCD_EXTRA_SPACE (LCD_WIDTH-8)
+    #define TEXT_SCREEN_LOGO_SHIFT ((LCD_WIDTH/2) - 4)
+    lcd.setCursor(TEXT_SCREEN_LOGO_SHIFT, 0); lcd.print('\x00'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x01');
+    lcd.setCursor(TEXT_SCREEN_LOGO_SHIFT, 1);                    lcd_printPGM(PSTR("|Marlin|"));
+    lcd.setCursor(TEXT_SCREEN_LOGO_SHIFT, 2); lcd.print('\x02'); lcd_printPGM(PSTR( "------" ));  lcd.print('\x03');
+
+    delay(2000);
 
     #ifdef STRING_SPLASH_LINE1
-      // Combine into a single splash screen if possible
-      if (LCD_EXTRA_SPACE >= strlen(STRING_SPLASH_LINE1) + 1) {
-        logo_lines(PSTR(" " STRING_SPLASH_LINE1));
-        #ifdef STRING_SPLASH_LINE2
-          lcd_erase_line(3);
-          lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 2000);
-        #else
-          delay(2000);
-        #endif
-      }
-      else {
-        logo_lines(PSTR(""));
-        lcd_erase_line(3);
-        lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE1), LCD_WIDTH, 1500);
-        #ifdef STRING_SPLASH_LINE2
-          lcd_erase_line(3);
-          lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 1500);
-        #endif
-      }
-    #elif defined(STRING_SPLASH_LINE2)
-      // Combine into a single splash screen if possible
-      if (LCD_EXTRA_SPACE >= strlen(STRING_SPLASH_LINE2) + 1) {
-        logo_lines(PSTR(" " STRING_SPLASH_LINE2));
-        delay(2000);
-      }
-      else {
-        logo_lines(PSTR(""));
-        lcd_erase_line(3);
-        lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 2000);
-      }
-    #else
-      logo_lines(PSTR(""));
-      delay(2000);
+      lcd_erase_line(3);
+      lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE1), LCD_WIDTH, 1000);
     #endif
 
+    #ifdef STRING_SPLASH_LINE2
+      lcd_erase_line(3);
+      lcd_scroll(0, 3, PSTR(STRING_SPLASH_LINE2), LCD_WIDTH, 1000);
+    #endif
   }
 
 #endif // SHOW_BOOTSCREEN
 
-/**
+/*
 Possible status screens:
 16x2   |000/000 B000/000|
        |0123456789012345|
@@ -636,8 +595,6 @@ static void lcd_implementation_status_screen() {
 
   #if LCD_HEIGHT > 2
 
-    bool blink = lcd_blink();
-
     #if LCD_WIDTH < 20
 
       #if ENABLED(SDSUPPORT)
@@ -662,61 +619,29 @@ static void lcd_implementation_status_screen() {
         LCD_TEMP(degBed(), degTargetBed(), LCD_STR_BEDTEMP[0]);
 
       #else
-        // Before homing the axis letters are blinking 'X' <-> '?'.
-        // When axis is homed but axis_known_position is false the axis letters are blinking 'X' <-> ' '.
-        // When everything is ok you see a constant 'X'.
 
-        if (blink)
-          lcd_printPGM(PSTR("X"));
-        else {
-          if (!axis_homed[X_AXIS])
-            lcd_printPGM(PSTR("?"));
-          else
-            #if DISABLED(DISABLE_REDUCED_ACCURACY_WARNING)
-              if (!axis_known_position[X_AXIS])
-                lcd_printPGM(PSTR(" "));
-              else
-            #endif
-            lcd_printPGM(PSTR("X"));
-        }
+        lcd.print('X');
+        if (axis_known_position[X_AXIS])
+          lcd.print(ftostr4sign(current_position[X_AXIS]));
+        else
+          lcd_printPGM(PSTR(" ---"));
 
-        lcd.print(ftostr4sign(current_position[X_AXIS]));
-
-        lcd_printPGM(PSTR(" "));
-        if (blink)
-          lcd_printPGM(PSTR("Y"));
-        else {
-          if (!axis_homed[Y_AXIS])
-            lcd_printPGM(PSTR("?"));
-          else
-            #if DISABLED(DISABLE_REDUCED_ACCURACY_WARNING)
-              if (!axis_known_position[Y_AXIS])
-                lcd_printPGM(PSTR(" "));
-              else
-            #endif
-            lcd_printPGM(PSTR("Y"));
-        }
-        lcd.print(ftostr4sign(current_position[Y_AXIS]));
+        lcd_printPGM(PSTR(" Y"));
+        if (axis_known_position[Y_AXIS])
+          lcd.print(ftostr4sign(current_position[Y_AXIS]));
+        else
+          lcd_printPGM(PSTR(" ---"));
 
       #endif // EXTRUDERS > 1 || TEMP_SENSOR_BED != 0
 
     #endif // LCD_WIDTH >= 20
 
     lcd.setCursor(LCD_WIDTH - 8, 1);
-    if (blink)
-      lcd_printPGM(PSTR("Z"));
-    else {
-      if (!axis_homed[Z_AXIS])
-        lcd_printPGM(PSTR("?"));
-      else
-        #if DISABLED(DISABLE_REDUCED_ACCURACY_WARNING)
-          if (!axis_known_position[Z_AXIS])
-            lcd_printPGM(PSTR(" "));
-          else
-        #endif
-        lcd_printPGM(PSTR("Z"));
-    }
-    lcd.print(ftostr32sp(current_position[Z_AXIS] + 0.00001));
+    lcd_printPGM(PSTR("Z "));
+    if (axis_known_position[Z_AXIS])
+      lcd.print(ftostr32sp(current_position[Z_AXIS] + 0.00001));
+    else
+      lcd_printPGM(PSTR("---.--"));
 
   #endif // LCD_HEIGHT > 2
 
@@ -745,9 +670,8 @@ static void lcd_implementation_status_screen() {
 
     lcd.setCursor(LCD_WIDTH - 6, 2);
     lcd.print(LCD_STR_CLOCK[0]);
-
-    uint16_t time = print_job_timer.duration() / 60;
-    if (time != 0) {
+    if (print_job_start_ms != 0) {
+      uint16_t time = millis() / 60000 - print_job_start_ms / 60000;
       lcd.print(itostr2(time / 60));
       lcd.print(':');
       lcd.print(itostr2(time % 60));
@@ -770,8 +694,8 @@ static void lcd_implementation_status_screen() {
     if (card.isFileOpen()) {
       // Draw the progress bar if the message has shown long enough
       // or if there is no message set.
-      if (ELAPSED(millis(), progress_bar_ms + PROGRESS_BAR_MSG_TIME) || !lcd_status_message[0]) {
-        int tix = (int)(card.percentDone() * (LCD_WIDTH) * 3) / 100,
+      if (millis() >= progress_bar_ms + PROGRESS_BAR_MSG_TIME || !lcd_status_message[0]) {
+        int tix = (int)(card.percentDone() * LCD_WIDTH * 3) / 100,
           cel = tix / 3, rem = tix % 3, i = LCD_WIDTH;
         char msg[LCD_WIDTH + 1], b = ' ';
         msg[i] = '\0';
@@ -791,7 +715,7 @@ static void lcd_implementation_status_screen() {
 
     // Show Filament Diameter and Volumetric Multiplier %
     // After allowing lcd_status_message to show for 5 seconds
-    if (ELAPSED(millis(), previous_lcd_status_ms + 5000UL)) {
+    if (millis() >= previous_lcd_status_ms + 5000) {
       lcd_printPGM(PSTR("Dia "));
       lcd.print(ftostr12ns(filament_width_meas));
       lcd_printPGM(PSTR(" V"));
@@ -866,20 +790,17 @@ static void lcd_implementation_drawmenu_setting_edit_generic_P(bool sel, uint8_t
 #define lcd_implementation_drawmenu_setting_edit_callback_long5(sel, row, pstr, pstr2, data, minValue, maxValue, callback) lcd_implementation_drawmenu_setting_edit_generic(sel, row, pstr, '>', ftostr5(*(data)))
 #define lcd_implementation_drawmenu_setting_edit_callback_bool(sel, row, pstr, pstr2, data, callback) lcd_implementation_drawmenu_setting_edit_generic_P(sel, row, pstr, '>', (*(data))?PSTR(MSG_ON):PSTR(MSG_OFF))
 
-void lcd_implementation_drawedit(const char* pstr, const char* value) {
+void lcd_implementation_drawedit(const char* pstr, char* value) {
   lcd.setCursor(1, 1);
   lcd_printPGM(pstr);
-  if (value != NULL) {
-    lcd.print(':');
-    lcd.setCursor(LCD_WIDTH - lcd_strlen(value), 1);
-    lcd_print(value);
-  }
+  lcd.print(':');
+  lcd.setCursor(LCD_WIDTH - lcd_strlen(value), 1);
+  lcd_print(value);
 }
 
 #if ENABLED(SDSUPPORT)
 
   static void lcd_implementation_drawmenu_sd(bool sel, uint8_t row, const char* pstr, const char* filename, char* longFilename, uint8_t concat, char post_char) {
-    UNUSED(pstr);
     char c;
     uint8_t n = LCD_WIDTH - concat;
     lcd.setCursor(0, row);
@@ -906,7 +827,7 @@ void lcd_implementation_drawedit(const char* pstr, const char* value) {
 
 #endif //SDSUPPORT
 
-#define lcd_implementation_drawmenu_back(sel, row, pstr) lcd_implementation_drawmenu_generic(sel, row, pstr, LCD_STR_UPLEVEL[0], LCD_STR_UPLEVEL[0])
+#define lcd_implementation_drawmenu_back(sel, row, pstr, data) lcd_implementation_drawmenu_generic(sel, row, pstr, LCD_STR_UPLEVEL[0], LCD_STR_UPLEVEL[0])
 #define lcd_implementation_drawmenu_submenu(sel, row, pstr, data) lcd_implementation_drawmenu_generic(sel, row, pstr, '>', LCD_STR_ARROW_RIGHT[0])
 #define lcd_implementation_drawmenu_gcode(sel, row, pstr, gcode) lcd_implementation_drawmenu_generic(sel, row, pstr, '>', ' ')
 #define lcd_implementation_drawmenu_function(sel, row, pstr, data) lcd_implementation_drawmenu_generic(sel, row, pstr, '>', ' ')
@@ -914,37 +835,21 @@ void lcd_implementation_drawedit(const char* pstr, const char* value) {
 #if ENABLED(LCD_HAS_STATUS_INDICATORS)
 
   static void lcd_implementation_update_indicators() {
-    // Set the LEDS - referred to as backlights by the LiquidTWI2 library
-    static uint8_t ledsprev = 0;
-    uint8_t leds = 0;
-
-    if (target_temperature_bed > 0) leds |= LED_A;
-
-    if (target_temperature[0] > 0) leds |= LED_B;
-
-    #if FAN_COUNT > 0
-      if (0
-        #if HAS_FAN0
-          || fanSpeeds[0]
-        #endif
-        #if HAS_FAN1
-          || fanSpeeds[1]
-        #endif
-        #if HAS_FAN2
-          || fanSpeeds[2]
-        #endif
-      ) leds |= LED_C;
-    #endif // FAN_COUNT > 0
-
-    #if EXTRUDERS > 1
-      if (target_temperature[1] > 0) leds |= LED_C;
+    #if ENABLED(LCD_I2C_PANELOLU2) || ENABLED(LCD_I2C_VIKI)
+      // Set the LEDS - referred to as backlights by the LiquidTWI2 library
+      static uint8_t ledsprev = 0;
+      uint8_t leds = 0;
+      if (target_temperature_bed > 0) leds |= LED_A;
+      if (target_temperature[0] > 0) leds |= LED_B;
+      if (fanSpeed) leds |= LED_C;
+      #if EXTRUDERS > 1
+        if (target_temperature[1] > 0) leds |= LED_C;
+      #endif
+      if (leds != ledsprev) {
+        lcd.setBacklight(leds);
+        ledsprev = leds;
+      }
     #endif
-
-    if (leds != ledsprev) {
-      lcd.setBacklight(leds);
-      ledsprev = leds;
-    }
-
   }
 
 #endif // LCD_HAS_STATUS_INDICATORS
@@ -955,15 +860,16 @@ void lcd_implementation_drawedit(const char* pstr, const char* value) {
 
   static uint8_t lcd_implementation_read_slow_buttons() {
     #if ENABLED(LCD_I2C_TYPE_MCP23017)
+      uint8_t slow_buttons;
       // Reading these buttons this is likely to be too slow to call inside interrupt context
       // so they are called during normal lcd_update
-      uint8_t slow_bits = lcd.readButtons() << B_I2C_BTN_OFFSET;
+      slow_buttons = lcd.readButtons() << B_I2C_BTN_OFFSET;
       #if ENABLED(LCD_I2C_VIKI)
-        if ((slow_bits & (B_MI | B_RI)) && PENDING(millis(), next_button_update_ms)) // LCD clicked
-          slow_bits &= ~(B_MI | B_RI); // Disable LCD clicked buttons if screen is updated
-      #endif // LCD_I2C_VIKI
-      return slow_bits;
-    #endif // LCD_I2C_TYPE_MCP23017
+        if ((slow_buttons & (B_MI | B_RI)) && millis() < next_button_update_ms) // LCD clicked
+          slow_buttons &= ~(B_MI | B_RI); // Disable LCD clicked buttons if screen is updated
+      #endif
+      return slow_buttons;
+    #endif
   }
 
 #endif // LCD_HAS_SLOW_BUTTONS

@@ -1,48 +1,16 @@
 /**
- * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- *
- * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
-/**
  * Conditionals.h
  * Defines that depend on configuration but are not editable.
  */
-
 #ifndef CONDITIONALS_H
 
-/**
-* Miscellaneous
-*/
 #ifndef M_PI
   #define M_PI 3.1415926536
 #endif
 
-/**
- * This value is used by M109 when tying to calculate a ballpark safe margin
- * to prevent wait-forever situation.
- */
-#ifndef EXTRUDE_MINTEMP
- #define EXTRUDE_MINTEMP 170
-#endif
-
 #ifndef CONFIGURATION_LCD // Get the LCD defines which are needed first
+
+  #define PIN_EXISTS(PN) (defined(PN##_PIN) && PN##_PIN >= 0)
 
   #define CONFIGURATION_LCD
 
@@ -65,7 +33,6 @@
     #elif ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
       #define DEFAULT_LCD_CONTRAST 110
       #define U8GLIB_LM6059_AF
-      #define SD_DETECT_INVERTED
     #endif
 
     #define ENCODER_PULSES_PER_STEP 4
@@ -90,22 +57,6 @@
 
   #if ENABLED(PANEL_ONE)
     #define ULTIMAKERCONTROLLER
-  #endif
-
-  #if ENABLED(BQ_LCD_SMART_CONTROLLER)
-    #define REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER
-
-    #ifndef ENCODER_PULSES_PER_STEP
-      #define ENCODER_PULSES_PER_STEP 4
-    #endif
-
-    #ifndef ENCODER_STEPS_PER_MENU_ITEM
-      #define ENCODER_STEPS_PER_MENU_ITEM 1
-    #endif
-
-    #ifndef LONG_FILENAME_HOST_SUPPORT
-      #define LONG_FILENAME_HOST_SUPPORT
-    #endif
   #endif
 
   #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
@@ -193,35 +144,28 @@
   // https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/schematics#!shiftregister-connection
 
   #if ENABLED(SAV_3DLCD)
-    #define SR_LCD_2W_NL    // Non latching 2 wire shift register
+    #define SR_LCD_2W_NL    // Non latching 2 wire shiftregister
     #define ULTIPANEL
     #define NEWPANEL
-  #endif
-
-  #if ENABLED(DOGLCD) // Change number of lines to match the DOG graphic display
-    #ifndef LCD_WIDTH
-      #define LCD_WIDTH 22
-    #endif
-    #ifndef LCD_HEIGHT
-      #define LCD_HEIGHT 5
-    #endif
   #endif
 
   #if ENABLED(ULTIPANEL)
     #define NEWPANEL  //enable this if you have a click-encoder panel
     #define ULTRA_LCD
-    #ifndef LCD_WIDTH
+    #if ENABLED(DOGLCD) // Change number of lines to match the DOG graphic display
+      #define LCD_WIDTH 22
+      #define LCD_HEIGHT 5
+    #else
       #define LCD_WIDTH 20
-    #endif
-    #ifndef LCD_HEIGHT
       #define LCD_HEIGHT 4
     #endif
   #else //no panel but just LCD
     #if ENABLED(ULTRA_LCD)
-      #ifndef LCD_WIDTH
+      #if ENABLED(DOGLCD) // Change number of lines to match the 128x64 graphics display
+        #define LCD_WIDTH 22
+        #define LCD_HEIGHT 5
+      #else
         #define LCD_WIDTH 16
-      #endif
-      #ifndef LCD_HEIGHT
         #define LCD_HEIGHT 2
       #endif
     #endif
@@ -286,49 +230,30 @@
   #include "Arduino.h"
 
   /**
-   * Set ENDSTOPPULLUPS for unused endstop switches
-   */
+  * ENDSTOPPULLUPS
+  */
   #if ENABLED(ENDSTOPPULLUPS)
-    #if ENABLED(USE_XMAX_PLUG)
+    #if DISABLED(DISABLE_MAX_ENDSTOPS)
       #define ENDSTOPPULLUP_XMAX
-    #endif
-    #if ENABLED(USE_YMAX_PLUG)
       #define ENDSTOPPULLUP_YMAX
-    #endif
-    #if ENABLED(USE_ZMAX_PLUG)
       #define ENDSTOPPULLUP_ZMAX
     #endif
-    #if ENABLED(USE_XMIN_PLUG)
+    #if DISABLED(DISABLE_MIN_ENDSTOPS)
       #define ENDSTOPPULLUP_XMIN
-    #endif
-    #if ENABLED(USE_YMIN_PLUG)
       #define ENDSTOPPULLUP_YMIN
-    #endif
-    #if ENABLED(USE_ZMIN_PLUG)
       #define ENDSTOPPULLUP_ZMIN
     #endif
-    #if ENABLED(DISABLE_Z_MIN_PROBE_ENDSTOP)
+    #if DISABLED(DISABLE_Z_MIN_PROBE_ENDSTOP)
       #define ENDSTOPPULLUP_ZMIN_PROBE
     #endif
   #endif
 
   /**
-   * Axis lengths
-   */
-  #define X_MAX_LENGTH (X_MAX_POS - (X_MIN_POS))
-  #define Y_MAX_LENGTH (Y_MAX_POS - (Y_MIN_POS))
-  #define Z_MAX_LENGTH (Z_MAX_POS - (Z_MIN_POS))
-
-  /**
-   * CoreXY and CoreXZ
-   */
-  #if ENABLED(COREXY)
-    #define CORE_AXIS_2 B_AXIS
-    #define CORE_AXIS_3 Z_AXIS
-  #elif ENABLED(COREXZ)
-    #define CORE_AXIS_2 C_AXIS
-    #define CORE_AXIS_3 Y_AXIS
-  #endif
+  * Axis lengths
+  */
+  #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
+  #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
+  #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
 
   /**
   * SCARA
@@ -347,8 +272,8 @@
     #define Z_HOME_POS MANUAL_Z_HOME_POS
   #else //!MANUAL_HOME_POSITIONS – Use home switch positions based on homing direction and travel limits
     #if ENABLED(BED_CENTER_AT_0_0)
-      #define X_HOME_POS (X_MAX_LENGTH) * (X_HOME_DIR) * 0.5
-      #define Y_HOME_POS (Y_MAX_LENGTH) * (Y_HOME_DIR) * 0.5
+      #define X_HOME_POS X_MAX_LENGTH * X_HOME_DIR * 0.5
+      #define Y_HOME_POS Y_MAX_LENGTH * Y_HOME_DIR * 0.5
     #else
       #define X_HOME_POS (X_HOME_DIR < 0 ? X_MIN_POS : X_MAX_POS)
       #define Y_HOME_POS (Y_HOME_DIR < 0 ? Y_MIN_POS : Y_MAX_POS)
@@ -367,8 +292,7 @@
     #define MAX_PROBE_Y (min(Y_MAX_POS, Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
   #endif
 
-  #define HAS_Z_ENDSTOP_SERVO (defined(Z_ENDSTOP_SERVO_NR) && Z_ENDSTOP_SERVO_NR >= 0)
-  #define SERVO_LEVELING (ENABLED(AUTO_BED_LEVELING_FEATURE) && HAS_Z_ENDSTOP_SERVO)
+  #define SERVO_LEVELING (defined(AUTO_BED_LEVELING_FEATURE) && defined(Z_ENDSTOP_SERVO_NR))
 
   /**
    * Sled Options
@@ -378,22 +302,8 @@
   #endif
 
   /**
-   * Enable MECHANICAL_PROBE for Z_PROBE_ALLEN_KEY, for older configs
-   */
-  #if ENABLED(Z_PROBE_ALLEN_KEY)
-    #define MECHANICAL_PROBE
-  #endif
-
-  /**
-   * Avoid double-negatives for enabling features
-   */
-  #if DISABLED(DISABLE_HOST_KEEPALIVE)
-    #define HOST_KEEPALIVE_FEATURE
-  #endif
-
-  /**
-   * MAX_STEP_FREQUENCY differs for TOSHIBA
-   */
+  * MAX_STEP_FREQUENCY differs for TOSHIBA
+  */
   #if ENABLED(CONFIG_STEPPERS_TOSHIBA)
     #define MAX_STEP_FREQUENCY 10000 // Max step frequency for Toshiba Stepper Controllers
   #else
@@ -411,28 +321,12 @@
   * Advance calculated values
   */
   #if ENABLED(ADVANCE)
-    #define EXTRUSION_AREA (0.25 * (D_FILAMENT) * (D_FILAMENT) * M_PI)
-    #define STEPS_PER_CUBIC_MM_E (axis_steps_per_unit[E_AXIS] / (EXTRUSION_AREA))
+    #define EXTRUSION_AREA (0.25 * D_FILAMENT * D_FILAMENT * M_PI)
+    #define STEPS_PER_CUBIC_MM_E (axis_steps_per_unit[E_AXIS] / EXTRUSION_AREA)
   #endif
 
   #if ENABLED(ULTIPANEL) && DISABLED(ELB_FULL_GRAPHIC_CONTROLLER)
     #undef SD_DETECT_INVERTED
-  #endif
-
-  /**
-   * Set defaults for missing (newer) options
-   */
-  #ifndef DISABLE_INACTIVE_X
-    #define DISABLE_INACTIVE_X DISABLE_X
-  #endif
-  #ifndef DISABLE_INACTIVE_Y
-    #define DISABLE_INACTIVE_Y DISABLE_Y
-  #endif
-  #ifndef DISABLE_INACTIVE_Z
-    #define DISABLE_INACTIVE_Z DISABLE_Z
-  #endif
-  #ifndef DISABLE_INACTIVE_E
-    #define DISABLE_INACTIVE_E DISABLE_E
   #endif
 
   // Power Signal Control Definitions
@@ -450,12 +344,9 @@
   #define HAS_POWER_SWITCH (POWER_SUPPLY > 0 && PIN_EXISTS(PS_ON))
 
   /**
-   * Temp Sensor defines
-   */
-  #if TEMP_SENSOR_0 == -3
-    #define HEATER_0_USES_MAX6675
-    #define MAX6675_IS_MAX31855
-  #elif TEMP_SENSOR_0 == -2
+  * Temp Sensor defines
+  */
+  #if TEMP_SENSOR_0 == -2
     #define HEATER_0_USES_MAX6675
   #elif TEMP_SENSOR_0 == -1
     #define HEATER_0_USES_AD595
@@ -467,9 +358,7 @@
     #define HEATER_0_USES_THERMISTOR
   #endif
 
-  #if TEMP_SENSOR_1 <= -2
-    #error MAX6675 / MAX31855 Thermocouples not supported for TEMP_SENSOR_1
-  #elif TEMP_SENSOR_1 == -1
+  #if TEMP_SENSOR_1 == -1
     #define HEATER_1_USES_AD595
   #elif TEMP_SENSOR_1 == 0
     #undef HEATER_1_MINTEMP
@@ -479,9 +368,7 @@
     #define HEATER_1_USES_THERMISTOR
   #endif
 
-  #if TEMP_SENSOR_2 <= -2
-    #error MAX6675 / MAX31855 Thermocouples not supported for TEMP_SENSOR_2
-  #elif TEMP_SENSOR_2 == -1
+  #if TEMP_SENSOR_2 == -1
     #define HEATER_2_USES_AD595
   #elif TEMP_SENSOR_2 == 0
     #undef HEATER_2_MINTEMP
@@ -491,9 +378,7 @@
     #define HEATER_2_USES_THERMISTOR
   #endif
 
-  #if TEMP_SENSOR_3 <= -2
-    #error MAX6675 / MAX31855 Thermocouples not supported for TEMP_SENSOR_3
-  #elif TEMP_SENSOR_3 == -1
+  #if TEMP_SENSOR_3 == -1
     #define HEATER_3_USES_AD595
   #elif TEMP_SENSOR_3 == 0
     #undef HEATER_3_MINTEMP
@@ -503,9 +388,7 @@
     #define HEATER_3_USES_THERMISTOR
   #endif
 
-  #if TEMP_SENSOR_BED <= -2
-    #error MAX6675 / MAX31855 Thermocouples not supported for TEMP_SENSOR_BED
-  #elif TEMP_SENSOR_BED == -1
+  #if TEMP_SENSOR_BED == -1
     #define BED_USES_AD595
   #elif TEMP_SENSOR_BED == 0
     #undef BED_MINTEMP
@@ -531,54 +414,13 @@
   #define ARRAY_BY_EXTRUDERS1(v1) ARRAY_BY_EXTRUDERS(v1, v1, v1, v1)
 
   /**
-   * Z_DUAL_ENDSTOPS endstop reassignment
-   */
-  #if ENABLED(Z_DUAL_ENDSTOPS)
-    #define _XMIN_ 100
-    #define _YMIN_ 200
-    #define _ZMIN_ 300
-    #define _XMAX_ 101
-    #define _YMAX_ 201
-    #define _ZMAX_ 301
-    const bool Z2_MAX_ENDSTOP_INVERTING =
-      #if Z2_USE_ENDSTOP == _XMAX_
-        X_MAX_ENDSTOP_INVERTING
-        #define Z2_MAX_PIN X_MAX_PIN
-        #undef USE_XMAX_PLUG
-      #elif Z2_USE_ENDSTOP == _YMAX_
-        Y_MAX_ENDSTOP_INVERTING
-        #define Z2_MAX_PIN Y_MAX_PIN
-        #undef USE_YMAX_PLUG
-      #elif Z2_USE_ENDSTOP == _ZMAX_
-        Z_MAX_ENDSTOP_INVERTING
-        #define Z2_MAX_PIN Z_MAX_PIN
-        #undef USE_ZMAX_PLUG
-      #elif Z2_USE_ENDSTOP == _XMIN_
-        X_MIN_ENDSTOP_INVERTING
-        #define Z2_MAX_PIN X_MIN_PIN
-        #undef USE_XMIN_PLUG
-      #elif Z2_USE_ENDSTOP == _YMIN_
-        Y_MIN_ENDSTOP_INVERTING
-        #define Z2_MAX_PIN Y_MIN_PIN
-        #undef USE_YMIN_PLUG
-      #elif Z2_USE_ENDSTOP == _ZMIN_
-        Z_MIN_ENDSTOP_INVERTING
-        #define Z2_MAX_PIN Z_MIN_PIN
-        #undef USE_ZMIN_PLUG
-      #else
-        0
-      #endif
-    ;
-  #endif
-
-  /**
-   * Shorthand for pin tests, used wherever needed
-   */
-  #define HAS_TEMP_0 (PIN_EXISTS(TEMP_0) && TEMP_SENSOR_0 != 0 && TEMP_SENSOR_0 > -2)
-  #define HAS_TEMP_1 (PIN_EXISTS(TEMP_1) && TEMP_SENSOR_1 != 0 && TEMP_SENSOR_1 > -2)
-  #define HAS_TEMP_2 (PIN_EXISTS(TEMP_2) && TEMP_SENSOR_2 != 0 && TEMP_SENSOR_2 > -2)
-  #define HAS_TEMP_3 (PIN_EXISTS(TEMP_3) && TEMP_SENSOR_3 != 0 && TEMP_SENSOR_3 > -2)
-  #define HAS_TEMP_BED (PIN_EXISTS(TEMP_BED) && TEMP_SENSOR_BED != 0 && TEMP_SENSOR_BED > -2)
+  * Shorthand for pin tests, used wherever needed
+  */
+  #define HAS_TEMP_0 (PIN_EXISTS(TEMP_0) && TEMP_SENSOR_0 != 0 && TEMP_SENSOR_0 != -2)
+  #define HAS_TEMP_1 (PIN_EXISTS(TEMP_1) && TEMP_SENSOR_1 != 0)
+  #define HAS_TEMP_2 (PIN_EXISTS(TEMP_2) && TEMP_SENSOR_2 != 0)
+  #define HAS_TEMP_3 (PIN_EXISTS(TEMP_3) && TEMP_SENSOR_3 != 0)
+  #define HAS_TEMP_BED (PIN_EXISTS(TEMP_BED) && TEMP_SENSOR_BED != 0)
   #define HAS_HEATER_0 (PIN_EXISTS(HEATER_0))
   #define HAS_HEATER_1 (PIN_EXISTS(HEATER_1))
   #define HAS_HEATER_2 (PIN_EXISTS(HEATER_2))
@@ -589,16 +431,14 @@
   #define HAS_AUTO_FAN_2 (PIN_EXISTS(EXTRUDER_2_AUTO_FAN))
   #define HAS_AUTO_FAN_3 (PIN_EXISTS(EXTRUDER_3_AUTO_FAN))
   #define HAS_AUTO_FAN (HAS_AUTO_FAN_0 || HAS_AUTO_FAN_1 || HAS_AUTO_FAN_2 || HAS_AUTO_FAN_3)
-  #define HAS_FAN0 (PIN_EXISTS(FAN))
-  #define HAS_FAN1 (PIN_EXISTS(FAN1) && CONTROLLERFAN_PIN != FAN1_PIN && EXTRUDER_0_AUTO_FAN_PIN != FAN1_PIN && EXTRUDER_1_AUTO_FAN_PIN != FAN1_PIN && EXTRUDER_2_AUTO_FAN_PIN != FAN1_PIN)
-  #define HAS_FAN2 (PIN_EXISTS(FAN2) && CONTROLLERFAN_PIN != FAN2_PIN && EXTRUDER_0_AUTO_FAN_PIN != FAN2_PIN && EXTRUDER_1_AUTO_FAN_PIN != FAN2_PIN && EXTRUDER_2_AUTO_FAN_PIN != FAN2_PIN)
+  #define HAS_FAN (PIN_EXISTS(FAN))
   #define HAS_CONTROLLERFAN (PIN_EXISTS(CONTROLLERFAN))
   #define HAS_SERVOS (defined(NUM_SERVOS) && NUM_SERVOS > 0)
   #define HAS_SERVO_0 (PIN_EXISTS(SERVO0))
   #define HAS_SERVO_1 (PIN_EXISTS(SERVO1))
   #define HAS_SERVO_2 (PIN_EXISTS(SERVO2))
   #define HAS_SERVO_3 (PIN_EXISTS(SERVO3))
-  #define HAS_FILAMENT_WIDTH_SENSOR (PIN_EXISTS(FILWIDTH))
+  #define HAS_FILAMENT_SENSOR (ENABLED(FILAMENT_SENSOR) && PIN_EXISTS(FILWIDTH))
   #define HAS_FILRUNOUT (PIN_EXISTS(FILRUNOUT))
   #define HAS_HOME (PIN_EXISTS(HOME))
   #define HAS_KILL (PIN_EXISTS(KILL))
@@ -655,10 +495,6 @@
   #define HAS_E3_STEP (PIN_EXISTS(E3_STEP))
   #define HAS_E4_STEP (PIN_EXISTS(E4_STEP))
 
-  #define HAS_MOTOR_CURRENT_PWM (PIN_EXISTS(MOTOR_CURRENT_PWM_XY) || PIN_EXISTS(MOTOR_CURRENT_PWM_Z) || PIN_EXISTS(MOTOR_CURRENT_PWM_E))
-
-  #define HAS_TEMP_HOTEND (HAS_TEMP_0 || ENABLED(HEATER_0_USES_MAX6675))
-
   /**
   * Helper Macros for heaters and extruder fan
   */
@@ -680,35 +516,13 @@
   #if HAS_HEATER_BED
     #define WRITE_HEATER_BED(v) WRITE(HEATER_BED_PIN, v)
   #endif
-
-  /**
-   * Up to 3 PWM fans
-   */
-  #if HAS_FAN2
-    #define FAN_COUNT 3
-  #elif HAS_FAN1
-    #define FAN_COUNT 2
-  #elif HAS_FAN0
-    #define FAN_COUNT 1
-  #else
-    #define FAN_COUNT 0
-  #endif
-
-  #if HAS_FAN0
+  #if HAS_FAN
     #define WRITE_FAN(v) WRITE(FAN_PIN, v)
-    #define WRITE_FAN0(v) WRITE_FAN(v)
   #endif
-  #if HAS_FAN1
-    #define WRITE_FAN1(v) WRITE(FAN1_PIN, v)
-  #endif
-  #if HAS_FAN2
-    #define WRITE_FAN2(v) WRITE(FAN2_PIN, v)
-  #endif
-  #define WRITE_FAN_N(n, v) WRITE_FAN##n(v)
 
   #define HAS_BUZZER (PIN_EXISTS(BEEPER) || defined(LCD_USE_I2C_BUZZER))
 
-  #if HAS_SERVOS
+  #if defined(NUM_SERVOS) && NUM_SERVOS > 0
     #ifndef X_ENDSTOP_SERVO_NR
       #define X_ENDSTOP_SERVO_NR -1
     #endif
@@ -718,21 +532,10 @@
     #ifndef Z_ENDSTOP_SERVO_NR
       #define Z_ENDSTOP_SERVO_NR -1
     #endif
-    #if X_ENDSTOP_SERVO_NR >= 0 || Y_ENDSTOP_SERVO_NR >= 0 || HAS_Z_ENDSTOP_SERVO
+    #if X_ENDSTOP_SERVO_NR >= 0 || Y_ENDSTOP_SERVO_NR >= 0 || Z_ENDSTOP_SERVO_NR >= 0
       #define HAS_SERVO_ENDSTOPS true
       #define SERVO_ENDSTOP_IDS { X_ENDSTOP_SERVO_NR, Y_ENDSTOP_SERVO_NR, Z_ENDSTOP_SERVO_NR }
     #endif
-  #endif
-
-  #if  ( (HAS_Z_MIN && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)) || HAS_Z_PROBE ) \
-    && ( \
-         ENABLED(FIX_MOUNTED_PROBE) \
-      || ENABLED(MECHANICAL_PROBE) \
-      || HAS_Z_ENDSTOP_SERVO \
-      || ENABLED(Z_PROBE_ALLEN_KEY) \
-      || ENABLED(Z_PROBE_SLED) \
-    )
-    #define HAS_Z_MIN_PROBE
   #endif
 
 #endif //CONFIGURATION_LCD

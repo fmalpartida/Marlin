@@ -1,30 +1,8 @@
 /**
- * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- *
- * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
-/**
  * Galician language (ISO "gl")
  *
  * LCD Menu Messages
- * See also https://github.com/MarlinFirmware/Marlin/wiki/LCD-Language
+ * Se also documentation/LCDLanguageFont.md
  *
  */
 #ifndef LANGUAGE_GL_H
@@ -142,7 +120,7 @@
 #define MSG_INIT_SDCARD                     "Iniciando SD"
 #define MSG_CNG_SDCARD                      "Cambiar SD"
 #define MSG_ZPROBE_OUT                      "Sonda-Z sen cama"
-#define MSG_YX_UNHOMED                      "X/Y antes que Z"
+#define MSG_POSITION_UNKNOWN                "X/Y antes que Z"
 #define MSG_ZPROBE_ZOFFSET                  "Offset Z"
 #define MSG_BABYSTEP_X                      "Micropaso X"
 #define MSG_BABYSTEP_Y                      "Micropaso Y"
@@ -162,10 +140,12 @@
 #define MSG_BED_HEATING                     "Quentando cama"
 #define MSG_BED_DONE                        "Cama esta quente"
 
-#define MSG_DELTA_CALIBRATE               "Calibracion Delta"
-#define MSG_DELTA_CALIBRATE_X             "Calibrar X"
-#define MSG_DELTA_CALIBRATE_Y             "Calibrar Y"
-#define MSG_DELTA_CALIBRATE_Z             "Calibrar Z"
-#define MSG_DELTA_CALIBRATE_CENTER        "Calibrar Centro"
+#if ENABLED(DELTA_CALIBRATION_MENU)
+  #define MSG_DELTA_CALIBRATE             "Calibracion Delta"
+  #define MSG_DELTA_CALIBRATE_X           "Calibrar X"
+  #define MSG_DELTA_CALIBRATE_Y           "Calibrar Y"
+  #define MSG_DELTA_CALIBRATE_Z           "Calibrar Z"
+  #define MSG_DELTA_CALIBRATE_CENTER      "Calibrar Centro"
+#endif // DELTA_CALIBRATION_MENU
 
 #endif // LANGUAGE_GL_H

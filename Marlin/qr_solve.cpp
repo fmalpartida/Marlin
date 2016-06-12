@@ -1,25 +1,3 @@
-/**
- * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- *
- * Based on Sprinter and grbl.
- * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
 #include "qr_solve.h"
 
 #if ENABLED(AUTO_BED_LEVELING_GRID)
@@ -32,7 +10,7 @@
 int i4_min(int i1, int i2)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     I4_MIN returns the smaller of two I4's.
@@ -62,7 +40,7 @@ int i4_min(int i1, int i2)
 double r8_epsilon(void)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     R8_EPSILON returns the R8 round off unit.
@@ -99,7 +77,7 @@ double r8_epsilon(void)
 double r8_max(double x, double y)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     R8_MAX returns the maximum of two R8's.
@@ -129,7 +107,7 @@ double r8_max(double x, double y)
 double r8_abs(double x)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     R8_ABS returns the absolute value of an R8.
@@ -159,7 +137,7 @@ double r8_abs(double x)
 double r8_sign(double x)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     R8_SIGN returns the sign of an R8.
@@ -189,7 +167,7 @@ double r8_sign(double x)
 double r8mat_amax(int m, int n, double a[])
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     R8MAT_AMAX returns the maximum absolute value entry of an R8MAT.
@@ -225,7 +203,8 @@ double r8mat_amax(int m, int n, double a[])
   double value = r8_abs(a[0 + 0 * m]);
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < m; i++) {
-      NOLESS(value, r8_abs(a[i + j * m]));
+      if (value < r8_abs(a[i + j * m]))
+        value = r8_abs(a[i + j * m]);
     }
   }
   return value;
@@ -234,7 +213,7 @@ double r8mat_amax(int m, int n, double a[])
 void r8mat_copy(double a2[], int m, int n, double a1[])
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     R8MAT_COPY_NEW copies one R8MAT to a "new" R8MAT.
@@ -276,7 +255,7 @@ void r8mat_copy(double a2[], int m, int n, double a1[])
 void daxpy(int n, double da, double dx[], int incx, double dy[], int incy)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DAXPY computes constant times a vector plus a vector.
@@ -328,7 +307,7 @@ void daxpy(int n, double da, double dx[], int incx, double dy[], int incy)
   if (n <= 0 || da == 0.0) return;
 
   int i, ix, iy, m;
-  /**
+  /*
     Code for unequal increments or equal increments
     not equal to 1.
   */
@@ -347,7 +326,7 @@ void daxpy(int n, double da, double dx[], int incx, double dy[], int incy)
       iy = iy + incy;
     }
   }
-  /**
+  /*
     Code for both increments equal to 1.
   */
   else {
@@ -367,7 +346,7 @@ void daxpy(int n, double da, double dx[], int incx, double dy[], int incy)
 double ddot(int n, double dx[], int incx, double dy[], int incy)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DDOT forms the dot product of two vectors.
@@ -422,7 +401,7 @@ double ddot(int n, double dx[], int incx, double dy[], int incy)
   int i, m;
   double dtemp = 0.0;
 
-  /**
+  /*
     Code for unequal increments or equal increments
     not equal to 1.
   */
@@ -435,7 +414,7 @@ double ddot(int n, double dx[], int incx, double dy[], int incy)
       iy = iy + incy;
     }
   }
-  /**
+  /*
     Code for both increments equal to 1.
   */
   else {
@@ -457,7 +436,7 @@ double ddot(int n, double dx[], int incx, double dy[], int incy)
 double dnrm2(int n, double x[], int incx)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DNRM2 returns the euclidean norm of a vector.
@@ -531,7 +510,7 @@ void dqrank(double a[], int lda, int m, int n, double tol, int* kr,
             int jpvt[], double qraux[])
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DQRANK computes the QR factorization of a rectangular matrix.
@@ -625,7 +604,7 @@ void dqrdc(double a[], int lda, int n, int p, double qraux[], int jpvt[],
            double work[], int job)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DQRDC computes the QR factorization of a real rectangular matrix.
@@ -709,7 +688,7 @@ void dqrdc(double a[], int lda, int n, int p, double qraux[], int jpvt[],
   double maxnrm, nrmxl, t, tt;
 
   int pl = 1, pu = 0;
-  /**
+  /*
     If pivoting is requested, rearrange the columns.
   */
   if (job != 0) {
@@ -738,19 +717,19 @@ void dqrdc(double a[], int lda, int n, int p, double qraux[], int jpvt[],
       }
     }
   }
-  /**
+  /*
     Compute the norms of the free columns.
   */
   for (j = pl; j <= pu; j++)
     qraux[j - 1] = dnrm2(n, a + 0 + (j - 1) * lda, 1);
   for (j = pl; j <= pu; j++)
     work[j - 1] = qraux[j - 1];
-  /**
+  /*
     Perform the Householder reduction of A.
   */
   lup = i4_min(n, p);
   for (int l = 1; l <= lup; l++) {
-    /**
+    /*
       Bring the column of largest norm into the pivot position.
     */
     if (pl <= l && l < pu) {
@@ -771,7 +750,7 @@ void dqrdc(double a[], int lda, int n, int p, double qraux[], int jpvt[],
         jpvt[l - 1] = jp;
       }
     }
-    /**
+    /*
       Compute the Householder transformation for column L.
     */
     qraux[l - 1] = 0.0;
@@ -782,7 +761,7 @@ void dqrdc(double a[], int lda, int n, int p, double qraux[], int jpvt[],
           nrmxl = nrmxl * r8_sign(a[l - 1 + (l - 1) * lda]);
         dscal(n - l + 1, 1.0 / nrmxl, a + l - 1 + (l - 1)*lda, 1);
         a[l - 1 + (l - 1)*lda] = 1.0 + a[l - 1 + (l - 1) * lda];
-        /**
+        /*
           Apply the transformation to the remaining columns, updating the norms.
         */
         for (j = l + 1; j <= p; j++) {
@@ -804,7 +783,7 @@ void dqrdc(double a[], int lda, int n, int p, double qraux[], int jpvt[],
             }
           }
         }
-        /**
+        /*
           Save the transformation.
         */
         qraux[l - 1] = a[l - 1 + (l - 1) * lda];
@@ -819,7 +798,7 @@ int dqrls(double a[], int lda, int m, int n, double tol, int* kr, double b[],
           double x[], double rsd[], int jpvt[], double qraux[], int itask)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DQRLS factors and solves a linear system in the least squares sense.
@@ -949,12 +928,12 @@ int dqrls(double a[], int lda, int m, int n, double tol, int* kr, double b[],
   }
 
   ind = 0;
-  /**
+  /*
     Factor the matrix.
   */
   if (itask == 1)
     dqrank(a, lda, m, n, tol, kr, jpvt, qraux);
-  /**
+  /*
     Solve the least-squares problem.
   */
   dqrlss(a, lda, m, n, *kr, b, x, rsd, jpvt, qraux);
@@ -966,7 +945,7 @@ void dqrlss(double a[], int lda, int m, int n, int kr, double b[], double x[],
             double rsd[], int jpvt[], double qraux[])
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DQRLSS solves a linear system in a least squares sense.
@@ -1075,7 +1054,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
           double qy[], double qty[], double b[], double rsd[], double ab[], int job)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DQRSL computes transformations, projections, and least squares solutions.
@@ -1222,12 +1201,12 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
   int ju;
   double t;
   double temp;
-  /**
+  /*
     Set INFO flag.
   */
   info = 0;
 
-  /**
+  /*
     Determine what is to be computed.
   */
   cqy  = ( job / 10000        != 0);
@@ -1237,7 +1216,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
   cab  = ((job %    10)       != 0);
   ju = i4_min(k, n - 1);
 
-  /**
+  /*
     Special action when N = 1.
   */
   if (ju == 0) {
@@ -1257,7 +1236,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
       rsd[0] = 0.0;
     return info;
   }
-  /**
+  /*
     Set up to compute QY or QTY.
   */
   if (cqy) {
@@ -1268,7 +1247,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
     for (i = 1; i <= n; i++)
       qty[i - 1] = y[i - 1];
   }
-  /**
+  /*
     Compute QY.
   */
   if (cqy) {
@@ -1283,7 +1262,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
       }
     }
   }
-  /**
+  /*
     Compute Q'*Y.
   */
   if (cqty) {
@@ -1297,7 +1276,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
       }
     }
   }
-  /**
+  /*
     Set up to compute B, RSD, or AB.
   */
   if (cb) {
@@ -1320,7 +1299,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
     for (i = 1; i <= k; i++)
       rsd[i - 1] = 0.0;
   }
-  /**
+  /*
     Compute B.
   */
   if (cb) {
@@ -1337,7 +1316,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
       }
     }
   }
-  /**
+  /*
     Compute RSD or AB as required.
   */
   if (cr || cab) {
@@ -1369,7 +1348,7 @@ int dqrsl(double a[], int lda, int n, int k, double qraux[], double y[],
 void dscal(int n, double sa, double x[], int incx)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DSCAL scales a vector by a constant.
@@ -1444,7 +1423,7 @@ void dscal(int n, double sa, double x[], int incx)
 void dswap(int n, double x[], int incx, double y[], int incy)
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     DSWAP interchanges two vectors.
@@ -1529,7 +1508,7 @@ void dswap(int n, double x[], int incx, double y[], int incy)
 void qr_solve(double x[], int m, int n, double a[], double b[])
 
 /******************************************************************************/
-/**
+/*
   Purpose:
 
     QR_SOLVE solves a linear system in the least squares sense.
